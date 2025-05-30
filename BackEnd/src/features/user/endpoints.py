@@ -1,0 +1,135 @@
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+from src.dependencies.auth import get_current_user
+from src.dependencies.response_decorator import handle_result
+from uuid import UUID
+import traceback
+from src.features.user.crud import (
+    updateUser,
+    createBankAccount,
+    deleteBankAccount,
+    getBankAccount,
+    updateBankAccount,
+    getData,
+    createSettings,
+    updateSettings,
+)
+from src.features.user.schema import (
+    UserUpdate,
+    BankAccountCreate,
+    BankAccountUpdate,
+    SettingsUpdate,
+    SettingsCreate,
+    ModelID,
+)
+from src.dependencies.db import get_gel_client
+
+
+userRoute = APIRouter(prefix='/api/user')
+
+
+@userRoute.get('/', response_class=JSONResponse)
+@handle_result()
+async def getUserData(user = Depends(get_current_user), db=Depends(get_gel_client)):
+    result = await getData(db, user)
+    return result
+
+@userRoute.put('/', response_class=JSONResponse)
+@handle_result()
+async def updateUserData(data: UserUpdate, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    try:
+        return await updateUser(
+            db,
+            user=user,
+            email=data.email,
+            hash=data.hash,
+            old_password=data.old_password
+        )
+    except Exception:
+        print(traceback.format_exc())
+
+@userRoute.post('/bank-account', response_class=JSONResponse)
+@handle_result()
+async def createAccount(data: BankAccountCreate, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await createBankAccount(
+        db,
+        user=user,
+        bank_name=data.bank_name,
+        type=data.type,
+        account_name=data.account_name,
+        balance=data.balance,
+        category=data.category,
+        details=data.details,
+        ignore=data.ignore_on_totals,
+    )
+
+
+@userRoute.delete('/bank-account', response_class=JSONResponse)
+@handle_result()
+async def deleteAccount(bank_id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await deleteBankAccount(
+        db,
+        user=user,
+        bank_id=bank_id
+    )
+
+
+@userRoute.get('/bank-account', response_class=JSONResponse)
+@handle_result()
+async def getAccount(bank_id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await getBankAccount(
+        db,
+        bank_id=bank_id
+    )
+
+
+@userRoute.put('/bank-account', response_class=JSONResponse)
+@handle_result()
+async def updateAccount(bank_account: BankAccountUpdate, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await updateBankAccount(
+        db,
+        bank_account=bank_account.id,
+        type=bank_account.type,
+        bank_name=bank_account.bank_name,
+        account_name=bank_account.account_name,
+        details=bank_account.details,
+        ignore=bank_account.ignore_on_totals,
+        category=bank_account.category
+    )
+
+
+@userRoute.post('/settings', response_class=JSONResponse)
+@handle_result()
+async def createConfig(data: SettingsCreate, user=Depends(get_current_user), db=Depends(get_gel_client)):
+    return await createSettings(
+        db,
+        user=user,
+        record_title=data.record_title,
+        movement_title=data.movement_title,
+        entity_title=data.entity_title,
+        bank_account=data.default_bank_account,
+    )
+
+
+@userRoute.put('/settings', response_class=JSONResponse)
+@handle_result()
+async def updateConfig(data: SettingsUpdate, user=Depends(get_current_user), db=Depends(get_gel_client)):
+    return await updateSettings(
+        db,
+        user=user,
+        record_title=data.record_title,
+        movement_title=data.movement_title,
+        entity_title=data.entity_title,
+        bank_account=data.id,
+        account_types=data.account_types,
+        entity_types=data.entity_types,
+        contact_number_types=data.contact_number_types,
+        record_types=data.record_types,
+        record_status=data.record_status,
+        movement_income_types=data.movement_income_types,
+        movement_expense_types=data.movement_expense_types,
+        scheduler_types=data.scheduler_types,
+        entity_id_types=data.entity_id_types,
+        movement_cycle_types=data.movement_cycle_types,
+
+    )

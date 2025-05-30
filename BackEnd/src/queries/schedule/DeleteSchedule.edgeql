@@ -1,0 +1,1 @@
+delete Scheduler filter .id = <uuid>$event

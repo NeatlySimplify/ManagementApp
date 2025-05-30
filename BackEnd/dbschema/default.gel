@@ -1,3 +1,500 @@
 module default {
+    abstract type Record_OR_Payment;
+
+    abstract type User{
+        required name: str;
+        required email: str {
+            delegated constraint exclusive;
+        };
+        required password: str;
+        refresh_token: uuid;
+        use_token: bool {
+            default := false;
+        };
+
+        trigger log_update after update for each when (
+            __old__.password != __new__.password
+        ) do (
+            insert Auditable {
+                user := __old__.id,
+                object_id := __old__.id,
+                action := "update",
+                details := to_json('{' ++ '"Action": "Password Updated"'++'}')
+            }
+        );
+
+        trigger log_insert after insert for each do (
+            insert Auditable {
+                user := __new__.id,
+                object_id := __new__.id,
+                action := "insert",
+                details := <json>__new__ {*}
+            }
+        );
+    }
+
+    type InternalOrg extending User{
+        multi user: InternalUser;
+    }
+
+    type Address {
+        state: str;
+        city: str;
+        district: str;
+        street: str;
+        number: int64;
+        complement: str;
+        postal: str;
+    }
+
+
+    type Contact {
+        name: str;
+        email: str;
+        number: json;
+        details: json;
+    }
+
+    type Auditable {
+        timestamp: datetime {
+            default := datetime_of_statement();
+        };
+        object_id: uuid;
+        user: uuid;
+        action: str;
+        details: json;
+    }
+
+
+    # Person or Organization
+    type Entity{
+        timestamp: datetime {
+            default := datetime_of_statement();
+        };
+        required email: str {
+            constraint exclusive;
+        };
+        type: str;
+        id_type: str;
+        status: bool {
+            default := true;
+        }
+        govt_id: str;
+        name: str;
+        sex: str;
+        relationship_status: str;
+        optional details: json;
+        birth: cal::local_date;
+
+        user: InternalUser;
+        multi phone : Contact{
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi address : Address{
+            on source delete delete target;
+            on target delete allow;
+        };
+
+
+        trigger log_update after update for each when ( <json>__old__ {*} != <json>__new__ {*}
+        ) do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "update",
+                details := to_json(
+                    '{' ++
+                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
+                    '"after": ' ++ <str><json>__new__{*} ++
+                    '}'
+                ),
+            }
+        );
+
+        trigger log_insert after insert for each do (
+            insert Auditable {
+                user := __new__.user.id,
+                object_id := __new__.id,
+                action := "insert",
+                details := <json>__new__{*}
+            }
+        );
+
+        trigger log_delete after delete for each do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "delete",
+                details := <json>__old__{*}
+            }
+        );
+    }
+
+
+    type InternalUser extending User{
+        optional single org: InternalOrg;
+
+        is_active: bool{
+            default := false;
+        };
+        settings: UserSettings {
+            on source delete delete target
+        };
+        last_active_date: datetime;
+
+
+        # Links to Other Types
+        multi account: BankAccount {
+            on target delete allow;
+            on source delete delete target;
+            constraint exclusive;
+        };
+        multi movement:= .<user[is Movement];
+        multi entity := .<user[is Entity];
+        multi record := .<user[is Record];
+        multi event := .<user[is Scheduler];
+
+
+        # Computed Properties:
+        paymente_income:=(select __source__.movement.payment filter .type = "income" order by .payment_date desc);
+        paymente_expense:=(select __source__.movement.payment filter .type = "expense" order by .payment_date desc);
+
+        trigger link_delete after delete for each do (
+            delete (select InternalUser.<user)
+        );
+    }
+
+
+    type UserSettings {
+        account_types: array<str>{
+            default := ["Conta Corrente", "Conta Poupança", "Investimentos", "Carteira"];
+        };
+        default_bank_account: BankAccount;
+        record_title: str;
+        movement_title: str;
+        entity_title: str;
+        entity_types: array<str>{
+            default := ["Cliente", "Parceiro"];
+        };
+        entity_id_types: array<str>{
+            default:= ["CPF", "CNPJ", "RG", "CNH"]
+        };
+        contact_number_types: array<str>{
+            default:= ["Casa", "Celular", "Trabalho"];
+        };
+        record_types: array<str>{
+            default := ["Serviço"];
+        };
+        record_status: array<str>{
+            default := ["Em Andamento", "Concluído"]
+        };
+        movement_income_types: array<str>{
+            default := ["Benefícios", "Comissão", "Pagamentos", "Rendimentos", "Serviços", "Outros"];
+        };
+        movement_expense_types: array<str>{
+            default := ["Alimentação", "Transporte", "Cartão de Crédito", "Educação", "Família", "Lazer", "Moradia", "Pagamentos", "Saúde", "Serviços", "Outros"]
+        }
+        scheduler_types: array<str>{
+            default := ["Evento", "Tarefa", "Reunião"]
+        };
+        movement_cycle_types: array<str>{
+            default:= ["Diário", "Semanal", "Quinzenal", "Mensal", "Trimestral", "Semestral", "Anual", "Personalizado"]
+        };
+    }
+
+
+    # Service or Action
+    type Record extending Record_OR_Payment{
+        name: str;
+        id_service: str;
+        active: bool;
+        status: str;
+        type: str;
+        value: decimal;
+        optional details: json;
+
+        user: InternalUser;
+        required multi entity: Entity {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi event: Scheduler {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi movement: Movement {
+            on source delete delete target;
+            on target delete allow;
+        };
+
+        trigger log_update after update for each when (
+            <json>__old__{*} != <json>__new__{*}
+        ) do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "update",
+                details := to_json(
+                    '{' ++
+                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
+                    '"after": ' ++ <str><json>__new__{*} ++
+                    '}'
+                )
+            }
+        );
+
+        trigger log_insert after insert for each do (
+            insert Auditable {
+                user := __new__.user.id,
+                object_id := __new__.id,
+                action := "insert",
+                details := <json>__new__{*}
+            }
+        );
+
+        trigger log_delete after delete for each do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "delete",
+                details := <json>__old__{*},
+            }
+        );
+    }
+
+
+    type Scheduler {
+        type: str;
+        name: str;
+        status: bool {
+            default:= false;
+        };
+        date: cal::local_date;
+        beginning_time: cal::local_time;
+        optional ending_time: cal::local_time;
+        optional details: json;
+
+        user: InternalUser;
+        optional origin: Record_OR_Payment;
+    }
+
+    type BankAccount {
+        required bank_name: str;
+        required account_name: str;
+        balance: decimal {
+            constraint min_value(0);
+            default := 0;
+        };
+        details: json;
+        ignore_on_totals: bool {
+            default:= <bool>false;
+        };
+        category:str;
+        type: str;
+    }
+
+    type Movement{
+        type: str;
+        value:= (sum(__source__.payment.value));
+        installment:= (count(__source__.payment));
+        details: json;
+        user: InternalUser;
+        optional single record: Record;
+        accounts:= (distinct(__source__.payment.account));
+        multi payment:= (select Payment filter .movement.id = __source__.id);
+
+        trigger log_update after update for each when (
+            <json>__old__ {*} != <json>__new__ {*}
+        ) do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "update",
+                details := to_json(
+                    '{' ++
+                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
+                    '"after": ' ++ <str><json>__new__{*} ++
+                    '}'
+                )
+            }
+        );
+
+        trigger log_insert after insert for each do (
+            insert Auditable {
+                user := __new__.user.id,
+                object_id := __new__.id,
+                action := "insert",
+                details := <json>__new__ {*}
+            }
+        );
+
+        trigger log_delete after delete for each do (
+            insert Auditable {
+                user := __old__.user.id,
+                object_id := __old__.id,
+                action := "delete",
+                details := <json>__old__ {*}
+            }
+        );
+    }
+
+    type Payment extending Record_OR_Payment{
+        name: str;
+        type:= (__source__.movement.type);
+        value: decimal;
+        interest: float64{
+            default := 0;
+        };
+        penalty: decimal{
+            default:= 0;
+        };
+        ignore_in_totals: bool{
+            default := false;
+        };
+        category: str;
+        subcategory: str;
+        payment_date: cal::local_date;
+        is_due: cal::local_date;
+        status: bool{
+            default:= false;
+        };
+        required account: BankAccount;
+        user: InternalUser;
+        required movement: Movement {
+            on target delete delete source;
+        };
+        event: Scheduler {
+            on target delete restrict;
+            on source delete delete target;
+        }
+
+        trigger update_balance_on_insert after insert for each when (
+            __new__.status = true and __new__.ignore_in_totals = false
+        ) do (
+            update BankAccount filter .id = __new__.account.id set {
+                balance := .balance + __new__.value
+            }
+        );
+        trigger update_any after update for each do (
+            with
+                old_payment_status := __old__.status,
+                new_payment_status := __new__.status,
+                old_value := __old__.value,
+                new_value := __new__.value,
+                old_account_id := __old__.account.id,
+                new_ignore := __new__.ignore_in_totals,
+                old_ignore := __old__.ignore_in_totals,
+                new_account_id := __new__.account.id,
+                same_account_block_result := (
+                    (
+                        with
+                           net_change := (
+                                (new_value if new_payment_status and not new_ignore else 0) -
+                                (old_value if old_payment_status and not old_ignore else 0)
+                            )
+                        select (
+                            update BankAccount filter .id = old_account_id set {
+                                balance := .balance + net_change
+                            }
+                        ) if net_change != 0 else {}
+                    ) if old_account_id ?= new_account_id else {}
+                ),
+                different_accounts_block_result := (
+                    (
+                        with
+                            old_account_deduction := (
+                                (
+                                    update BankAccount filter .id = old_account_id set {
+                                        balance := .balance - old_value
+                                    }
+                                )
+                                if old_payment_status and not old_ignore else {}
+                            ),
+                            new_account_addition := (
+                                (
+                                    update BankAccount filter .id = new_account_id set {
+                                        balance := .balance + new_value
+                                    }
+                                )
+                                if new_payment_status and not new_ignore else {}
+                            )
+                        select (old_account_deduction union new_account_addition)
+                    ) if old_account_id ?!= new_account_id else {}
+                )
+
+            select same_account_block_result union different_accounts_block_result
+        );
+
+        # Updates balance on movement.account.balance when delete Payment.
+        trigger update_balance_on_delete after delete for each when (
+            __old__.status = true and __old__.ignore_in_totals = false
+        ) do (
+            update BankAccount filter .id = __old__.account.id set {
+                balance := .balance - __old__.value
+            }
+        );
+
+        # Insert Payment.event.
+        trigger create_event after insert for each do (
+            with data := ( insert Scheduler {
+                user:= __new__.user,
+                name:= __new__.name,
+                type:= __new__.type,
+                status:= __new__.status,
+                date:= __new__.is_due,
+                origin:= <Record_OR_Payment>__new__.id
+            }
+            )
+            update Payment filter .id = __new__.id set {
+                event := data
+            }
+        );
+
+        # Updates Payment.event.
+        trigger update_event after update for each when (
+            __new__.status = true or __old__.is_due != __new__.is_due
+        ) do (
+            with new_status := __new__.status,
+            old_status := __old__.status,
+            new_isDue := __new__.is_due,
+            payment_date := __new__.payment_date,
+            new_date := (
+                select payment_date if new_status and new_status != old_status else new_isDue
+            )
+            update __old__.event set {
+                name:= __new__.name,
+                status:= __new__.status,
+                date:= new_date,
+            }
+        )
+    }
+
+    #Count Number of institutions or individuals from user
+    function EntityNum (user_id: uuid) -> int64
+    using (
+        with entities := assert_single((select InternalUser filter .id = <uuid>user_id)),
+        total_entities:= (select entities.entity)
+        select count(total_entities)
+    );
+
+    # Count Number of Services or Actions from user
+    function RecordNum (user_id: uuid) -> int64
+    using (
+        with recorded := assert_single((select InternalUser filter .id = <uuid>user_id)),
+        total_record:= (select recorded.record)
+        select count(total_record)
+    );
+
+        # Count Number of Transactions from user
+
+    # Return total balance from user
+    function balanceTotal (user_id: uuid) -> decimal
+    using (
+        with total := assert_single((select InternalUser filter .id = <uuid>user_id)),
+        total_balance := (select total.account.balance)
+
+        select sum(total_balance)
+    );
 
 }
