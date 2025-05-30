@@ -1,0 +1,1 @@
+delete Movement filter .id = <uuid>$movement

@@ -1,0 +1,1 @@
+delete Record filter .id = <uuid>$id
