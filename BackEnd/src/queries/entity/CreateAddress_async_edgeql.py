@@ -3,9 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -20,18 +22,30 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
 @dataclasses.dataclass
 class CreateAddressResult(NoPydanticValidation):
+    address: CreateAddressResultAddress | None
+    updated: CreateAddressResultUpdated | None
+
+
+@dataclasses.dataclass
+class CreateAddressResultAddress(NoPydanticValidation):
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
+class CreateAddressResultUpdated(NoPydanticValidation):
     id: uuid.UUID
 
 
 async def CreateAddress(
     executor: gel.AsyncIOExecutor,
     *,
+    entity_id: uuid.UUID,
     state: str,
     city: str,
     district: str,
@@ -39,11 +53,11 @@ async def CreateAddress(
     number: int | None = None,
     complement: str | None = None,
     postal: str | None = None,
-    entity_id: uuid.UUID,
 ) -> CreateAddressResult:
     return await executor.query_single(
         """\
-        with add_address:= (
+        with entity:=assert_single((select Entity filter .id = <uuid>$entity_id)),
+        add_address:= (
             insert Address{
                 state:= <str>$state,
                 city:= <str>$city,
@@ -53,14 +67,18 @@ async def CreateAddress(
                 complement:= <optional str>$complement,
                 postal:= <optional str>$postal
             }
-        ),
+        ) if exists entity else <Address>{},
         update_entity := (
-            update Entity filter .id = <uuid>$entity_id set {
+            update entity  set {
                 address += add_address
             }
-        )
-        select add_address{id}\
+        ),
+        select {
+            address := add_address { id },
+            updated := update_entity { id }
+        }\
         """,
+        entity_id=entity_id,
         state=state,
         city=city,
         district=district,
@@ -68,5 +86,4 @@ async def CreateAddress(
         number=number,
         complement=complement,
         postal=postal,
-        entity_id=entity_id,
     )

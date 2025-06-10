@@ -1,0 +1,8 @@
+{
+  "typeCheckingMode": "basic",
+  "include": ["src", "tests"],
+  "exclude": ["queries", "static"],
+  "reportArgumentType": false,
+  "reportOperatorIssue": false,
+  "reportOptionalIterable": false
+}

@@ -1,4 +1,5 @@
-with add_address:= (
+with entity:=assert_single((select Entity filter .id = <uuid>$entity_id)),
+add_address:= (
     insert Address{
         state:= <str>$state,
         city:= <str>$city,
@@ -8,10 +9,13 @@ with add_address:= (
         complement:= <optional str>$complement,
         postal:= <optional str>$postal
     }
-),
+) if exists entity else <Address>{},
 update_entity := (
-    update Entity filter .id = <uuid>$entity_id set {
+    update entity  set {
         address += add_address
     }
-)
-select add_address{id}
+),
+select {
+    address := add_address { id },
+    updated := update_entity { id }
+}

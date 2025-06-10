@@ -3,11 +3,13 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
 import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -22,7 +24,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -67,7 +69,12 @@ class GetUserDataResultEntityItemAddressItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetUserDataResultEntityItemPhoneItem(NoPydanticValidation):
     id: uuid.UUID
-    number: str | None
+    number: list[GetUserDataResultEntityItemPhoneItemNumberItem]
+
+
+@dataclasses.dataclass
+class GetUserDataResultEntityItemPhoneItemNumberItem(NoPydanticValidation):
+    id: uuid.UUID
 
 
 @dataclasses.dataclass

@@ -3,9 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -20,7 +22,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -35,7 +37,6 @@ async def CreateMovement(
     record_id: uuid.UUID | None = None,
     user: uuid.UUID,
     type: str,
-    details: str | None = None,
 ) -> CreateMovementResult:
     return await executor.query_single(
         """\
@@ -43,7 +44,6 @@ async def CreateMovement(
         select (insert Movement {
             user := assert_single((select InternalUser filter .id = <uuid>$user)),
             type:= <str>$type,
-            details:= <optional json>$details,
             record := assert_single((select Record filter .id = recorded)) if exists recorded else {}
             }
         ){id}\
@@ -51,5 +51,4 @@ async def CreateMovement(
         record_id=record_id,
         user=user,
         type=type,
-        details=details,
     )

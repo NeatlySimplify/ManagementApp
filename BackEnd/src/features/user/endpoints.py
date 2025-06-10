@@ -1,29 +1,28 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+
 from src.dependencies.auth import get_current_user
+from src.dependencies.db import get_gel_client
 from src.dependencies.response_decorator import handle_result
-from uuid import UUID
-import traceback
 from src.features.user.crud import (
-    updateUser,
     createBankAccount,
+    createSettings,
     deleteBankAccount,
     getBankAccount,
-    updateBankAccount,
     getData,
-    createSettings,
+    updateBankAccount,
     updateSettings,
+    updateUser,
 )
 from src.features.user.schema import (
-    UserUpdate,
     BankAccountCreate,
     BankAccountUpdate,
-    SettingsUpdate,
     SettingsCreate,
-    ModelID,
+    SettingsUpdate,
+    UserUpdate,
 )
-from src.dependencies.db import get_gel_client
-
 
 userRoute = APIRouter(prefix='/api/user')
 
@@ -34,19 +33,18 @@ async def getUserData(user = Depends(get_current_user), db=Depends(get_gel_clien
     result = await getData(db, user)
     return result
 
+
 @userRoute.put('/', response_class=JSONResponse)
 @handle_result()
 async def updateUserData(data: UserUpdate, user = Depends(get_current_user), db=Depends(get_gel_client)):
-    try:
-        return await updateUser(
-            db,
-            user=user,
-            email=data.email,
-            hash=data.hash,
-            old_password=data.old_password
-        )
-    except Exception:
-        print(traceback.format_exc())
+    return await updateUser(
+        db,
+        user=user,
+        email=data.email,
+        hash=data.hash,
+        old_password=data.old_password
+    )
+
 
 @userRoute.post('/bank-account', response_class=JSONResponse)
 @handle_result()
@@ -64,22 +62,22 @@ async def createAccount(data: BankAccountCreate, user = Depends(get_current_user
     )
 
 
-@userRoute.delete('/bank-account', response_class=JSONResponse)
+@userRoute.delete('/bank-account/{id}', response_class=JSONResponse)
 @handle_result()
-async def deleteAccount(bank_id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+async def deleteAccount(id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
     return await deleteBankAccount(
         db,
         user=user,
-        bank_id=bank_id
+        bank_id=id
     )
 
 
-@userRoute.get('/bank-account', response_class=JSONResponse)
+@userRoute.get('/bank-account/{id}', response_class=JSONResponse)
 @handle_result()
-async def getAccount(bank_id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+async def getAccount(id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
     return await getBankAccount(
         db,
-        bank_id=bank_id
+        bank_id=id
     )
 
 

@@ -3,9 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -20,7 +22,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -38,9 +40,13 @@ async def UpdateUserAuth(
 ) -> UpdateUserAuthResult | None:
     return await executor.query_single(
         """\
+        with raw_email:= <optional str>$email,
+        str_email:= (if exists raw_email then raw_email else <str>{}),
+        raw_password:= <optional str>$password,
+        str_password:=(if exists raw_password then raw_password else <str>{}),
         update User filter .id=<uuid>$id set {
-            email := <optional str>$email ?? .email,
-            password := <optional str>$password ?? .password,
+            email := str_email ?? .email,
+            password := str_password ?? .password,
         };\
         """,
         email=email,

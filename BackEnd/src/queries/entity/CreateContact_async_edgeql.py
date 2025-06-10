@@ -3,9 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -20,44 +22,51 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
 @dataclasses.dataclass
 class CreateContactResult(NoPydanticValidation):
+    contact: CreateContactResultContact | None
+    updated: CreateContactResultUpdated | None
+
+
+@dataclasses.dataclass
+class CreateContactResultContact(NoPydanticValidation):
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
+class CreateContactResultUpdated(NoPydanticValidation):
     id: uuid.UUID
 
 
 async def CreateContact(
     executor: gel.AsyncIOExecutor,
     *,
+    entity: uuid.UUID,
     name: str,
     email: str | None = None,
-    number: str,
-    details: str | None = None,
-    entity: uuid.UUID,
 ) -> CreateContactResult:
     return await executor.query_single(
         """\
-        with add_contact:= (
+        with entity:=assert_single((select Entity filter .id = <uuid>$entity)),
+        add_contact:= (
             insert Contact{
                 name:= <str>$name,
                 email:= <optional str>$email,
-                number:= <json>$number,
-                details:= <optional json>$details
             }
-        ),
-        update_entity:= (
-            update Entity filter .id = <uuid>$entity set {
-                phone += add_contact
-            }
-        )
-        select add_contact{id}\
+        ) if exists entity else <Contact>{},
+        update_entity:= (update entity set {
+            phone += add_contact
+        }),
+        select {
+            contact := add_contact { id },
+            updated := update_entity { id }
+        }\
         """,
+        entity=entity,
         name=name,
         email=email,
-        number=number,
-        details=details,
-        entity=entity,
     )

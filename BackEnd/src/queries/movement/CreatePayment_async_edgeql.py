@@ -3,11 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -22,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -35,9 +36,9 @@ async def CreatePayment(
     executor: gel.AsyncIOExecutor,
     *,
     name: str,
-    value: decimal.Decimal,
-    interest: float | None = None,
-    penalty: decimal.Decimal | None = None,
+    value: str,
+    interest: str | None = None,
+    penalty: str | None = None,
     ignore_in_totals: bool | None = None,
     category: str,
     subcategory: str | None = None,
@@ -52,9 +53,9 @@ async def CreatePayment(
         """\
         insert Payment {
             name:= <str>$name,
-            value:=<decimal>$value,
-            interest:= <optional float64>$interest,
-            penalty:= <optional decimal>$penalty,
+            value:=to_decimal(<str>$value, 'FM999999999999.99'),
+            interest:= <optional str>$interest,
+            penalty:= <optional str>$penalty,
             ignore_in_totals:= <optional bool>$ignore_in_totals,
             category:= <str>$category,
             subcategory:= <optional str>$subcategory,

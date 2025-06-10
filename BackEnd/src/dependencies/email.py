@@ -1,5 +1,6 @@
 import smtplib
 from email.mime.text import MIMEText
+
 from src.settings import get_settings
 
 set = get_settings()

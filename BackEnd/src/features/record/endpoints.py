@@ -1,45 +1,50 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+
 from src.dependencies.auth import get_current_user
+from src.dependencies.db import get_gel_client
 from src.dependencies.response_decorator import handle_result
 from src.features.record.crud import (
-    getRecord,
     createRecord,
-    updateRecord,
     deleteRecord,
-    linkEvent,
+    getRecord,
     linkEntity,
+    linkEvent,
     linkMovement,
-    unlinkEvent,
     unlinkEntity,
-    unlinkMovement
+    unlinkEvent,
+    unlinkMovement,
+    updateRecord,
 )
 from src.features.record.schema import (
     RecordCreate,
     RecordUpdate,
-    ModelID
 )
 
 recordRoute = APIRouter(prefix='/api/record')
 
 
-@recordRoute.get('/', response_class=JSONResponse)
+@recordRoute.get('/{id}', response_class=JSONResponse)
 @handle_result()
 async def get_record(
-        record: ModelID,
-        user = Depends(get_current_user)
+        id: UUID,
+        user = Depends(get_current_user),
+        db=Depends(get_gel_client)
     ):
-    return await getRecord(record.id)
+    return await getRecord(db, id)
 
 
 @recordRoute.post('/', response_class=JSONResponse)
 @handle_result()
 async def create_record(
-        entity: ModelID,
         data: RecordCreate,
-        user = Depends(get_current_user)
+        user = Depends(get_current_user),
+        db=Depends(get_gel_client)
     ):
     return await createRecord(
+        db,
         user=user,
         name=data.name,
         id_service=data.id_service,
@@ -48,13 +53,14 @@ async def create_record(
         type=data.type,
         value=data.value,
         details=data.details,
-        entity=entity.id
+        entity=data.entity
     )
 
 
 @recordRoute.put('/', response_class=JSONResponse)
-async def update_record(data: RecordUpdate, user = Depends(get_current_user)):
+async def update_record(data: RecordUpdate, user = Depends(get_current_user), db=Depends(get_gel_client)):
     return await updateRecord(
+        db,
         id=data.id,
         name=data.name,
         id_service=data.id_service,
@@ -66,43 +72,42 @@ async def update_record(data: RecordUpdate, user = Depends(get_current_user)):
     )
 
 
-@recordRoute.delete('/', response_class=JSONResponse)
+@recordRoute.delete('/{id}', response_class=JSONResponse)
 @handle_result()
-async def delete_record(record: ModelID, user = Depends(get_current_user)):
-    return await deleteRecord(record.id)
+async def delete_record(id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await deleteRecord(db, id)
 
 
-@recordRoute.put('/event/add', response_class=JSONResponse)
+@recordRoute.put('/{id}/add-event/', response_class=JSONResponse)
 @handle_result()
-async def link_event(record: ModelID, event: ModelID,user = Depends(get_current_user)):
-    return await linkEvent(schedule=event.id, record=record.id)
+async def link_event(event: UUID, id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await linkEvent(db, schedule=event, record=id)
 
 
-@recordRoute.put('/event/remove', response_class=JSONResponse)
+@recordRoute.put('/{id}/del-event/', response_class=JSONResponse)
 @handle_result()
-async def unlink_event(record: ModelID, event: ModelID,user = Depends(get_current_user)):
-    return await unlinkEvent(schedule=event.id, record=record.id)
+async def unlink_event(event: UUID, id: UUID, user=Depends(get_current_user), db=Depends(get_gel_client)):
+    return await unlinkEvent(db, schedule=event, record=id)
 
 
-@recordRoute.put('/entity/add', response_class=JSONResponse)
+@recordRoute.put('/{id}/add-entity/', response_class=JSONResponse)
 @handle_result()
-async def link_entity(record: ModelID, entity: ModelID,user = Depends(get_current_user)):
-    return await linkEntity(entity=entity.id, record=record.id)
+async def link_entity(entity: UUID, id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await linkEntity(db, entity=entity, record=id)
 
 
-@recordRoute.put('/entity/remove', response_class=JSONResponse)
+@recordRoute.put('/{id}/del-entity/', response_class=JSONResponse)
 @handle_result()
-async def unlink_entity(record: ModelID, entity: ModelID,user = Depends(get_current_user)):
-    return await unlinkEntity(entity=entity.id, record=record.id)
+async def unlink_entity(entity: UUID, id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await unlinkEntity(db, entity=entity, record=id)
 
 
-@recordRoute.put('/movement/add', response_class=JSONResponse)
+@recordRoute.put('/{id}/add-movement/', response_class=JSONResponse)
 @handle_result()
-async def link_movement(record: ModelID, movement: ModelID,user = Depends(get_current_user)):
-    return await linkMovement(movement=movement.id, record=record.id)
+async def link_movement(movement: UUID, id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await linkMovement(db, movement=movement, record=id)
 
-
-@recordRoute.put('/movement/remove', response_class=JSONResponse)
+@recordRoute.put('/{id}/del-movement/', response_class=JSONResponse)
 @handle_result()
-async def unlink_movement(record: ModelID, movement: ModelID,user = Depends(get_current_user)):
-    return await unlinkMovement(movement=movement.id, record=record.id)
+async def unlink_movement(movement: UUID, id: UUID, user = Depends(get_current_user), db=Depends(get_gel_client)):
+    return await unlinkMovement(db ,movement=movement, record=id)

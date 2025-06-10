@@ -16,7 +16,7 @@ dependencies = [
     "dotenv (>=0.9.9,<0.10.0)",
     "pyjwt[crypto] (>=2.10.1,<3.0.0)",
     "bcrypt (>=4.3.0,<5.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
+    "python-dateutil (>=2.9.0.post0,<3.0.0)",
 ]
 
 [tool.poetry]
@@ -52,7 +52,6 @@ lint.select = [
     "UP", # pyupgrade (modern syntax)
     "A",  # flake8-builtins
     "ASYNC",  # async-specific checks
-    "DTZ",  # flake8-datetimez (datetime without timezone)
     "ERA",  # flake8-eradicate (commented out code)
     "PIE",  # flake8-pie (prevent silent bugs, e.g. wrong default args)
     "RET",  # flake8-return
@@ -60,6 +59,16 @@ lint.select = [
     "TID",  # flake8-tidy-imports
     "PTH",  # flake8-use-pathlib
     "TRY",  # flake8-trio for try/except/else best practices
+]
+include = ["src/**/*.py", "tests/**/*.py"]
+exclude = [
+    "build/",
+    "dist/",
+    "__pycache__/",
+    "queries/",
+    "static/",
+    "**/*.json",
+    "**/*.md"
 ]
 
 [tool.ruff.format]
@@ -76,7 +85,3 @@ run = "task ruff && pytest && task app"
 ruff = "ruff check src/ && ruff check tests/ && ruff format src/ && ruff format tests/"
 app = "fastapi dev src/main.py"
 build = "poetry build --clean -f wheel"
-
-[tool.pyright]
-reportArgumentType = "false"
-reportOperatorIssue = "false"

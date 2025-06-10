@@ -1,33 +1,29 @@
 # pyright: ignore[reportReturnType]
-import jwt
 from http import HTTPStatus
-from fastapi import HTTPException, Request
-from datetime import datetime, timedelta
-from src.settings import get_settings
 from typing import Any
 from uuid import UUID
 
+import jwt
+from fastapi import HTTPException, Request
 
+from src.settings import get_settings
 
-class TestingVar():
-    jwt_expire: float = 5
-    algorithm: str = "HS256"
-    secret: str = "80af3f6203c32405093db6bd7ebdb126474d495690aa0893"
+set = get_settings()
 
-
-set = TestingVar()
-
-def create_token(user_id: Any, type: str = "access", expire_time: float = set.jwt_expire):
+def create_token(user_id: Any, type: str = "access"):
     user_id = UUID(str(user_id))
-    expire = datetime.now() + timedelta(minutes=expire_time)
     if type == "refresh":
-        expire = datetime.now() + timedelta(minutes=set.jwt_expire * 30)
-
-    payload = {
-        "sub": str(user_id),
-        "exp": int(expire.timestamp()),
-        "type": type
-    }
+        payload = {
+            "sub": str(user_id),
+            "exp": set.jwt_refresh_exp,
+            "type": type
+        }
+    else:
+        payload = {
+            "sub": str(user_id),
+            "exp": set.jwt_exp,
+            "type": type
+        }
     return jwt.encode(payload, set.secret, algorithm=set.algorithm)
 
 

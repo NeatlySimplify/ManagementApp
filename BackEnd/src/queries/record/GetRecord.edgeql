@@ -4,8 +4,8 @@ select Record {
     active,
     status,
     type,
-    value,
-    details,
+    str_value:=to_str(.value),
+    details: {*},
     entity: {
         id,
         name,
@@ -20,7 +20,7 @@ select Record {
     movement: {
         id,
         type,
-        value,
+        str_value:=to_str(.value),
         installment,
     }
 } filter .id = <uuid>$id

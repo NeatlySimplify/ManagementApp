@@ -1,8 +1,8 @@
 insert Payment {
     name:= <str>$name,
-    value:=<decimal>$value,
-    interest:= <optional float64>$interest,
-    penalty:= <optional decimal>$penalty,
+    value:=to_decimal(<str>$value, 'FM999999999999.99'),
+    interest:= <optional str>$interest,
+    penalty:= <optional str>$penalty,
     ignore_in_totals:= <optional bool>$ignore_in_totals,
     category:= <str>$category,
     subcategory:= <optional str>$subcategory,

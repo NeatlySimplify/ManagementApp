@@ -3,10 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -36,7 +38,7 @@ class GetEntityResult(NoPydanticValidation):
     name: str | None
     sex: str | None
     relationship_status: str | None
-    details: str | None
+    details: list[GetEntityResultDetailsItem]
     birth: datetime.date | None
     phone: list[GetEntityResultPhoneItem]
     address: list[GetEntityResultAddressItem]
@@ -44,7 +46,6 @@ class GetEntityResult(NoPydanticValidation):
 
 @dataclasses.dataclass
 class GetEntityResultAddressItem(NoPydanticValidation):
-    id: uuid.UUID
     city: str | None
     complement: str | None
     district: str | None
@@ -52,15 +53,29 @@ class GetEntityResultAddressItem(NoPydanticValidation):
     postal: str | None
     state: str | None
     street: str | None
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
+class GetEntityResultDetailsItem(NoPydanticValidation):
+    title: str | None
+    field: str | None
+    id: uuid.UUID
 
 
 @dataclasses.dataclass
 class GetEntityResultPhoneItem(NoPydanticValidation):
-    id: uuid.UUID
+    number: list[GetEntityResultPhoneItemNumberItem]
     email: str | None
     name: str | None
-    details: str | None
-    number: str | None
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
+class GetEntityResultPhoneItemNumberItem(NoPydanticValidation):
+    title: str | None
+    field: str | None
+    id: uuid.UUID
 
 
 async def GetEntity(
@@ -79,9 +94,9 @@ async def GetEntity(
             name,
             sex,
             relationship_status,
-            details,
+            details: {*},
             birth,
-            phone: {*},
+            phone: {*, number:{*}},
             address: {*}
         } filter .id = <uuid>$entity\
         """,

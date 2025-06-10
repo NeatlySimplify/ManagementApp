@@ -3,10 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -34,6 +36,7 @@ async def UpdateEntity(
     executor: gel.AsyncIOExecutor,
     *,
     email: str | None = None,
+    entity: uuid.UUID,
     type: str | None = None,
     id_type: str | None = None,
     status: bool | None = None,
@@ -41,26 +44,27 @@ async def UpdateEntity(
     name: str | None = None,
     sex: str | None = None,
     relationship_status: str | None = None,
-    details: str | None = None,
     birth: datetime.date | None = None,
-    entity: uuid.UUID,
 ) -> UpdateEntityResult | None:
     return await executor.query_single(
         """\
-        update Entity filter .id = <uuid>$entity set {
-            email:= <optional str>$email ?? .email,
-            type:= <optional str>$type ?? .type,
-            id_type:= <optional str>$id_type ?? .id_type,
-            status:= <optional bool>$status ?? .status,
-            govt_id:= <optional str>$govt_id ?? .govt_id,
-            name:= <optional str>$name ?? .name,
-            sex:= <optional str>$sex ?? .sex,
-            relationship_status:= <optional str>$relationship_status ?? .relationship_status,
-            details:= <optional json>$details ?? .details,
-            birth:= <optional cal::local_date>$birth ?? .birth
+        with raw_email:= <optional str>$email,
+        str_email:=(raw_email if exists raw_email else <str>{}),
+        old_entity:=(select Entity filter .id = <uuid>$entity)
+        update old_entity set {
+            email:= str_email ?? .email,
+            type:= <optional str>$type ?? old_entity.type,
+            id_type:= <optional str>$id_type ?? old_entity.id_type,
+            status:= <optional bool>$status ?? old_entity.status,
+            govt_id:= <optional str>$govt_id ?? old_entity.govt_id,
+            name:= <optional str>$name ?? old_entity.name,
+            sex:= <optional str>$sex ?? old_entity.sex,
+            relationship_status:= <optional str>$relationship_status ?? old_entity.relationship_status,
+            birth:= <optional cal::local_date>$birth ?? old_entity.birth
         }\
         """,
         email=email,
+        entity=entity,
         type=type,
         id_type=id_type,
         status=status,
@@ -68,7 +72,5 @@ async def UpdateEntity(
         name=name,
         sex=sex,
         relationship_status=relationship_status,
-        details=details,
         birth=birth,
-        entity=entity,
     )

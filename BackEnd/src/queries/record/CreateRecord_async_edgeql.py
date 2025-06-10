@@ -3,10 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +22,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -39,8 +40,7 @@ async def CreateRecord(
     active: bool | None = None,
     status: str | None = None,
     type: str,
-    value: decimal.Decimal,
-    details: str | None = None,
+    value: str,
     entity: uuid.UUID,
 ) -> CreateRecordResult:
     return await executor.query_single(
@@ -52,8 +52,7 @@ async def CreateRecord(
             active:= <optional bool>$active ?? <bool>true,
             status := <optional str>$status,
             type:= <str>$type,
-            value := <decimal>$value,
-            details:= <optional json>$details,
+            value := to_decimal(<str>$value, 'FM999999999999.99'),
             entity := assert_single((select Entity filter .id = <uuid>$entity))
         }){
             id
@@ -66,6 +65,5 @@ async def CreateRecord(
         status=status,
         type=type,
         value=value,
-        details=details,
         entity=entity,
     )

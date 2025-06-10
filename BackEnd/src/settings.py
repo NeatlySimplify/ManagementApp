@@ -1,12 +1,14 @@
 import os
-from dotenv import load_dotenv
-from pydantic import BaseModel, EmailStr
+from datetime import datetime, timedelta
 from typing import Literal
+
+from dotenv import load_dotenv
+from pydantic import BaseModel, EmailStr, computed_field
 
 load_dotenv()
 
 class Settings(BaseModel):
-    stage: str
+    stage: str = "prod"
     debug: bool = False
     use_rich_traceback: bool = False
     httponly: bool = True
@@ -17,7 +19,23 @@ class Settings(BaseModel):
     secret: str
     session_secret: str
     algorithm: str
-    jwt_expire: int
+    jwt_expire_base: float
+
+
+    @computed_field
+    @property
+    def jwt_exp(self) -> int:
+        value = int((datetime.now() + timedelta(minutes=self.jwt_expire_base)).timestamp())
+        return value
+
+
+    @computed_field
+    @property
+    def jwt_refresh_exp(self) -> int:
+        value = int((datetime.now() + timedelta(minutes=self.jwt_expire_base*100)).timestamp())
+        return value
+
+
 
 
 _config: Settings | None = None
@@ -39,7 +57,7 @@ def instance() -> None:
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
-            "jwt_expire": 30
+            "jwt_expire_base": 30
         },
         'prod': {
             'debug': False,
@@ -51,7 +69,7 @@ def instance() -> None:
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
-            "jwt_expire": 30
+            "jwt_expire_base": 30
         },
     }
 

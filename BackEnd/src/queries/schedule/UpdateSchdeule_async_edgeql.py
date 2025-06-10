@@ -3,10 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -39,7 +41,6 @@ async def UpdateSchdeule(
     date: datetime.date | None = None,
     beginning_time: datetime.time | None = None,
     ending_time: datetime.time | None = None,
-    details: str | None = None,
     id: uuid.UUID,
 ) -> UpdateSchdeuleResult | None:
     return await executor.query_single(
@@ -51,7 +52,6 @@ async def UpdateSchdeule(
             date:= <optional cal::local_date>$date ?? .date,
             beginning_time:= <optional cal::local_time>$beginning_time ?? .beginning_time,
             ending_time:= <optional cal::local_time>$ending_time ?? .ending_time,
-            details:= <optional json>$details ?? .details
         }\
         """,
         name=name,
@@ -60,6 +60,5 @@ async def UpdateSchdeule(
         date=date,
         beginning_time=beginning_time,
         ending_time=ending_time,
-        details=details,
         id=id,
     )
