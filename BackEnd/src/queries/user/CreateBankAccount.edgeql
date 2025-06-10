@@ -3,8 +3,7 @@ add_bank:=(
     insert BankAccount {
         bank_name:= <str>$bank_name,
         account_name:= <str>$account_name,
-        balance:= <decimal>$balance,
-        details:= <optional json>$details,
+        balance:= to_decimal(<str>$balance, 'FM999999999999D99'),
         category:= <optional str>$category,
         ignore_on_totals:= <bool>$ignore_on_totals,
         type:= <optional str>$type

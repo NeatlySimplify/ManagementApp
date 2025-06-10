@@ -1,21 +1,23 @@
-from uuid import UUID
-from src.dependencies.pwHash import verify_password
 from dataclasses import asdict
-from decimal import Decimal
-from fastapi import Depends, HTTPException
-import json
+from uuid import UUID
+
+from fastapi import HTTPException
+
+from src.dependencies import db
+from src.dependencies.pwHash import verify_password
+from src.features.generics.crud import _create_details, _delete_details
+from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.user import (
     CreateBankAccount_async_edgeql,
     CreateSettings_async_edgeql,
     DeleteBankAccount_async_edgeql,
     GetBankAccount_async_edgeql,
+    GetUserAuth_async_edgeql,
     GetUserData_async_edgeql,
-    UpdateSettings_async_edgeql,
     UpdateBankAccount_async_edgeql,
+    UpdateSettings_async_edgeql,
     UpdateUserAuth_async_edgeql,
-    GetUserAuth_async_edgeql
 )
-from src.dependencies import db
 
 
 @db.handle_database_errors
@@ -49,14 +51,14 @@ async def createBankAccount(
         user: UUID,
         bank_name: str,
         account_name: str,
-        balance: Decimal,
+        balance: str,
         category: str | None,
-        details: dict | None,
+        details: list[CreateDictType] | None,
         type: str | None,
         ignore: bool,
-    ) -> CreateBankAccount_async_edgeql.CreateBankAccountResult | None:
+    ) -> dict | None:
 
-    return await CreateBankAccount_async_edgeql.CreateBankAccount(
+    result = await CreateBankAccount_async_edgeql.CreateBankAccount(
         db,
         user=user,
         bank_name=bank_name,
@@ -65,8 +67,14 @@ async def createBankAccount(
         category=category,
         ignore_on_totals=ignore,
         type=type,
-        details=json.dumps(details)
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if details is not None:
+            for data in details:
+                await _create_details(db, title=data.title, field=data.field, origin=id)
+    return result
 
 
 @db.handle_database_errors
@@ -91,8 +99,6 @@ async def getBankAccount(
     if result is None:
         return None
     result_dict = asdict(result)
-    result_dict["details"] = json.loads(result_dict["details"])
-
     return result_dict
 
 
@@ -103,31 +109,44 @@ async def updateBankAccount(
         bank_name: str | None,
         account_name: str | None,
         type: str | None,
-        details: dict | None,
+        details: UpdateDictType | None,
         ignore: bool | None,
         category: str | None,
-    ) -> UpdateBankAccount_async_edgeql.UpdateBankAccountResult | None:
-    return await UpdateBankAccount_async_edgeql.UpdateBankAccount(
+    ) -> dict | None:
+    result = await UpdateBankAccount_async_edgeql.UpdateBankAccount(
         db,
         bank_account=bank_account,
         bank_name=bank_name,
         type=type,
         account_name=account_name,
-        details=json.dumps(details),
         ignore_on_totals=ignore,
         category=category
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if details is not None and details.change:
+            await _delete_details(db, origin=id)
+            for data in details.body:
+                await _create_details(db, title=data.title, field=data.field, origin=id)
+
+    return result
+
 
 
 @db.handle_database_errors
 async def getData(
         db,
         user: UUID,
-    ) -> GetUserData_async_edgeql.GetUserDataResult | None:
-    return await GetUserData_async_edgeql.GetUserData(
+    ) -> dict | None:
+    result = await GetUserData_async_edgeql.GetUserData(
         db,
         id=user
     )
+    if result is not None:
+        result = asdict(result)
+
+    return result
 
 
 @db.handle_database_errors

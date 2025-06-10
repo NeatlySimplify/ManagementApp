@@ -3,11 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -22,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -35,10 +36,10 @@ async def UpdatePayment(
     executor: gel.AsyncIOExecutor,
     *,
     account: uuid.UUID | None = None,
+    value: str | None = None,
     name: str | None = None,
-    value: decimal.Decimal | None = None,
-    interest: float | None = None,
-    penalty: decimal.Decimal | None = None,
+    interest: str | None = None,
+    penalty: str | None = None,
     ignore_in_totals: bool | None = None,
     category: str | None = None,
     subcategory: str | None = None,
@@ -50,12 +51,14 @@ async def UpdatePayment(
     return await executor.query_single(
         """\
         with new_account:= <optional uuid>$account,
-        bank_account := (select BankAccount filter .id = new_account) if exists new_account else {},
+        bank_account := (select BankAccount filter .id = new_account) if exists new_account else <BankAccount>{},
+        raw_value:= <optional str>$value,
+        decimal_value:= (to_decimal(raw_value, 'FM999999999999.99') if exists raw_value else <decimal>{})
         update Payment filter .id = <uuid>$payment_id set {
             name:= <optional str>$name ?? .name,
-            value:= <optional decimal>$value ?? .value,
-            interest:= <optional float64>$interest ?? .interest,
-            penalty:= <optional decimal>$penalty ?? .penalty,
+            value:= decimal_value ?? .value,
+            interest:= <optional str>$interest ?? .interest,
+            penalty:= <optional str>$penalty ?? .penalty,
             ignore_in_totals:= <optional bool>$ignore_in_totals ?? .ignore_in_totals,
             category:= <optional str>$category ?? .category,
             subcategory:= <optional str>$subcategory ?? .subcategory,
@@ -63,12 +66,11 @@ async def UpdatePayment(
             is_due:= <optional cal::local_date>$is_due ?? .is_due,
             status:= <optional bool>$status ?? .status,
             account:= bank_account ?? .account
-
         }\
         """,
         account=account,
-        name=name,
         value=value,
+        name=name,
         interest=interest,
         penalty=penalty,
         ignore_in_totals=ignore_in_totals,

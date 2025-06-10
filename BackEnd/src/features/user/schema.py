@@ -1,20 +1,18 @@
+from typing import Self
 from uuid import UUID
-from pydantic import BaseModel, computed_field, model_validator, EmailStr
-from decimal import Decimal
-import datetime
+
+from pydantic import BaseModel, EmailStr, computed_field, model_validator
+
 from src.dependencies.pwHash import hash_password
-from typing_extensions import Self
+from src.features.generics.schema import CreateDictType, UpdateDictType
 
 
-class ModelID(BaseModel):
+class BankAccountUpdate(BaseModel):
     id: UUID
-
-
-class BankAccountUpdate(ModelID):
     bank_name: str | None = None
     account_name: str | None = None
     type: str | None = None
-    details: dict | None = None
+    details: UpdateDictType | None = None
     ignore_on_totals: bool | None = None
     category: str | None = None
 
@@ -23,8 +21,8 @@ class BankAccountCreate(BaseModel):
     bank_name: str
     account_name: str
     type: str | None = None
-    balance: Decimal
-    details: dict | None = None
+    balance: str
+    details: list[CreateDictType] | None = None
     ignore_on_totals: bool = False
     category: str | None = None
 
@@ -56,7 +54,9 @@ class UserUpdate(BaseModel):
             raise ValueError('Passwords do not match')
         return self
 
-class SettingsUpdate(ModelID):
+
+class SettingsUpdate(BaseModel):
+    id: UUID
     default_bank_account: UUID | None = None
     record_title: str | None = None
     movement_title: str | None = None

@@ -1,8 +1,7 @@
 from functools import wraps
+
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-import dataclasses
-import traceback
 
 
 def handle_result():

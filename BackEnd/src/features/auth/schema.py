@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, computed_field, model_validator
+from typing import Self
 from uuid import UUID, uuid4
-from typing_extensions import Self
+
+from pydantic import BaseModel, EmailStr, computed_field, model_validator
 
 from src.dependencies.pwHash import hash_password
 

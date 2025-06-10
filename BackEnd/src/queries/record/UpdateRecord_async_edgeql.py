@@ -3,10 +3,11 @@
 
 
 from __future__ import annotations
+
 import dataclasses
-import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +22,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -33,33 +34,32 @@ class UpdateRecordResult(NoPydanticValidation):
 async def UpdateRecord(
     executor: gel.AsyncIOExecutor,
     *,
+    value: str | None = None,
     name: str | None = None,
     id_service: str | None = None,
     status: str | None = None,
     type: str | None = None,
     active: bool | None = None,
-    value: decimal.Decimal | None = None,
-    details: str | None = None,
     id: uuid.UUID,
 ) -> UpdateRecordResult | None:
     return await executor.query_single(
         """\
+        with raw_value:= <optional str>$value,
+        decimal_value:= (to_decimal(raw_value, 'FM999999999999.99') if exists raw_value else <decimal>{})
         update Record filter .id = <uuid>$id set {
             name:= <optional str>$name ?? .name,
             id_service := <optional str>$id_service ?? .id_service,
             status := <optional str>$status ?? .status,
             type:= <optional str>$type ?? .type,
             active:= <optional bool>$active ?? .active,
-            value := <optional decimal>$value ?? .value,
-            details:= <optional json>$details ?? .details,
+            value := decimal_value ?? .value,
         }\
         """,
+        value=value,
         name=name,
         id_service=id_service,
         status=status,
         type=type,
         active=active,
-        value=value,
-        details=details,
         id=id,
     )

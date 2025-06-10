@@ -2,7 +2,7 @@ select Movement{
     type,
     value,
     installment,
-    details,
+    details: {*},
     record: {
         id,
         name,

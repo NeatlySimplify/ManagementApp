@@ -8,7 +8,6 @@ select (
     date:= <cal::local_date>$date,
     beginning_time:= <optional cal::local_time>$beginning_time,
     ending_time:= <optional cal::local_time>$ending_time,
-    details:= <optional json>$details,
     origin:= assert_single((select Record_OR_Payment filter .id = original)) if exists original else {}
 }
 ){id}

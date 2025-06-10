@@ -5,8 +5,7 @@ select (insert Record{
     active:= <optional bool>$active ?? <bool>true,
     status := <optional str>$status,
     type:= <str>$type,
-    value := <decimal>$value,
-    details:= <optional json>$details,
+    value := to_decimal(<str>$value, 'FM999999999999.99'),
     entity := assert_single((select Entity filter .id = <uuid>$entity))
 }){
     id

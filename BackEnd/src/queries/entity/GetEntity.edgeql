@@ -7,8 +7,8 @@ select Entity {
     name,
     sex,
     relationship_status,
-    details,
+    details: {*},
     birth,
-    phone: {*},
+    phone: {*, number:{*}},
     address: {*}
 } filter .id = <uuid>$entity

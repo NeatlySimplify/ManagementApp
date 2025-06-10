@@ -5,6 +5,6 @@ select Scheduler{
     date,
     beginning_time,
     ending_time,
-    details,
+    details: {*},
     origin: {id}
 }filter .id = <uuid>$id

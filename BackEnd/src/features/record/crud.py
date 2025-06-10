@@ -1,7 +1,9 @@
-from fastapi import Depends
-from src.dependencies import db
+from dataclasses import asdict
 from uuid import UUID
-from decimal import Decimal
+
+from src.dependencies import db
+from src.features.generics.crud import _create_details, _delete_details
+from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.record import (
     CreateRecord_async_edgeql,
     DeleteRecord_async_edgeql,
@@ -10,34 +12,38 @@ from src.queries.record import (
     LinkEvent_async_edgeql,
     LinkMovement_async_edgeql,
     UnlinkEntity_async_edgeql,
-    UnlinkScheduler_async_edgeql,
     UnlinkMovement_async_edgeql,
-    UpdateRecord_async_edgeql
+    UnlinkScheduler_async_edgeql,
+    UpdateRecord_async_edgeql,
 )
 
 
 @db.handle_database_errors
 async def getRecord(
+        db,
         record: UUID,
-        db=Depends(db.get_gel_client)
-    ) -> GetRecord_async_edgeql.GetRecordResult | None:
-    return await GetRecord_async_edgeql.GetRecord(db, id=record)
+    ) -> dict | None:
+    result = await GetRecord_async_edgeql.GetRecord(db, id=record)
+    if result is None: return None
+    result_dict = asdict(result)
+    return result_dict
+
 
 
 @db.handle_database_errors
 async def createRecord(
+        db,
         user: UUID,
         name: str,
         id_service: str | None,
         active: bool | None,
         status: str | None,
         type: str,
-        value: Decimal,
-        details: dict | None,
+        value: str,
+        details: list[CreateDictType] | None,
         entity: UUID,
-        db=Depends(db.get_gel_client)
-    ) -> CreateRecord_async_edgeql.CreateRecordResult | None:
-    return await CreateRecord_async_edgeql.CreateRecord(
+    ) -> dict | None:
+    result = await CreateRecord_async_edgeql.CreateRecord(
         db,
         user=user,
         entity=entity,
@@ -47,34 +53,43 @@ async def createRecord(
         status=status,
         type=type,
         value=value,
-        details=details,
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if details is not None:
+            for data in details:
+                await _create_details(db, title=data.title, field=data.field, origin=id)
+    return result
 
 
 @db.handle_database_errors
 async def deleteRecord(
+        db,
         record: UUID,
-        db=Depends(db.get_gel_client)
-    ) -> DeleteRecord_async_edgeql.DeleteRecordResult | None:
-    return await DeleteRecord_async_edgeql.DeleteRecord(
+    ) -> dict | None:
+    result = await DeleteRecord_async_edgeql.DeleteRecord(
         db,
         id=record
     )
+    if result is not None:
+            result = asdict(result)
+    return result
 
 
 @db.handle_database_errors
 async def updateRecord(
+        db,
         id: UUID,
         name: str | None,
         id_service: str | None,
         active: bool | None,
         status: str | None,
         type: str | None,
-        value: Decimal | None,
-        details: dict | None,
-        db=Depends(db.get_gel_client)
-    ) -> UpdateRecord_async_edgeql.UpdateRecordResult | None:
-    return await UpdateRecord_async_edgeql.UpdateRecord(
+        value: str | None,
+        details: UpdateDictType | None,
+    ) -> dict | None:
+    result = await UpdateRecord_async_edgeql.UpdateRecord(
         db,
         id=id,
         name=name,
@@ -83,15 +98,23 @@ async def updateRecord(
         status=status,
         type=type,
         value=value,
-        details=details
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if  details is not None and details.change:
+            await _delete_details(db, origin=id)
+            for data in details.body:
+                await _create_details(db, title=data.title, field=data.field, origin=id)
+
+    return result
 
 
 @db.handle_database_errors
 async def linkEntity(
+        db,
         entity: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> LinkEntity_async_edgeql.LinkEntityResult | None:
     return await LinkEntity_async_edgeql.LinkEntity(
         db,
@@ -102,9 +125,9 @@ async def linkEntity(
 
 @db.handle_database_errors
 async def linkEvent(
+        db,
         schedule: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> LinkEvent_async_edgeql.LinkEventResult | None:
     return await LinkEvent_async_edgeql.LinkEvent(
         db,
@@ -115,9 +138,9 @@ async def linkEvent(
 
 @db.handle_database_errors
 async def linkMovement(
+        db,
         movement: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> LinkMovement_async_edgeql.LinkMovementResult | None:
     return await LinkMovement_async_edgeql.LinkMovement(
         db,
@@ -128,9 +151,9 @@ async def linkMovement(
 
 @db.handle_database_errors
 async def unlinkEntity(
+        db,
         entity: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> UnlinkEntity_async_edgeql.UnlinkEntityResult | None:
     return await UnlinkEntity_async_edgeql.UnlinkEntity(
         db,
@@ -141,9 +164,9 @@ async def unlinkEntity(
 
 @db.handle_database_errors
 async def unlinkEvent(
+        db,
         schedule: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> UnlinkScheduler_async_edgeql.UnlinkSchedulerResult | None:
     return await UnlinkScheduler_async_edgeql.UnlinkScheduler(
         db,
@@ -154,9 +177,9 @@ async def unlinkEvent(
 
 @db.handle_database_errors
 async def unlinkMovement(
+        db,
         movement: UUID,
         record: UUID,
-        db=Depends(db.get_gel_client)
     ) -> UnlinkMovement_async_edgeql.UnlinkMovementResult | None:
     return await UnlinkMovement_async_edgeql.UnlinkMovement(
         db,

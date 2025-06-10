@@ -1,20 +1,20 @@
-from fastapi import Depends
+from uuid import UUID
+
+from src.dependencies import db
+from src.dependencies.pwHash import verify_password
 from src.queries.user import (
     CreateUser_async_edgeql,
     GetUserAuth_async_edgeql,
     GetUserToken_async_edgeql,
 )
-from src.dependencies import db
-from uuid import UUID
-from src.dependencies.pwHash import verify_password
 
 
 @db.handle_database_errors
 async def loginUser(
-        db,
-        email: str,
-        password: str,
-    ) -> tuple[UUID, bool] | tuple[None, None]:
+    db,
+    email: str,
+    password: str,
+) -> tuple[UUID, bool] | tuple[None, None]:
     result: GetUserAuth_async_edgeql.GetUserAuthResult | None = await GetUserAuth_async_edgeql.GetUserAuth(executor=db, email=email)
     if result is None:
         return None, None
@@ -23,13 +23,12 @@ async def loginUser(
 
 @db.handle_database_errors
 async def createUser(
-        db,
-        email: str,
-        hash: str,
-        name: str,
-        token: UUID,
-    ) -> CreateUser_async_edgeql.CreateUserResult | None:
-
+    db,
+    email: str,
+    hash: str,
+    name: str,
+    token: UUID,
+) -> CreateUser_async_edgeql.CreateUserResult | None:
     return await CreateUser_async_edgeql.CreateUser(
         executor=db,
         name=name,
@@ -41,10 +40,10 @@ async def createUser(
 
 @db.handle_database_errors
 async def loginWithToken(
-        db,
-        email: str,
-        token: UUID,
-    ) -> tuple[bool, bool|None, UUID] | tuple[None, None, None]:
+    db,
+    email: str,
+    token: UUID,
+) -> tuple[bool, bool|None, UUID] | tuple[None, None, None]:
     result: GetUserAuth_async_edgeql.GetUserAuthResult | None = await GetUserAuth_async_edgeql.GetUserAuth(
         executor=db,
         email=email
@@ -55,9 +54,9 @@ async def loginWithToken(
 
 @db.handle_database_errors
 async def getToken(
-        db,
-        email: str,
-    ) -> None | bool:
+    db,
+    email: str,
+) -> None | bool:
     from src.dependencies.email import email as sender
     result: GetUserToken_async_edgeql.GetUserTokenResult | None = await GetUserToken_async_edgeql.GetUserToken(
         db,

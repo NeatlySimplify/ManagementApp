@@ -1,5 +1,19 @@
 module default {
     abstract type Record_OR_Payment;
+    abstract type Link;
+
+    abstract type Metadata{
+        title: str;
+        field: str;
+        required origin: Link {
+            on target delete delete source;
+        };
+    }
+
+    type Details extending Metadata;
+
+    type PhoneNumber extending Metadata;
+
 
     abstract type User{
         required name: str;
@@ -33,9 +47,13 @@ module default {
         );
     }
 
+
     type InternalOrg extending User{
-        multi user: InternalUser;
+        multi user: InternalUser {
+            on target delete allow;
+        };
     }
+
 
     type Address {
         state: str;
@@ -48,11 +66,11 @@ module default {
     }
 
 
-    type Contact {
+    type Contact extending Link{
         name: str;
         email: str;
-        number: json;
-        details: json;
+        multi number:= (select PhoneNumber filter .origin.id = __source__.id);
+        multi details:= (select Details filter .origin.id = __source__.id);
     }
 
     type Auditable {
@@ -67,7 +85,7 @@ module default {
 
 
     # Person or Organization
-    type Entity{
+    type Entity extending Link{
         timestamp: datetime {
             default := datetime_of_statement();
         };
@@ -83,10 +101,14 @@ module default {
         name: str;
         sex: str;
         relationship_status: str;
-        optional details: json;
+
         birth: cal::local_date;
 
-        user: InternalUser;
+        user: InternalUser {
+            on target delete delete source;
+        };
+
+        multi details:= (select Details filter .origin.id = __source__.id);
         multi phone : Contact{
             on source delete delete target;
             on target delete allow;
@@ -105,8 +127,8 @@ module default {
                 action := "update",
                 details := to_json(
                     '{' ++
-                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
-                    '"after": ' ++ <str><json>__new__{*} ++
+                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
+                    '"after": ' ++ to_str(<json>__new__{*}) ++
                     '}'
                 ),
             }
@@ -144,7 +166,7 @@ module default {
         last_active_date: datetime;
 
 
-        # Links to Other Types
+        # Link to Other Types
         multi account: BankAccount {
             on target delete allow;
             on source delete delete target;
@@ -205,17 +227,20 @@ module default {
 
 
     # Service or Action
-    type Record extending Record_OR_Payment{
+    type Record extending Record_OR_Payment, Link{
         name: str;
         id_service: str;
         active: bool;
         status: str;
         type: str;
         value: decimal;
-        optional details: json;
 
-        user: InternalUser;
-        required multi entity: Entity {
+        multi details:= (select Details filter .origin.id = __source__.id);
+
+        user: InternalUser {
+            on target delete delete source;
+        };
+        multi entity: Entity {
             on source delete delete target;
             on target delete allow;
         };
@@ -237,15 +262,15 @@ module default {
                 action := "update",
                 details := to_json(
                     '{' ++
-                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
-                    '"after": ' ++ <str><json>__new__{*} ++
+                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
+                    '"after": ' ++ to_str(<json>__new__{*}) ++
                     '}'
                 )
             }
         );
 
         trigger log_insert after insert for each do (
-            insert Auditable {
+           insert Auditable {
                 user := __new__.user.id,
                 object_id := __new__.id,
                 action := "insert",
@@ -261,10 +286,10 @@ module default {
                 details := <json>__old__{*},
             }
         );
-    }
+   }
 
 
-    type Scheduler {
+    type Scheduler extending Link{
         type: str;
         name: str;
         status: bool {
@@ -273,20 +298,24 @@ module default {
         date: cal::local_date;
         beginning_time: cal::local_time;
         optional ending_time: cal::local_time;
-        optional details: json;
+        multi details:= (select Details filter .origin.id = __source__.id);
 
-        user: InternalUser;
-        optional origin: Record_OR_Payment;
+        user: InternalUser {
+            on target delete delete source;
+        };
+        optional origin: Record_OR_Payment{
+            on target delete delete source;
+        };
     }
 
-    type BankAccount {
+    type BankAccount extending Link{
         required bank_name: str;
         required account_name: str;
         balance: decimal {
             constraint min_value(0);
             default := 0;
         };
-        details: json;
+        multi details:= (select Details filter .origin.id = __source__.id);
         ignore_on_totals: bool {
             default:= <bool>false;
         };
@@ -294,12 +323,14 @@ module default {
         type: str;
     }
 
-    type Movement{
+    type Movement extending Link{
         type: str;
         value:= (sum(__source__.payment.value));
         installment:= (count(__source__.payment));
-        details: json;
-        user: InternalUser;
+        multi details:= (select Details filter .origin.id = __source__.id);
+        user: InternalUser {
+            on target delete delete source;
+        };
         optional single record: Record;
         accounts:= (distinct(__source__.payment.account));
         multi payment:= (select Payment filter .movement.id = __source__.id);
@@ -313,8 +344,8 @@ module default {
                 action := "update",
                 details := to_json(
                     '{' ++
-                    '"before": ' ++ <str><json>__old__{*} ++ ',' ++
-                    '"after": ' ++ <str><json>__new__{*} ++
+                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
+                    '"after": ' ++ to_str(<json>__new__{*}) ++
                     '}'
                 )
             }
@@ -343,12 +374,8 @@ module default {
         name: str;
         type:= (__source__.movement.type);
         value: decimal;
-        interest: float64{
-            default := 0;
-        };
-        penalty: decimal{
-            default:= 0;
-        };
+        interest: str;
+        penalty: str;
         ignore_in_totals: bool{
             default := false;
         };
@@ -359,72 +386,85 @@ module default {
         status: bool{
             default:= false;
         };
-        required account: BankAccount;
-        user: InternalUser;
+        required account: BankAccount {
+        };
+        user: InternalUser {
+            on target delete delete source;
+        };
         required movement: Movement {
             on target delete delete source;
         };
-        event: Scheduler {
-            on target delete restrict;
-            on source delete delete target;
-        }
+        event:= assert_single((select Scheduler filter .origin = __source__));
 
         trigger update_balance_on_insert after insert for each when (
             __new__.status = true and __new__.ignore_in_totals = false
         ) do (
             update BankAccount filter .id = __new__.account.id set {
-                balance := .balance + __new__.value
+                balance := .balance + (__new__.value * (if __new__.type = "income" then 1 else -1))
             }
         );
-        trigger update_any after update for each do (
+
+        # Handles changes to value, status, or ignore_in_totals WHEN THE ACCOUNT REMAINS THE SAME
+        trigger update_balance_on_same_account_changes after update for each when (
+            __old__.account.id = __new__.account.id and (
+                __old__.value != __new__.value or
+                __old__.status != __new__.status or
+                __old__.ignore_in_totals != __new__.ignore_in_totals
+            )
+        ) do (
             with
-                old_payment_status := __old__.status,
-                new_payment_status := __new__.status,
                 old_value := __old__.value,
                 new_value := __new__.value,
-                old_account_id := __old__.account.id,
-                new_ignore := __new__.ignore_in_totals,
+                old_payment_status := __old__.status,
+                new_payment_status := __new__.status,
                 old_ignore := __old__.ignore_in_totals,
-                new_account_id := __new__.account.id,
-                same_account_block_result := (
-                    (
-                        with
-                           net_change := (
-                                (new_value if new_payment_status and not new_ignore else 0) -
-                                (old_value if old_payment_status and not old_ignore else 0)
-                            )
-                        select (
-                            update BankAccount filter .id = old_account_id set {
-                                balance := .balance + net_change
-                            }
-                        ) if net_change != 0 else {}
-                    ) if old_account_id ?= new_account_id else {}
-                ),
-                different_accounts_block_result := (
-                    (
-                        with
-                            old_account_deduction := (
-                                (
-                                    update BankAccount filter .id = old_account_id set {
-                                        balance := .balance - old_value
-                                    }
-                                )
-                                if old_payment_status and not old_ignore else {}
-                            ),
-                            new_account_addition := (
-                                (
-                                    update BankAccount filter .id = new_account_id set {
-                                        balance := .balance + new_value
-                                    }
-                                )
-                                if new_payment_status and not new_ignore else {}
-                            )
-                        select (old_account_deduction union new_account_addition)
-                    ) if old_account_id ?!= new_account_id else {}
-                )
+                new_ignore := __new__.ignore_in_totals,
+                payment_type := __new__.type,
 
-            select same_account_block_result union different_accounts_block_result
+                net_impact := (
+                    (new_value if new_payment_status and not new_ignore else 0) -
+                    (old_value if old_payment_status and not old_ignore else 0)
+                ) * if payment_type = "income" then 1 else -1,
+                select (
+                    update BankAccount filter .id = __new__.account.id set {
+                        balance := .balance + net_impact
+                    }
+                ) if net_impact != 0 else <BankAccount>{}
         );
+
+        # Handles changes to the ACCOUNT LINK
+        trigger update_balance_on_account_change after update for each when (
+            __old__.account.id != __new__.account.id
+        ) do (
+            with
+                old_value := __old__.value,
+                new_value := __new__.value,
+                old_payment_status := __old__.status,
+                new_payment_status := __new__.status,
+                old_ignore := __old__.ignore_in_totals,
+                new_ignore := __new__.ignore_in_totals,
+                new_type := __new__.type,
+                old_account_id := __old__.account.id,
+                new_account_id := __new__.account.id,
+
+                # 1. Revert the impact on the OLD account
+                old_payment_original_impact := (old_value * (if new_type = "income" then 1 else -1)),
+                update_old_account := (
+                    update BankAccount filter .id = old_account_id set {
+                        balance := .balance - old_payment_original_impact
+                    }
+                ) if old_payment_status and not old_ignore else <BankAccount>{},
+
+                # 2. Apply the impact on the NEW account
+                new_payment_current_impact := (new_value * (if new_type = "income" then 1 else -1)),
+                update_new_account := (
+                    update BankAccount filter .id = new_account_id set {
+                        balance := .balance + new_payment_current_impact
+                    }
+                ) if new_payment_status and not new_ignore else <BankAccount>{},
+            select (update_old_account, update_new_account)
+        );
+
 
         # Updates balance on movement.account.balance when delete Payment.
         trigger update_balance_on_delete after delete for each when (
@@ -437,7 +477,7 @@ module default {
 
         # Insert Payment.event.
         trigger create_event after insert for each do (
-            with data := ( insert Scheduler {
+            insert Scheduler {
                 user:= __new__.user,
                 name:= __new__.name,
                 type:= __new__.type,
@@ -445,11 +485,8 @@ module default {
                 date:= __new__.is_due,
                 origin:= <Record_OR_Payment>__new__.id
             }
-            )
-            update Payment filter .id = __new__.id set {
-                event := data
-            }
         );
+
 
         # Updates Payment.event.
         trigger update_event after update for each when (

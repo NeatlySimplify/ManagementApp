@@ -3,10 +3,12 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -21,7 +23,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -41,7 +43,6 @@ async def CreateSchedule(
     date: datetime.date,
     beginning_time: datetime.time | None = None,
     ending_time: datetime.time | None = None,
-    details: str | None = None,
 ) -> CreateScheduleResult:
     return await executor.query_single(
         """\
@@ -55,7 +56,6 @@ async def CreateSchedule(
             date:= <cal::local_date>$date,
             beginning_time:= <optional cal::local_time>$beginning_time,
             ending_time:= <optional cal::local_time>$ending_time,
-            details:= <optional json>$details,
             origin:= assert_single((select Record_OR_Payment filter .id = original)) if exists original else {}
         }
         ){id}\
@@ -68,5 +68,4 @@ async def CreateSchedule(
         date=date,
         beginning_time=beginning_time,
         ending_time=ending_time,
-        details=details,
     )

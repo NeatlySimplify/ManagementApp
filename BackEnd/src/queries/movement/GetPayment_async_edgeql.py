@@ -3,11 +3,13 @@
 
 
 from __future__ import annotations
+
 import dataclasses
 import datetime
 import decimal
-import gel
 import uuid
+
+import gel
 
 
 class NoPydanticValidation:
@@ -22,7 +24,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = lambda: []
+        cls.__pydantic_model__.__get_validators__ = list
         return []
 
 
@@ -33,8 +35,8 @@ class GetPaymentResult(NoPydanticValidation):
     type: str | None
     value: decimal.Decimal | None
     ignore_in_totals: bool | None
-    interest: float | None
-    penalty: decimal.Decimal | None
+    interest: str | None
+    penalty: str | None
     category: str | None
     subcategory: str | None
     payment_date: datetime.date | None

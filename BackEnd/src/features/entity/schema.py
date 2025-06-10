@@ -1,14 +1,14 @@
-from pydantic import BaseModel
-from uuid import UUID
-from typing import Optional
 import datetime
+from uuid import UUID
+
+from pydantic import BaseModel
 from pydantic.networks import EmailStr
 
+from src.features.generics.schema import CreateDictType, UpdateDictType
 
-class ModelID(BaseModel):
+
+class EntityUpdate(BaseModel):
     id: UUID
-
-class EntityUpdate(ModelID):
     email: EmailStr | None = None
     type: str | None = None
     id_type: str | None = None
@@ -17,11 +17,11 @@ class EntityUpdate(ModelID):
     name: str | None = None
     sex: str | None = None
     relationship_status: str | None = None
-    details: dict | None = None
+    details: UpdateDictType | None = None
     birth: datetime.date | None = None
 
 
-class EntityCreate(ModelID):
+class EntityCreate(BaseModel):
     email: str
     type: str
     id_type: str
@@ -31,10 +31,11 @@ class EntityCreate(ModelID):
     sex: str | None = None
     relationship_status: str | None = None
     birth: datetime.date | None = None
-    details: dict | None = None
+    details: list[CreateDictType] | None = None
 
 
-class AddressUpdate(ModelID):
+class AddressUpdate(BaseModel):
+    id: UUID
     state: str | None = None
     city: str | None = None
     district: str | None = None
@@ -44,7 +45,8 @@ class AddressUpdate(ModelID):
     postal: str | None = None
 
 
-class AddressCreate(ModelID):
+class AddressCreate(BaseModel):
+    entity: UUID
     state: str
     city: str
     district: str
@@ -56,24 +58,15 @@ class AddressCreate(ModelID):
 
 class ContactUpdate(BaseModel):
     id: UUID
-    number: dict | None = None
+    number: UpdateDictType | None = None
     name: str | None = None
     email: EmailStr | None = None
-    details: dict | None = None
-
-
-class EntitySimple(ModelID):
-    name: str | None
+    details: UpdateDictType | None = None
 
 
 class ContactCreate(BaseModel):
-    id: UUID
-    number: dict
+    entity: UUID
+    number: list[CreateDictType]
     name: str
     email: EmailStr | None
-    details: dict | None
-
-
-class EntityOut(EntityCreate):
-    phone: list[ContactCreate]
-    address: list[AddressCreate]
+    details: list[CreateDictType] | None = None

@@ -1,8 +1,13 @@
+import logging
+import traceback
 from contextlib import asynccontextmanager
 from functools import wraps
-import gel
-from fastapi import Request, HTTPException
 from http import HTTPStatus
+
+import gel
+from fastapi import HTTPException, Request
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -28,6 +33,7 @@ def handle_database_errors(func):
             return await func(*args, **kwargs)
 
         except gel.errors.QueryError as e:
+            logger.warning("QueryError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail={
@@ -38,6 +44,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.IntegrityError as e:
+            logger.warning("IntegrityError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
                 detail={
@@ -48,6 +55,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.ExecutionError as e:
+            logger.warning("ExecutionError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail={
@@ -58,6 +66,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.ProtocolError as e:
+            logger.warning("ProtocolError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail={
@@ -68,6 +77,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.AccessError as e:
+            logger.warning("AccessError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.FORBIDDEN,
                 detail={
@@ -78,6 +88,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.BackendError as e:
+            logger.warning("BackendError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.SERVICE_UNAVAILABLE,
                 detail={
@@ -88,6 +99,7 @@ def handle_database_errors(func):
             )
 
         except gel.errors.AvailabilityError as e:
+            logger.warning("AvailabilityError: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.SERVICE_UNAVAILABLE,
                 detail={
@@ -98,6 +110,7 @@ def handle_database_errors(func):
             )
 
         except Exception as e:
+            logger.warning("Generic Exception: %s\n%s", str(e), traceback.format_exc())
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 detail={

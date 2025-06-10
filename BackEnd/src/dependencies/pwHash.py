@@ -1,4 +1,5 @@
-from bcrypt import gensalt, hashpw, checkpw
+from bcrypt import checkpw, gensalt, hashpw
+
 
 def hash_password(password: str) -> str:
     if not isinstance(password, str):

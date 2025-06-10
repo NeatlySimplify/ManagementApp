@@ -2,7 +2,7 @@ select BankAccount {
     bank_name,
     account_name,
     balance,
-    details,
+    details: {*},
     ignore_on_totals,
     category,
     type

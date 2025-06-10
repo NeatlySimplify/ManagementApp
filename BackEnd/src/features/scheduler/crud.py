@@ -1,17 +1,21 @@
+from dataclasses import asdict
 from datetime import date, time
-from fastapi import Depends
-from src.dependencies import db
 from uuid import UUID
+
+from src.dependencies import db
+from src.features.generics.crud import _create_details, _delete_details
+from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.schedule import (
     CreateSchedule_async_edgeql,
-    UpdateSchdeule_async_edgeql,
+    DeleteSchedule_async_edgeql,
     GetSchedule_async_edgeql,
-    DeleteSchedule_async_edgeql
+    UpdateSchdeule_async_edgeql,
 )
 
 
 @db.handle_database_errors
 async def createEvent(
+        db,
         user_id: UUID,
         origin: UUID | None,
         type: str,
@@ -20,10 +24,9 @@ async def createEvent(
         date: date,
         beginning_time: time | None,
         ending_time: time | None,
-        details: dict | None,
-        db=Depends(db.get_gel_client)
-    ) -> CreateSchedule_async_edgeql.CreateScheduleResult | None:
-    return await CreateSchedule_async_edgeql.CreateSchedule(
+        details: list[CreateDictType] | None
+    ) -> dict | None:
+    result = await CreateSchedule_async_edgeql.CreateSchedule(
         db,
         user=user_id,
         origin=origin,
@@ -33,12 +36,22 @@ async def createEvent(
         date=date,
         beginning_time=beginning_time,
         ending_time=ending_time,
-        details=details
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if details is not None:
+            for data in details:
+                print("From the loop inside CRUD createEvent")
+                print(data, id)
+                result_detail = await _create_details(db, title=data.title, field=data.field, origin=id)
+                print(result_detail)
+    return result
 
 
 @db.handle_database_errors
 async def updateEvent(
+        db,
         event_id: UUID,
         name: str | None,
         status: bool | None,
@@ -46,10 +59,9 @@ async def updateEvent(
         date: date | None,
         beginning_time: time | None,
         ending_time: time | None,
-        details: dict | None,
-        db=Depends(db.get_gel_client)
-    ) -> UpdateSchdeule_async_edgeql.UpdateSchdeuleResult | None:
-    return await UpdateSchdeule_async_edgeql.UpdateSchdeule(
+        details: UpdateDictType | None,
+    ) -> dict | None:
+    result = await UpdateSchdeule_async_edgeql.UpdateSchdeule(
         db,
         name=name,
         type=type,
@@ -58,13 +70,29 @@ async def updateEvent(
         date=date,
         beginning_time=beginning_time,
         ending_time=ending_time,
-        details=details
     )
+    if result is not None:
+        result = asdict(result)
+        id = result["id"]
+        if details is not None and details.change:
+            await _delete_details(db, origin=id)
+            for data in details.body:
+                print("From the loop inside CRUD updateEvent")
+                print(data, id)
+                result_detail = await _create_details(db, title=data.title, field=data.field, origin=id)
+                print(result_detail)
 
 
-async def getEvent(event_id: UUID, db=Depends(db.get_gel_client)) -> GetSchedule_async_edgeql.GetScheduleResult | None:
-    return await GetSchedule_async_edgeql.GetSchedule(db, id=event_id)
+    return result
 
 
-async def deleteEvent(event_id: UUID, db=Depends(db.get_gel_client)) -> DeleteSchedule_async_edgeql.DeleteScheduleResult | None:
+async def getEvent(db, event_id: UUID) -> dict | None:
+    result: GetSchedule_async_edgeql.GetScheduleResult | None = await GetSchedule_async_edgeql.GetSchedule(db, id=event_id)
+    if result is None:
+        return None
+    result_dict = asdict(result)
+    return result_dict
+
+
+async def deleteEvent(db, event_id: UUID) -> DeleteSchedule_async_edgeql.DeleteScheduleResult | None:
     return await DeleteSchedule_async_edgeql.DeleteSchedule(db, event=event_id)

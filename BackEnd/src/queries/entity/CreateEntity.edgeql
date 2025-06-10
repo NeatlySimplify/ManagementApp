@@ -8,6 +8,5 @@ select (insert Entity {
     name:= <str>$name,
     sex:= <optional str>$sex,
     relationship_status:= <optional str>$relationship_status,
-    details:= <optional json>$details,
     birth:= <optional cal::local_date>$birth
 }){id}
