@@ -3,13 +3,11 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
 import decimal
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -24,17 +22,17 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
 @dataclasses.dataclass
 class GetMovementResult(NoPydanticValidation):
     id: uuid.UUID
-    type: str | None
+    type_movement: str | None
     value: decimal.Decimal
     installment: int
-    details: list[GetMovementResultDetailsItem]
+    notes: str | None
     record: GetMovementResultRecord | None
     accounts: list[GetMovementResultAccountsItem]
     payment: list[GetMovementResultPaymentItem]
@@ -44,13 +42,6 @@ class GetMovementResult(NoPydanticValidation):
 class GetMovementResultAccountsItem(NoPydanticValidation):
     id: uuid.UUID
     account_name: str
-
-
-@dataclasses.dataclass
-class GetMovementResultDetailsItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
 
 
 @dataclasses.dataclass
@@ -78,10 +69,10 @@ async def GetMovement(
     return await executor.query_single(
         """\
         select Movement{
-            type,
+            type_movement:= .type,
             value,
             installment,
-            details: {*},
+            notes,
             record: {
                 id,
                 name,

@@ -1,8 +1,5 @@
 from uuid import UUID
-
 from pydantic import BaseModel
-
-from src.features.generics.schema import CreateDictType, UpdateDictType
 
 
 class RecordCreate(BaseModel):
@@ -10,9 +7,9 @@ class RecordCreate(BaseModel):
     id_service: str | None = None
     active: bool
     status: str | None = None
-    type: str
+    type_record: str
     value: str
-    details: list[CreateDictType] | None = None
+    notes: dict[str, str | int | float] | None = None
     entity: UUID
 
 
@@ -22,6 +19,6 @@ class RecordUpdate(BaseModel):
     id_service: str | None = None
     active: bool | None = None
     status: str | None = None
-    type: str | None = None
+    type_record: str | None = None
     value: str | None = None
-    details: UpdateDictType | None = None
+    notes: dict[str, str | int | float] | None = None

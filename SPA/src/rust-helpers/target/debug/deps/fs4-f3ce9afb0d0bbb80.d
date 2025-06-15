@@ -1,0 +1,12 @@
+/home/dennis/Projetos/ManagementApp/SPA/src/rust-helpers/target/debug/deps/libfs4-f3ce9afb0d0bbb80.rmeta: /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/lib.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix/sync_impl.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/fs_stats.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext/sync_impl.rs
+
+/home/dennis/Projetos/ManagementApp/SPA/src/rust-helpers/target/debug/deps/libfs4-f3ce9afb0d0bbb80.rlib: /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/lib.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix/sync_impl.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/fs_stats.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext/sync_impl.rs
+
+/home/dennis/Projetos/ManagementApp/SPA/src/rust-helpers/target/debug/deps/fs4-f3ce9afb0d0bbb80.d: /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/lib.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix/sync_impl.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/fs_stats.rs /home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext/sync_impl.rs
+
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/lib.rs:
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix.rs:
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/unix/sync_impl.rs:
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext.rs:
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/fs_stats.rs:
+/home/dennis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fs4-0.6.6/src/file_ext/sync_impl.rs:

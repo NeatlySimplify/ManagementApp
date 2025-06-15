@@ -50,9 +50,9 @@ async def create_record(
         id_service=data.id_service,
         active=data.active,
         status=data.status,
-        type=data.type,
+        type=data.type_record,
         value=data.value,
-        details=data.details,
+        details=data.notes,
         entity=data.entity
     )
 
@@ -66,9 +66,9 @@ async def update_record(data: RecordUpdate, user = Depends(get_current_user), db
         id_service=data.id_service,
         active=data.active,
         status=data.status,
-        type=data.type,
+        type=data.type_record,
         value=data.value,
-        details=data.details
+        details=data.notes
     )
 
 

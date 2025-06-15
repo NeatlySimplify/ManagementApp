@@ -3,12 +3,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from src.features.generics.schema import CreateDictType, UpdateDictType
-
 
 class MovementCreate(BaseModel):
-    type: str
-    details: list[CreateDictType] | None = None
+    type_movement: str
+    notes: dict[str, str |int | float] | None = None
     record: UUID | None = None
     name: str
     parts: int = 1
@@ -28,7 +26,7 @@ class MovementCreate(BaseModel):
 
 class MovementUpdate(BaseModel):
     id: UUID
-    details: UpdateDictType | None = None
+    notes: dict[str, str | int | float] | None = None
 
 
 class PaymentUpdate(BaseModel):

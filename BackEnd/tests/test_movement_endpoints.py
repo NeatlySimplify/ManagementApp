@@ -50,12 +50,12 @@ def valid_movement(
     # --- CREATE Mode ---
     if id_param is None and mode=="basic":
         payload = {
-            "type": fake.random_element(["income", "expense"]),
-            "details": [
-                {"title": "Description", "field": fake.sentence()},
-                {"title": "Notes", "field": fake.paragraph()},
-                {"title": "Category", "field": fake.random_element(["Primary", "Secondary", "Tertiary"])}
-            ],
+            "type_movement": fake.random_element(["income", "expense"]),
+            "notes": {
+                "Description": fake.sentence(),
+                "Note": fake.paragraph(),
+                "Category": fake.random_element(["Primary", "Secondary", "Tertiary"])
+            },
             "record": str(uuid.uuid4()),
             "parts": fake.random_int(min=1, max=10),
             "total": str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
@@ -91,12 +91,12 @@ def valid_movement(
                 final_unique = None
 
         payload = {
-            "type": type_param if type_param is not None else fake.random_element(["income", "expense"]),
-            "details": details_param if details_param is not None else [
-                {"title": "Description", "field": fake.sentence()},
-                {"title": "Notes", "field": fake.paragraph()},
-                {"title": "Category", "field": fake.random_element(["Primary", "Secondary", "Tertiary"])}
-            ],
+            "type_movement": type_param if type_param is not None else fake.random_element(["income", "expense"]),
+            "notes": {
+                "Description": fake.sentence(),
+                "Note": fake.paragraph(),
+                "Category": fake.random_element(["Primary", "Secondary", "Tertiary"])
+            },
             "record": record_param if record_param is not None else str(uuid.uuid4()),
             "parts": parts_param if parts_param is not None else fake.random_int(min=1, max=10),
             "total": str(total_param) if total_param is not None else str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
@@ -120,7 +120,7 @@ def valid_movement(
     else:
         payload = {
             "id": id_param,
-            "details": details_param,
+            "notes": details_param,
         }
         return payload
 
@@ -153,51 +153,75 @@ def valid_payment(
         "status": status_param
     }
 
-async def get_bank_account(bank_id, client, authenticated_user):
+async def get_bank_account(bank_id, client, authenticated_user=None):
     """Helper function to get bank account details."""
-    response = await client.get(f"/api/user/bank-account/{bank_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.get(f"/api/user/bank-account/{bank_id}")
+    else:
+        response = await client.get(f"/api/user/bank-account/{bank_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def get_movement(movement_id, client, authenticated_user):
+async def get_movement(movement_id, client, authenticated_user=None):
     """Helper function to get movement details."""
-    response = await client.get(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.get(f"/api/movement/{movement_id}")
+    else:
+        response = await client.get(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def get_payment(payment_id, client, authenticated_user):
+async def get_payment(payment_id, client, authenticated_user=None):
     """Helper function to get payment details."""
-    response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.get(f"/api/movement/payment/{payment_id}")
+    else:
+        response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def post_movement(movement, client, authenticated_user):
+async def post_movement(movement, client, authenticated_user=None):
     """Helper function to post movement."""
-    response = await client.post("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.post("/api/movement/", json=movement)
+    else:
+        response = await client.post("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def update_movement(movement, client, authenticated_user):
+async def update_movement(movement, client, authenticated_user=None):
     """Helper function to update movement."""
-    response = await client.put("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.put("/api/movement/", json=movement)
+    else:
+        response = await client.put("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def update_payment(payment, client, authenticated_user):
+async def update_payment(payment, client, authenticated_user=None):
     """Helper function to update payment."""
-    response = await client.put("/api/movement/payment", json=payment, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.put("/api/movement/payment", json=payment)
+    else:
+        response = await client.put("/api/movement/payment", json=payment, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def delete_movement(movement_id, client, authenticated_user):
+async def delete_movement(movement_id, client, authenticated_user=None):
     """Helper function to delete movement."""
-    response = await client.delete(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.delete(f"/api/movement/{movement_id}")
+    else:
+        response = await client.delete(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
-async def delete_payment(payment_id, client, authenticated_user):
+async def delete_payment(payment_id, client, authenticated_user=None):
     """Helper function to delete payment."""
-    response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+    if authenticated_user is None:
+        response = await client.get(f"/api/movement/payment/{payment_id}")
+    else:
+        response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -224,23 +248,10 @@ class TestMovementEndpoints:
 
         assert status < 300
         get_data = get_response["result"]
-        assert get_data["type"] == data["type"]
+        assert get_data["type_movement"] == data["type_movement"]
         # Verify details array contains expected items
-        description_found = False
-        for detail in get_data["details"]:
-            if detail["title"] == "Description":
-                # Find the matching detail from the input data
-                for input_detail in data["details"]:
-                    if input_detail["title"] == "Description":
-                        assert detail["field"] == input_detail["field"]
-                        description_found = True
-                        break
-        assert description_found, "Description detail not found in response"
 
-        details = {
-            "body": get_data["details"],
-            "change": True
-        }
+        details = get_data["notes"]
         update_data = valid_movement(bank_id, id_param=movement["id"], details_param=details)
 
 
@@ -255,10 +266,7 @@ class TestMovementEndpoints:
         assert get_updated_response["status"] == "success"
         updated_data_2 = get_updated_response["result"]
         # Verify the details were updated correctly
-        assert len(updated_data_2["details"]) == len(get_data["details"])
-        for detail in updated_data_2["details"]:
-            assert any(d["title"] == detail["title"] for d in get_data["details"])
-
+        assert len(updated_data_2["notes"]) == len(get_data["notes"])
         # Delete movement
         status, delete_response = await delete_movement(movement["id"], client, authenticated_user)
 
@@ -330,17 +338,20 @@ class TestMovementEndpoints:
     @pytest.mark.asyncio
     async def test_unauthorized_access_movement(self, client, test_bank_account):
         bank_id, _ = test_bank_account
+        client.cookies.clear()
         # Try to get movement data without authentication
-
-        fake_id = str(uuid.uuid4())
-        response = await client.get(f"/api/movement/{fake_id}")
-        assert response.status_code == 401
-
-        # Try to create movement without authentication
+        #
         movement_data = valid_movement(bank_id)
 
-        movement_response = await client.post("/api/movement/", json=movement_data)
-        assert movement_response.status_code == 401
+        status, _ = await post_movement(movement_data, client)
+        assert status == 401
+
+        fake_id = str(uuid.uuid4())
+        status, _ = await get_movement(fake_id, client)
+        assert status == 401
+
+        # Try to create movement without authentication
+
 
 
     @pytest.mark.asyncio

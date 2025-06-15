@@ -45,6 +45,16 @@ app.include_router(entityRoute)
 app.include_router(recordRoute)
 
 
+index_path = os.path.join("static", "index.html")
+_cached_index_html = None
+
+@app.on_event("startup")
+async def load_index_html():
+    global _cached_index_html
+    with open(index_path, "r", encoding="utf-8") as f:
+        _cached_index_html = f.read()
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     body = await request.body()
@@ -63,11 +73,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.mount('/assets', StaticFiles(directory='src/static/assets/', html=True), name='assets')
 
 
-@app.get("/{full_path:path}")
-async def catch_all(full_path: str):
-    print('Hi')
-    if full_path.startswith("api"):
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+async def catch_all(request: Request, full_path: str):
+    index_path = os.path.join("build", "index.html")
+
+    if full_path.startswith("api") or full_path.startswith("assets") or "." in full_path:
         raise HTTPException(status_code=404)
-    if full_path.startswith("assets") or "." in full_path:
-        raise HTTPException(status_code=404)
-    return FileResponse("static/index.html")
+
+    backend_url = str(request.base_url).rstrip("/")
+    html = _cached_index_html.replace("__API_URL_PLACEHOLDER__", backend_url)
+    return HTMLResponse(content=html, status_code=200)

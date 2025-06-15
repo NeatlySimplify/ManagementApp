@@ -4,15 +4,14 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, computed_field, model_validator
 
 from src.dependencies.pwHash import hash_password
-from src.features.generics.schema import CreateDictType, UpdateDictType
 
 
 class BankAccountUpdate(BaseModel):
     id: UUID
     bank_name: str | None = None
     account_name: str | None = None
-    type: str | None = None
-    details: UpdateDictType | None = None
+    type_account: str | None = None
+    notes: dict[str, str | int | float] | None = None
     ignore_on_totals: bool | None = None
     category: str | None = None
 
@@ -20,9 +19,9 @@ class BankAccountUpdate(BaseModel):
 class BankAccountCreate(BaseModel):
     bank_name: str
     account_name: str
-    type: str | None = None
+    type_account: str | None = None
     balance: str
-    details: list[CreateDictType] | None = None
+    notes: dict[str, str | int | float] | None = None
     ignore_on_totals: bool = False
     category: str | None = None
 

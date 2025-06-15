@@ -1,9 +1,7 @@
 from dataclasses import asdict
 from uuid import UUID
-
+import json
 from src.dependencies import db
-from src.features.generics.crud import _create_details, _delete_details
-from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.record import (
     CreateRecord_async_edgeql,
     DeleteRecord_async_edgeql,
@@ -26,6 +24,8 @@ async def getRecord(
     result = await GetRecord_async_edgeql.GetRecord(db, id=record)
     if result is None: return None
     result_dict = asdict(result)
+    if result_dict["notes"] is not None:
+        result_dict["notes"] = json.loads(result_dict["notes"])
     return result_dict
 
 
@@ -40,7 +40,7 @@ async def createRecord(
         status: str | None,
         type: str,
         value: str,
-        details: list[CreateDictType] | None,
+        details: dict[str, str | int | float] | None,
         entity: UUID,
     ) -> dict | None:
     result = await CreateRecord_async_edgeql.CreateRecord(
@@ -53,13 +53,10 @@ async def createRecord(
         status=status,
         type=type,
         value=value,
+        notes=json.dumps(details) if details is not None else None,
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if details is not None:
-            for data in details:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
     return result
 
 
@@ -87,7 +84,7 @@ async def updateRecord(
         status: str | None,
         type: str | None,
         value: str | None,
-        details: UpdateDictType | None,
+        details: dict[str, str | int | float] | None,
     ) -> dict | None:
     result = await UpdateRecord_async_edgeql.UpdateRecord(
         db,
@@ -98,15 +95,10 @@ async def updateRecord(
         status=status,
         type=type,
         value=value,
+        notes=json.dumps(details) if details is not None else None,
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if  details is not None and details.change:
-            await _delete_details(db, origin=id)
-            for data in details.body:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
-
     return result
 
 

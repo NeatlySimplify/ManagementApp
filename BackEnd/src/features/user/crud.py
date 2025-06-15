@@ -4,9 +4,8 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from src.dependencies import db
+import json
 from src.dependencies.pwHash import verify_password
-from src.features.generics.crud import _create_details, _delete_details
-from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.user import (
     CreateBankAccount_async_edgeql,
     CreateSettings_async_edgeql,
@@ -53,7 +52,7 @@ async def createBankAccount(
         account_name: str,
         balance: str,
         category: str | None,
-        details: list[CreateDictType] | None,
+        details: dict[str, str | int | float] | None,
         type: str | None,
         ignore: bool,
     ) -> dict | None:
@@ -67,13 +66,10 @@ async def createBankAccount(
         category=category,
         ignore_on_totals=ignore,
         type=type,
+        notes=json.dumps(details) if details is not None else None,
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if details is not None:
-            for data in details:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
     return result
 
 
@@ -99,6 +95,8 @@ async def getBankAccount(
     if result is None:
         return None
     result_dict = asdict(result)
+    if result_dict["notes"] is not None:
+        result_dict["notes"] = json.loads(result_dict["notes"])
     return result_dict
 
 
@@ -109,7 +107,7 @@ async def updateBankAccount(
         bank_name: str | None,
         account_name: str | None,
         type: str | None,
-        details: UpdateDictType | None,
+        details: dict[str, str | int | float] | None,
         ignore: bool | None,
         category: str | None,
     ) -> dict | None:
@@ -124,12 +122,6 @@ async def updateBankAccount(
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if details is not None and details.change:
-            await _delete_details(db, origin=id)
-            for data in details.body:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
-
     return result
 
 

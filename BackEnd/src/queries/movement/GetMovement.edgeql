@@ -1,8 +1,8 @@
 select Movement{
-    type,
+    type_movement:= .type,
     value,
     installment,
-    details: {*},
+    notes,
     record: {
         id,
         name,

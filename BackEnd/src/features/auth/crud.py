@@ -1,5 +1,4 @@
 from uuid import UUID
-
 from src.dependencies import db
 from src.dependencies.pwHash import verify_password
 from src.queries.user import (
@@ -7,6 +6,7 @@ from src.queries.user import (
     GetUserAuth_async_edgeql,
     GetUserToken_async_edgeql,
 )
+from dataclasses import asdict
 
 
 @db.handle_database_errors
@@ -14,11 +14,13 @@ async def loginUser(
     db,
     email: str,
     password: str,
-) -> tuple[UUID, bool] | tuple[None, None]:
+) -> tuple[dict, bool] | tuple[None, None]:
     result: GetUserAuth_async_edgeql.GetUserAuthResult | None = await GetUserAuth_async_edgeql.GetUserAuth(executor=db, email=email)
+
     if result is None:
         return None, None
-    return result.id, verify_password(password, result.password)
+    result_dict = asdict(result)
+    return result_dict, verify_password(password, result.password)
 
 
 @db.handle_database_errors
@@ -43,13 +45,15 @@ async def loginWithToken(
     db,
     email: str,
     token: UUID,
-) -> tuple[bool, bool|None, UUID] | tuple[None, None, None]:
+) -> tuple[UUID, dict] | tuple[None, None]:
     result: GetUserAuth_async_edgeql.GetUserAuthResult | None = await GetUserAuth_async_edgeql.GetUserAuth(
         executor=db,
         email=email
     )
-    if result is None: return None, None, None
-    return result.refresh_token == token, result.use_token, result.id
+    result_dict = asdict(result)
+    if result is None: return None, None
+    result_dict = asdict(result)
+    return result.refresh_token == token, result_dict
 
 
 @db.handle_database_errors

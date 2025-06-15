@@ -1,35 +1,50 @@
 import { defineStore } from "pinia";
 
-interface Entity {
-  id: string;
-
-  // other fields — will be used only by Rust/WASM for filtering
+interface PartialAddress {
+  state: string;
+  city: string;
 }
 
-export const useEntryStore = defineStore("entries", {
+interface PartialContact {
+  number: string;
+}
+
+interface PartialEntity {
+  id: string;
+  name: string;
+  email: string;
+  govt_id: string;
+  type_entity: string;
+  id_type: string;
+  status: boolean;
+  address: PartialAddress[];
+  phone: PartialContact[];
+}
+
+export const useEntityStore = defineStore("entity", {
   state: () => ({
-    entries: {} as Record<string, Entity>,
+    entries: {} as Record<string, PartialEntity>,
   }),
 
   getters: {
-    getById: (state) => (id: string) => state.entries[id],
+    getEntity: (state) => (id: string) => state.entries[id],
+    getAllEntities: (state) => state.entries,
   },
 
   actions: {
-    add(entry: Entity) {
+    addEntity(entry: PartialEntity) {
       this.entries[entry.id] = entry;
     },
 
-    remove(id: string) {
+    removeEntity(id: string) {
       delete this.entries[id];
     },
 
-    set(entries: Entity[]) {
-      this.entries = Object.fromEntries(entries.map((e) => [e.id, e]));
+    set(entry: PartialEntity[]) {
+      this.entries = Object.fromEntries(entry.map((e) => [e.id, e]));
     },
-
-    clear() {
-      this.entries = {};
+    updateEntity(entry: PartialEntity) {
+      this.entries[entry.id] = entry;
     },
   },
 });

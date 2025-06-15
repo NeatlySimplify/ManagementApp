@@ -1,42 +1,21 @@
 from dataclasses import asdict
 from datetime import date
 from uuid import UUID
+import json
 
 from src.dependencies import db
-from src.features.generics.crud import _create_details, _delete_details
-from src.features.generics.schema import CreateDictType, UpdateDictType
 from src.queries.entity import (
     CreateAddress_async_edgeql,
     CreateContact_async_edgeql,
     CreateEntity_async_edgeql,
-    CreatePhoneNumber_async_edgeql,
     DeleteAddress_async_edgeql,
     DeleteContact_async_edgeql,
     DeleteEntity_async_edgeql,
-    DeletePhoneNumber_async_edgeql,
     GetEntity_async_edgeql,
     UpdateAddress_async_edgeql,
     UpdateContact_async_edgeql,
     UpdateEntity_async_edgeql,
 )
-
-
-@db.handle_database_errors
-async def _create_phone_number(
-    db,
-    title: str,
-    field: str,
-    origin: UUID
-) -> CreatePhoneNumber_async_edgeql.CreatePhoneNumberResult | None:
-    return await CreatePhoneNumber_async_edgeql.CreatePhoneNumber(db, title=title, field=field, id=origin)
-
-
-@db.handle_database_errors
-async def _delete_phone_number(
-    db,
-    id: UUID
-) -> list[DeletePhoneNumber_async_edgeql.DeletePhoneNumberResult] | None:
-    return await DeletePhoneNumber_async_edgeql.DeletePhoneNumber(db, id=id)
 
 
 @db.handle_database_errors
@@ -51,7 +30,7 @@ async def create_entity(
     name: str,
     sex: str | None,
     relationship_status: str | None,
-    details: list[CreateDictType] | None,
+    details: dict[str, str | int | float] | None,
     birth: date | None,
 ) -> dict | None:
     result = await CreateEntity_async_edgeql.CreateEntity(
@@ -65,14 +44,11 @@ async def create_entity(
         name=name,
         sex=sex,
         relationship_status=relationship_status,
-        birth=birth
+        birth=birth,
+        notes=json.dumps(details) if details is not None else None
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if details is not None:
-            for data in details:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
     return result
 
 
@@ -88,7 +64,7 @@ async def update_entity(
     name: str | None,
     sex: str | None,
     relationship_status: str | None,
-    details: UpdateDictType | None,
+    details: dict[str, str | int | float] | None,
     birth: date | None,
 ) -> dict | None:
     result = await UpdateEntity_async_edgeql.UpdateEntity(
@@ -102,15 +78,11 @@ async def update_entity(
         sex=sex,
         relationship_status=relationship_status,
         birth=birth,
+        notes=json.dumps(details) if details is not None else None,
         entity=entity
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if details is not None and details.change:
-            await _delete_details(db, origin=id)
-            for data in details.body:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
     return result
 
 
@@ -139,6 +111,12 @@ async def get_entity(
     )
     if result is None: return None
     result_dict = asdict(result)
+    if result_dict["notes"] is not None:
+        result_dict["notes"] = json.loads(result_dict["notes"])
+    for i in result_dict["phone"]:
+        i["number"] = json.loads(i["number"])
+        if i["notes"] is not None:
+            i["notes"] = json.loads(i["notes"])
     return result_dict
 
 
@@ -215,26 +193,22 @@ async def delete_address(
 async def create_contact(
     db,
     entity: UUID,
-    number: list[CreateDictType] | None,
+    number: dict[str, str],
     name: str,
     email: str | None,
-    details: list[CreateDictType] | None,
+    details: dict[str, str | int | float] | None,
 ) -> dict | None:
     result = await CreateContact_async_edgeql.CreateContact(
         executor=db,
         name=name,
         email=email,
-        entity=entity
+        number=json.dumps(number),
+        entity=entity,
+        notes=json.dumps(details) if details is not None else None
     )
     if result is not None:
         result = asdict(result)
-        id = result["contact"]["id"]
-        if number is not None:
-            for data in number:
-                await _create_phone_number(db, title=data.title, field=data.field, origin=id)
-        if details is not None:
-            for data in details:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
+    if result["contact"] is None: return None
     return result
 
 
@@ -242,29 +216,21 @@ async def create_contact(
 async def update_contact(
     db,
     contact: UUID,
-    number: UpdateDictType | None,
+    number: dict[str, str] | None,
     email: str | None,
     name: str | None,
-    details: UpdateDictType | None,
+    details: dict[str, str | int | float] | None,
 ) -> dict | None:
     result = await UpdateContact_async_edgeql.UpdateContact(
         executor=db,
         name=name,
         email=email,
-        contact=contact
+        contact=contact,
+        notes=json.dumps(details) if details is not None else None,
+        number=json.dumps(number) if number is not None else None,
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if number is not None and number.change:
-            await _delete_phone_number(db, id=id)
-            for data in number.body:
-                await _create_phone_number(db, title=data.title, field=data.field, origin=id)
-
-        if details is not None and details.change:
-            await _delete_details(db, origin=id)
-            for data in details.body:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
     return result
 
 

@@ -2,12 +2,12 @@ import datetime
 from dataclasses import asdict
 from decimal import ROUND_HALF_EVEN, Decimal
 from uuid import UUID
+import json
 
 from dateutil.relativedelta import relativedelta
 
 from src.dependencies import db
-from src.features.generics.crud import _create_details, _delete_details
-from src.features.generics.schema import CreateDictType, UpdateDictType
+
 from src.queries.movement import (
     CreateMovement_async_edgeql,
     CreatePayment_async_edgeql,
@@ -16,6 +16,7 @@ from src.queries.movement import (
     GetMovement_async_edgeql,
     GetPayment_async_edgeql,
     UpdatePayment_async_edgeql,
+    UpdateMovement_async_edgeql
 )
 
 CycleMap = {
@@ -163,7 +164,7 @@ async def createMovement(
     db,
     user: UUID,
     type: str,
-    details: list[CreateDictType] | None,
+    details: dict[str, str | int | float] | None,
     record: UUID | None,
     parts: int,
     total: str,
@@ -184,14 +185,13 @@ async def createMovement(
         db,
         type=type,
         user=user,
-        record_id=record
+        record_id=record,
+        notes=json.dumps(details) if details is not None else None,
     )
     if result is not None:
         result = asdict(result)
         id = result["id"]
-        if details is not None:
-            for data in details:
-                await _create_details(db, title=data.title, field=data.field, origin=id)
+        if cycle=="custom": unique = None
         offset = date_cycle_generator(is_due, cycle, parts, unique)
         value_list = list(map(str, dividir_com_erro_no_final(Decimal(total),parts)))
 
@@ -219,15 +219,18 @@ async def createMovement(
 async def updateMovement(
     db,
     movement_id: UUID,
-    details: UpdateDictType | None,
-) -> bool:
-    if details is not None and details.change:
-        await _delete_details(db, origin=movement_id)
-        for data in details.body:
-            await _create_details(db, title=data.title, field=data.field, origin=movement_id)
-        return True
-    return False
-
+    details: dict[str, str | int | float] | None
+) -> dict | None:
+    if details is not None:
+        result = await UpdateMovement_async_edgeql.UpdateMovement(
+            db,
+            movement=movement_id,
+            notes=json.dumps(details) if details is not None else None,
+        )
+        if result is None: return None
+        result = asdict(result)
+        return result
+    return None
 
 
 @db.handle_database_errors
@@ -255,4 +258,6 @@ async def getMovement(
     )
     if result is None: return None
     result_dict = asdict(result)
+    if result_dict["notes"] is not None:
+        result_dict["notes"] = json.loads(result_dict["notes"])
     return result_dict

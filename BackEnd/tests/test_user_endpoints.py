@@ -98,18 +98,12 @@ class TestUserEndpoints:
         data = {
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Checking", "Savings", "Investment"]),
-            "type": fake.random_element(["Personal", "Business", "Joint"]),
+            "type_account": fake.random_element(["Personal", "Business", "Joint"]),
             "balance": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-            "details": [
-                {
-                    "title": "Account Number",
-                    "field": str(fake.random_number(digits=10)),
-                },
-                {
-                    "title": "Routing Number",
-                    "field": str(fake.random_number(digits=9)),
-                }
-            ],
+            "notes": {
+                "Account Number":str(fake.random_number(digits=10)),
+                "Routing Number": str(fake.random_number(digits=9))
+            },
             "ignore_on_totals": False,
             "category": fake.random_element(["Primary", "Secondary", "Emergency"])
         }
@@ -141,28 +135,19 @@ class TestUserEndpoints:
         get_data = get_response.json()["result"]
         assert get_data["bank_name"] == bank_data["bank_name"]
         assert get_data["account_name"] == bank_data["account_name"]
-        assert get_data["type"] == bank_data["type"]
+        assert get_data["type_account"] == bank_data["type_account"]
         assert "balance" in get_data
-        assert len(get_data["details"]) == len(bank_data["details"])
+        assert len(get_data["notes"]) == len(bank_data["notes"])
 
         # Update bank account
         update_data = {
             "id": bank["id"],
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Premium", "Gold", "Platinum"]),
-            "type": fake.random_element(["Personal", "Business"]),
-            "details": {
-                "body": [
-                    {
-                        "title": "Account Number",
-                        "field": str(fake.random_number(digits=10)),
-                    },
-                    {
-                        "title": "Updated Flag",
-                        "field": "true",
-                    }
-                ],
-                "change": True
+            "type_account": fake.random_element(["Personal", "Business"]),
+            "notes": {
+                "Account Number": str(fake.random_number(digits=10)),
+                "Updated Flag": "true"
             },
             "ignore_on_totals": True,
             "category": fake.random_element(["Primary", "Secondary"])
@@ -190,11 +175,11 @@ class TestUserEndpoints:
         updated_data = get_updated_response.json()["result"]
         assert updated_data["bank_name"] == update_data["bank_name"]
         assert updated_data["account_name"] == update_data["account_name"]
-        assert updated_data["type"] == update_data["type"]
+        assert updated_data["type_account"] == update_data["type_account"]
         # The response format may vary depending on how your API serializes the details
         # This assertion checks that the update was processed, but doesn't make assumptions
         # about the exact format of the returned details
-        assert "details" in updated_data
+        assert "notes" in updated_data
 
         # Delete bank account
         delete_response = await client.delete(

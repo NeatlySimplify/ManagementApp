@@ -1,11 +1,14 @@
 with user_id:= (<uuid>$id),
-select InternalUser {
+selected_user:= assert_single((select InternalUser filter .id = user_id)),
+select selected_user {
     name,
     email,
+    auth:= true,
+    total_balance:= to_str(sum((select selected_user.account.balance))),
     settings: {
         id,
         account_types,
-        default_bank_account: { id, bank_name, account_name, balance },
+        default_bank_account: {id},
         record_title,
         movement_title,
         entity_title,
@@ -21,41 +24,42 @@ select InternalUser {
     },
     movement: {
         id,
-        type,
-        value,
+        type_movement:= .type,
+        value_str:= to_str(.value),
         installment,
+        payment: {
+            id,
+            status,
+            payment_date,
+        }
     },
     entity: {
         id,
         name,
         email,
         govt_id,
-        type,
+        type_entity:= .type,
         id_type,
         status,
         address: {
             state,
             city,
         },
-        phone: {
-            id,
-            number,
-        }
     },
-    paymente_income:{
+    payment_income:{
         id,
         name,
-        type,
-        value,
+        type_payment:= .type,
+        value_str:=to_str(.value),
         payment_date,
         status,
         movement:{id}
     },
-    paymente_expense:{
+    payment_expense:{
         id,
         name,
-        type,
-        value,
+        type_payment:= .type,
+        value_str:=to_str(.value),
         payment_date,
         status,
         movement:{id}
@@ -66,11 +70,11 @@ select InternalUser {
         id_service,
         active,
         status,
-        type,
+        type_record:= .type,
     },
     event:{
         id,
-        type,
+        type_entry:= .type,
         name,
         status,
         date,
@@ -79,9 +83,6 @@ select InternalUser {
         id,
         bank_name,
         account_name,
-        balance,
+        balance_str:=to_str(.balance),
     },
-    entityNUM:= (select EntityNum(user_id)),
-    recordNUM:= (select RecordNum(user_id)),
-    balanceTOTAL:= (select balanceTotal(user_id))
-} filter .id = user_id
+}

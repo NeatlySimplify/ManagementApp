@@ -4,26 +4,24 @@ from uuid import UUID
 from pydantic import BaseModel
 from pydantic.networks import EmailStr
 
-from src.features.generics.schema import CreateDictType, UpdateDictType
-
 
 class EntityUpdate(BaseModel):
     id: UUID
     email: EmailStr | None = None
-    type: str | None = None
+    type_entity: str | None = None
     id_type: str | None = None
     status: bool | None = None
     govt_id: str | None = None
     name: str | None = None
     sex: str | None = None
     relationship_status: str | None = None
-    details: UpdateDictType | None = None
+    notes: dict[str, str | int | float] | None = None
     birth: datetime.date | None = None
 
 
 class EntityCreate(BaseModel):
     email: str
-    type: str
+    type_entity: str
     id_type: str
     status: bool | None = False
     govt_id: str
@@ -31,7 +29,7 @@ class EntityCreate(BaseModel):
     sex: str | None = None
     relationship_status: str | None = None
     birth: datetime.date | None = None
-    details: list[CreateDictType] | None = None
+    notes: dict[str, str | int | float] | None = None
 
 
 class AddressUpdate(BaseModel):
@@ -58,15 +56,15 @@ class AddressCreate(BaseModel):
 
 class ContactUpdate(BaseModel):
     id: UUID
-    number: UpdateDictType | None = None
+    number: dict[str, str] | None = None
     name: str | None = None
     email: EmailStr | None = None
-    details: UpdateDictType | None = None
+    notes: dict[str, str | int | float] | None = None
 
 
 class ContactCreate(BaseModel):
     entity: UUID
-    number: list[CreateDictType]
+    number: dict[str, str]
     name: str
     email: EmailStr | None
-    details: list[CreateDictType] | None = None
+    notes: dict[str, str | int | float] | None = None

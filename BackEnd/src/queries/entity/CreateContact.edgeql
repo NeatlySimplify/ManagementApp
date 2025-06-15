@@ -3,6 +3,8 @@ add_contact:= (
     insert Contact{
         name:= <str>$name,
         email:= <optional str>$email,
+        notes:=<optional json>$notes,
+        number:= <json>$number,
     }
 ) if exists entity else <Contact>{},
 update_entity:= (update entity set {
