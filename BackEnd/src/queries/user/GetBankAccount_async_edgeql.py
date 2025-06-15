@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import decimal
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -32,18 +30,11 @@ class GetBankAccountResult(NoPydanticValidation):
     id: uuid.UUID
     bank_name: str
     account_name: str
+    type_account: str | None
     balance: decimal.Decimal | None
-    details: list[GetBankAccountResultDetailsItem]
+    notes: str | None
     ignore_on_totals: bool | None
     category: str | None
-    type: str | None
-
-
-@dataclasses.dataclass
-class GetBankAccountResultDetailsItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
 
 
 async def GetBankAccount(
@@ -56,11 +47,11 @@ async def GetBankAccount(
         select BankAccount {
             bank_name,
             account_name,
+            type_account:= .type,
             balance,
-            details: {*},
+            notes,
             ignore_on_totals,
             category,
-            type
         } filter .id = <uuid>$bank_account\
         """,
         bank_account=bank_account,

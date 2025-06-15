@@ -3,13 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import decimal
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -24,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -33,17 +30,24 @@ class GetUserDataResult(NoPydanticValidation):
     id: uuid.UUID
     name: str
     email: str
+    auth: bool
+    total_balance: str
     settings: GetUserDataResultSettings | None
     movement: list[GetUserDataResultMovementItem]
     entity: list[GetUserDataResultEntityItem]
-    paymente_income: list[GetUserDataResultPaymenteIncomeItem]
-    paymente_expense: list[GetUserDataResultPaymenteIncomeItem]
+    payment_income: list[GetUserDataResultPaymentIncomeItem]
+    payment_expense: list[GetUserDataResultPaymentIncomeItem]
     record: list[GetUserDataResultRecordItem]
     event: list[GetUserDataResultEventItem]
-    account: list[GetUserDataResultSettingsDefaultBankAccount]
-    entityNUM: int
-    recordNUM: int
-    balanceTOTAL: decimal.Decimal
+    account: list[GetUserDataResultAccountItem]
+
+
+@dataclasses.dataclass
+class GetUserDataResultAccountItem(NoPydanticValidation):
+    id: uuid.UUID
+    bank_name: str
+    account_name: str
+    balance_str: str | None
 
 
 @dataclasses.dataclass
@@ -52,11 +56,10 @@ class GetUserDataResultEntityItem(NoPydanticValidation):
     name: str | None
     email: str
     govt_id: str | None
-    type: str | None
+    type_entity: str | None
     id_type: str | None
     status: bool | None
     address: list[GetUserDataResultEntityItemAddressItem]
-    phone: list[GetUserDataResultEntityItemPhoneItem]
 
 
 @dataclasses.dataclass
@@ -67,20 +70,9 @@ class GetUserDataResultEntityItemAddressItem(NoPydanticValidation):
 
 
 @dataclasses.dataclass
-class GetUserDataResultEntityItemPhoneItem(NoPydanticValidation):
-    id: uuid.UUID
-    number: list[GetUserDataResultEntityItemPhoneItemNumberItem]
-
-
-@dataclasses.dataclass
-class GetUserDataResultEntityItemPhoneItemNumberItem(NoPydanticValidation):
-    id: uuid.UUID
-
-
-@dataclasses.dataclass
 class GetUserDataResultEventItem(NoPydanticValidation):
     id: uuid.UUID
-    type: str | None
+    type_entry: str | None
     name: str | None
     status: bool | None
     date: datetime.date | None
@@ -89,24 +81,32 @@ class GetUserDataResultEventItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetUserDataResultMovementItem(NoPydanticValidation):
     id: uuid.UUID
-    type: str | None
-    value: decimal.Decimal
+    type_movement: str | None
+    value_str: str
     installment: int
+    payment: list[GetUserDataResultMovementItemPaymentItem]
 
 
 @dataclasses.dataclass
-class GetUserDataResultPaymenteIncomeItem(NoPydanticValidation):
+class GetUserDataResultMovementItemPaymentItem(NoPydanticValidation):
+    id: uuid.UUID
+    status: bool | None
+    payment_date: datetime.date | None
+
+
+@dataclasses.dataclass
+class GetUserDataResultPaymentIncomeItem(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type: str | None
-    value: decimal.Decimal | None
+    type_payment: str | None
+    value_str: str | None
     payment_date: datetime.date | None
     status: bool | None
-    movement: GetUserDataResultPaymenteIncomeItemMovement
+    movement: GetUserDataResultPaymentIncomeItemMovement
 
 
 @dataclasses.dataclass
-class GetUserDataResultPaymenteIncomeItemMovement(NoPydanticValidation):
+class GetUserDataResultPaymentIncomeItemMovement(NoPydanticValidation):
     id: uuid.UUID
 
 
@@ -117,7 +117,7 @@ class GetUserDataResultRecordItem(NoPydanticValidation):
     id_service: str | None
     active: bool | None
     status: str | None
-    type: str | None
+    type_record: str | None
 
 
 @dataclasses.dataclass
@@ -142,9 +142,6 @@ class GetUserDataResultSettings(NoPydanticValidation):
 @dataclasses.dataclass
 class GetUserDataResultSettingsDefaultBankAccount(NoPydanticValidation):
     id: uuid.UUID
-    bank_name: str
-    account_name: str
-    balance: decimal.Decimal | None
 
 
 async def GetUserData(
@@ -155,13 +152,16 @@ async def GetUserData(
     return await executor.query_single(
         """\
         with user_id:= (<uuid>$id),
-        select InternalUser {
+        selected_user:= assert_single((select InternalUser filter .id = user_id)),
+        select selected_user {
             name,
             email,
+            auth:= true,
+            total_balance:= to_str(sum((select selected_user.account.balance))),
             settings: {
                 id,
                 account_types,
-                default_bank_account: { id, bank_name, account_name, balance },
+                default_bank_account: {id},
                 record_title,
                 movement_title,
                 entity_title,
@@ -177,41 +177,42 @@ async def GetUserData(
             },
             movement: {
                 id,
-                type,
-                value,
+                type_movement:= .type,
+                value_str:= to_str(.value),
                 installment,
+                payment: {
+                    id,
+                    status,
+                    payment_date,
+                }
             },
             entity: {
                 id,
                 name,
                 email,
                 govt_id,
-                type,
+                type_entity:= .type,
                 id_type,
                 status,
                 address: {
                     state,
                     city,
                 },
-                phone: {
-                    id,
-                    number,
-                }
             },
-            paymente_income:{
+            payment_income:{
                 id,
                 name,
-                type,
-                value,
+                type_payment:= .type,
+                value_str:=to_str(.value),
                 payment_date,
                 status,
                 movement:{id}
             },
-            paymente_expense:{
+            payment_expense:{
                 id,
                 name,
-                type,
-                value,
+                type_payment:= .type,
+                value_str:=to_str(.value),
                 payment_date,
                 status,
                 movement:{id}
@@ -222,11 +223,11 @@ async def GetUserData(
                 id_service,
                 active,
                 status,
-                type,
+                type_record:= .type,
             },
             event:{
                 id,
-                type,
+                type_entry:= .type,
                 name,
                 status,
                 date,
@@ -235,12 +236,9 @@ async def GetUserData(
                 id,
                 bank_name,
                 account_name,
-                balance,
+                balance_str:=to_str(.balance),
             },
-            entityNUM:= (select EntityNum(user_id)),
-            recordNUM:= (select RecordNum(user_id)),
-            balanceTOTAL:= (select balanceTotal(user_id))
-        } filter .id = user_id\
+        }\
         """,
         id=id,
     )

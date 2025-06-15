@@ -26,8 +26,13 @@ async def login(
 
     a_token = create_token(result, "access")
     r_token = create_token(result, "refresh")
+    user_data = {
+        "name": result["name"],
+        "email": result["email"],
+        "first_access": result["first_access"]
+    }
 
-    response = JSONResponse(content={"status": "success"})
+    response = JSONResponse(content={"status": "success", "response": user_data})
     response.set_cookie("access_token", a_token)
     response.set_cookie("refresh_token", r_token)
     return response
@@ -80,7 +85,7 @@ async def loginOnToken(
     response: Response,
     db=Depends(get_gel_client)
 ):
-    comparisson, result, user = await loginWithToken(db, login.email, login.token)
+    comparisson, result = await loginWithToken(db, login.email, login.token)
     if result is None or not comparisson:
         raise HTTPException(
             status_code=404,
@@ -88,6 +93,13 @@ async def loginOnToken(
         )
     a_token = create_token(user, "access")
     r_token = create_token(user, "refresh")
+    user_data = {
+        "name": result["name"],
+        "email": result["email"],
+        "first_access": result["first_access"]
+    }
+
+    response = JSONResponse(content={"status": "success", "response": user_data})
     response.set_cookie("access_token", a_token)
     response.set_cookie("refresh_token", r_token)
     return {

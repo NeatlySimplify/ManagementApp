@@ -1,10 +1,10 @@
 select Scheduler{
-    type,
+    type_entry := .type,
     name,
     status,
     date,
     beginning_time,
     ending_time,
-    details: {*},
+    notes,
     origin: {id}
 }filter .id = <uuid>$id

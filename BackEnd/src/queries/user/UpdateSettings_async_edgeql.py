@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,7 +20,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 

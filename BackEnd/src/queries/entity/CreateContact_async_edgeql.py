@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,7 +20,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -48,6 +46,8 @@ async def CreateContact(
     entity: uuid.UUID,
     name: str,
     email: str | None = None,
+    notes: str | None = None,
+    number: str,
 ) -> CreateContactResult:
     return await executor.query_single(
         """\
@@ -56,6 +56,8 @@ async def CreateContact(
             insert Contact{
                 name:= <str>$name,
                 email:= <optional str>$email,
+                notes:=<optional json>$notes,
+                number:= <json>$number,
             }
         ) if exists entity else <Contact>{},
         update_entity:= (update entity set {
@@ -69,4 +71,6 @@ async def CreateContact(
         entity=entity,
         name=name,
         email=email,
+        notes=notes,
+        number=number,
     )

@@ -99,18 +99,12 @@ class BankAccountData:
         return {
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Checking", "Savings", "Investment"]),
-            "type": fake.random_element(["Personal", "Business", "Joint"]),
+            "type_account": fake.random_element(["Personal", "Business", "Joint"]),
             "balance": str(Decimal(random_number_in_range) / Decimal(100)),
-            "details": [
-                {
-                    "title": "Account Number",
-                    "field": str(fake.random_number(digits=10)),
-                },
-                {
-                    "title": "Routing Number",
-                    "field": str(fake.random_number(digits=9)),
-                }
-            ],
+            "notes":{
+                "Account Number": str(fake.random_number(digits=10)),
+                "Routing Number": str(fake.random_number(digits=9))
+            },
             "ignore_on_totals": False,
             "category": fake.random_element(["Primary", "Secondary", "Emergency"])
         }
@@ -244,7 +238,7 @@ async def test_entity(client, authenticated_user):
     today = datetime.date.today()
     entity_data = {
         "email": fake.email(),
-        "type": fake.random_element(["Person", "Company", "Institution"]),
+        "type_entity": fake.random_element(["Person", "Company", "Institution"]),
         "id_type": fake.random_element(["SSN", "EIN", "Passport"]),
         "govt_id": str(fake.random_number(digits=9)),
         "name": fake.name(),
@@ -252,12 +246,9 @@ async def test_entity(client, authenticated_user):
         "relationship_status": fake.random_element(["Single", "Married", "Divorced"]),
         "birth": (today - datetime.timedelta(days=fake.random_int(min=7000, max=25000))).isoformat(),
         "status": fake.boolean(),
-        "details": [
-            {
-                "title": "Ocupation",
-                "field": fake.job(),
-            },
-        ],
+        "notes": {
+            "Ocupation":fake.job(),
+        }
     }
     entity_id_to_yield = str(uuid.uuid4())
     created_entity_id = None
@@ -307,10 +298,10 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
     record_id_to_yield = str(uuid.uuid4())
     # Ensure movement_data_to_yield is always defined for the yield statement
     movement_data_to_yield = {
-        "type": "Expense", "name": "Dummy Movement", "parts": 1, "total": "0.00",
+        "type_movement": "Expense", "name": "Dummy Movement", "parts": 1, "total": "0.00",
         "is_due": today.isoformat(), "payment_date": today.isoformat(),
         "bank_account": bank_id, "category": "Dummy", "subcategory": "Dummy",
-        "status": False, "details": [], "cycle": "only", "record": record_id_to_yield
+        "status": False, "notes": {}, "cycle": "only", "record": record_id_to_yield
     }
 
 
@@ -324,9 +315,9 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
             "id_service": f"REC-{fake.random_number(digits=6)}",
             "active": True,
             "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-            "type": fake.random_element(["Invoice", "Receipt"]),
+            "type_record": fake.random_element(["Invoice", "Receipt"]),
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-            "details": [{"title": "Notes", "field": fake.paragraph()}],
+            "notes": {"Note": fake.paragraph()},
             "entity": entity_id
         }
 
@@ -342,7 +333,7 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
 
             # Now create a movement linked to that record
             movement_data = {
-                "type": fake.random_element(["Income", "Expense"]),
+                "type_movement": fake.random_element(["Income", "Expense"]),
                 "name": fake.sentence(nb_words=3),
                 "parts": 1,
                 "total": str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
@@ -352,11 +343,11 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
                 "category": "Test Category",
                 "subcategory": "Test Subcategory",
                 "status": False,
-                "details": [
-                    {"title": "Description", "field": fake.sentence()},
-                    {"title": "Notes", "field": fake.paragraph()},
-                    {"title": "Category", "field": fake.random_element(["Primary", "Secondary", "Tertiary"])}
-                ],
+                "notes": {
+                    "Description": fake.sentence(),
+                    "Note": fake.paragraph(),
+                    "Category": fake.random_element(["Primary", "Secondary", "Tertiary"])
+                },
                 "cycle": "only",
                 "unique": None,
                 "interest": None,
@@ -421,18 +412,15 @@ async def test_scheduler(client, authenticated_user):
     """
     today = datetime.date.today()
     scheduler_data = {
-        "type": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
+        "type_entry": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
         "name": fake.sentence(nb_words=3),
         "status": fake.boolean(),
         "date": today.isoformat(),
         "beginning_time": datetime.time(10, 0).isoformat(),
         "ending_time": datetime.time(11, 0).isoformat(),
-        "details": [
-            {
-                "title": "Location",
-                "field": fake.address(),
-            },
-        ],
+        "notes": {
+            "Location":fake.address()
+        },
         "origin": None
     }
     scheduler_id_to_yield = str(uuid.uuid4())

@@ -1,18 +1,5 @@
 module default {
     abstract type Record_OR_Payment;
-    abstract type Link;
-
-    abstract type Metadata{
-        title: str;
-        field: str;
-        required origin: Link {
-            on target delete delete source;
-        };
-    }
-
-    type Details extending Metadata;
-
-    type PhoneNumber extending Metadata;
 
 
     abstract type User{
@@ -66,11 +53,11 @@ module default {
     }
 
 
-    type Contact extending Link{
+    type Contact{
         name: str;
         email: str;
-        multi number:= (select PhoneNumber filter .origin.id = __source__.id);
-        multi details:= (select Details filter .origin.id = __source__.id);
+        number: json;
+        notes: json;
     }
 
     type Auditable {
@@ -85,7 +72,7 @@ module default {
 
 
     # Person or Organization
-    type Entity extending Link{
+    type Entity{
         timestamp: datetime {
             default := datetime_of_statement();
         };
@@ -108,7 +95,7 @@ module default {
             on target delete delete source;
         };
 
-        multi details:= (select Details filter .origin.id = __source__.id);
+        notes: json;
         multi phone : Contact{
             on source delete delete target;
             on target delete allow;
@@ -160,6 +147,9 @@ module default {
         is_active: bool{
             default := false;
         };
+        first_access: bool {
+            default:= true;
+        };
         settings: UserSettings {
             on source delete delete target
         };
@@ -179,8 +169,8 @@ module default {
 
 
         # Computed Properties:
-        paymente_income:=(select __source__.movement.payment filter .type = "income" order by .payment_date desc);
-        paymente_expense:=(select __source__.movement.payment filter .type = "expense" order by .payment_date desc);
+        payment_income:=(select __source__.movement.payment filter .type = "income" order by .payment_date desc);
+        payment_expense:=(select __source__.movement.payment filter .type = "expense" order by .payment_date desc);
 
         trigger link_delete after delete for each do (
             delete (select InternalUser.<user)
@@ -197,7 +187,7 @@ module default {
         movement_title: str;
         entity_title: str;
         entity_types: array<str>{
-            default := ["Cliente", "Parceiro"];
+            default := ["Cliente PF", "Cliente PJ", "Sócio"];
         };
         entity_id_types: array<str>{
             default:= ["CPF", "CNPJ", "RG", "CNH"]
@@ -227,7 +217,7 @@ module default {
 
 
     # Service or Action
-    type Record extending Record_OR_Payment, Link{
+    type Record extending Record_OR_Payment{
         name: str;
         id_service: str;
         active: bool;
@@ -235,7 +225,7 @@ module default {
         type: str;
         value: decimal;
 
-        multi details:= (select Details filter .origin.id = __source__.id);
+        notes: json;
 
         user: InternalUser {
             on target delete delete source;
@@ -289,7 +279,7 @@ module default {
    }
 
 
-    type Scheduler extending Link{
+    type Scheduler{
         type: str;
         name: str;
         status: bool {
@@ -298,7 +288,7 @@ module default {
         date: cal::local_date;
         beginning_time: cal::local_time;
         optional ending_time: cal::local_time;
-        multi details:= (select Details filter .origin.id = __source__.id);
+        notes: json;
 
         user: InternalUser {
             on target delete delete source;
@@ -308,14 +298,14 @@ module default {
         };
     }
 
-    type BankAccount extending Link{
+    type BankAccount{
         required bank_name: str;
         required account_name: str;
         balance: decimal {
             constraint min_value(0);
             default := 0;
         };
-        multi details:= (select Details filter .origin.id = __source__.id);
+        notes: json;
         ignore_on_totals: bool {
             default:= <bool>false;
         };
@@ -323,11 +313,11 @@ module default {
         type: str;
     }
 
-    type Movement extending Link{
+    type Movement{
         type: str;
         value:= (sum(__source__.payment.value));
         installment:= (count(__source__.payment));
-        multi details:= (select Details filter .origin.id = __source__.id);
+        notes: json;
         user: InternalUser {
             on target delete delete source;
         };

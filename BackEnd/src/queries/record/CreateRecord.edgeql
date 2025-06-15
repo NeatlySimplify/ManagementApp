@@ -6,6 +6,7 @@ select (insert Record{
     status := <optional str>$status,
     type:= <str>$type,
     value := to_decimal(<str>$value, 'FM999999999999.99'),
+    notes:=<optional json>$notes,
     entity := assert_single((select Entity filter .id = <uuid>$entity))
 }){
     id

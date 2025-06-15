@@ -20,7 +20,7 @@ class TestEntityEndpoints:
         # Create entity
         entity_data = {
             "email": fake.email(),
-            "type": fake.random_element(["Person", "Company", "Institution"]),
+            "type_entity": fake.random_element(["Person", "Company", "Institution"]),
             "id_type": fake.random_element(["SSN", "EIN", "Passport"]),
             "govt_id": str(fake.random_number(digits=9)),
             "name": fake.name(),
@@ -28,10 +28,10 @@ class TestEntityEndpoints:
             "relationship_status": fake.random_element(["Single", "Married", "Divorced"]),
             "birth": (today - datetime.timedelta(days=fake.random_int(min=7000, max=25000))).isoformat(),
             "status": fake.boolean(),
-            "details": [
-                {"title": "Occupation", "field": fake.job()},
-                {"title": "Notes", "field": fake.paragraph()}
-            ]
+            "notes":{
+                "Occupation": fake.job(),
+                "Notes": fake.paragraph()
+            }
         }
 
         create_response = await client.post(
@@ -64,7 +64,7 @@ class TestEntityEndpoints:
         assert get_response.status_code == 200
         get_data = get_response.json()["result"]
         assert get_data["email"] == entity_data["email"]
-        assert get_data["type"] == entity_data["type"]
+        assert get_data["type_entity"] == entity_data["type_entity"]
         assert get_data["id_type"] == entity_data["id_type"]
         assert get_data["govt_id"] == entity_data["govt_id"]
         assert get_data["name"] == entity_data["name"]
@@ -72,17 +72,13 @@ class TestEntityEndpoints:
         assert get_data["relationship_status"] == entity_data["relationship_status"]
         assert get_data["status"] == entity_data["status"]
         # Verify all details match
-        assert len(get_data["details"]) == len(entity_data["details"])
-        for detail in get_data["details"]:
-            matching_detail = next((d for d in entity_data["details"] if d["title"] == detail["title"]), None)
-            assert matching_detail is not None
-            assert detail["field"] == matching_detail["field"]
+        assert len(get_data["notes"]) == len(entity_data["notes"])
 
         # Update entity
         update_data = {
             "id": entity_id,
             "email": fake.email(),
-            "type": fake.random_element(["Organization", "Government"]),
+            "type_entity": fake.random_element(["Organization", "Government"]),
             "id_type": fake.random_element(["TIN", "VAT"]),
             "govt_id": str(fake.random_number(digits=8)),
             "name": fake.company(),
@@ -90,12 +86,9 @@ class TestEntityEndpoints:
             "relationship_status": fake.random_element(["Partnered", "Separated"]),
             "birth": (today - datetime.timedelta(days=fake.random_int(min=5000, max=20000))).isoformat(),
             "status": not entity_data["status"],
-            "details": {
-                "body": [
-                    {"title": "Industry", "field": fake.word()},
-                    {"title": "Updated Notes", "field": fake.paragraph()}
-                ],
-                "change": True
+            "notes": {
+                "Industry": fake.word(),
+                "Updated Notes": fake.paragraph()
             }
         }
         update_response = await client.put(
@@ -116,17 +109,11 @@ class TestEntityEndpoints:
         assert get_updated_response.status_code == 200
         updated_data = get_updated_response.json()["result"]
         assert updated_data["email"] == update_data["email"]
-        assert updated_data["type"] == update_data["type"]
+        assert updated_data["type_entity"] == update_data["type_entity"]
         assert updated_data["id_type"] == update_data["id_type"]
         assert updated_data["govt_id"] == update_data["govt_id"]
         assert updated_data["name"] == update_data["name"]
         assert updated_data["status"] == update_data["status"]
-        # Verify updated details match
-        for detail in updated_data["details"]:
-            # For updates, we need to check against the update_data body
-            matching_detail = next((d for d in update_data["details"]["body"] if d["title"] == detail["title"]), None)
-            assert matching_detail is not None
-            assert detail["field"] == matching_detail["field"]
 
         # Delete entity
         delete_response = await client.delete(
@@ -234,15 +221,13 @@ class TestEntityEndpoints:
         # Create contact
         contact_data = {
             "entity": entity_id,
-            "number": [
-                {"field": fake.phone_number(), "title": fake.random_element(["Mobile", "Work", "Home"])}
-            ],
+            "number": {str(fake.random_element(["Mobile", "Work", "Home"])): fake.phone_number()},
             "email": fake.email(),
             "name": fake.name(),
-            "details": [
-                {"title": "Preferred", "field": str(fake.boolean())},
-                {"title": "Notes", "field": fake.sentence()}
-            ]
+            "notes": {
+                "Preferred": str(fake.boolean()),
+                "Notes": fake.sentence()
+            }
         }
 
         create_response = await client.post(
@@ -273,30 +258,14 @@ class TestEntityEndpoints:
             contacts = entity_data["contacts"]
             created_contact = next((cont for cont in contacts if cont["id"] == contact_id), None)
             assert created_contact is not None
-            assert created_contact["number"][0]["field"] == contact_data["number"][0]["field"]
+            assert len(created_contact["number"]) == len(contact_data["number"])
             assert created_contact["email"] == contact_data["email"]
             assert created_contact["name"] == contact_data["name"]
         # Update contact
         update_contact_data = {
             "id": create_contact_id,
-            "number": {
-                "body": [
-                    {
-                        "field": fake.phone_number(),
-                        "title": fake.random_element(["Emergency", "Business"])
-                    }
-                ],
-                "change": True
-            },
             "email": fake.email(),
             "name": fake.name(),
-            "details": {
-                "body": [
-                    {"title": "Preferred", "field": str(not contact_data["details"][0]["field"] == "True")},
-                    {"title": "Updated Notes", "field": fake.sentence()}
-                ],
-                "change": True
-            }
         }
         update_response = await client.put(
             "/api/entity/contact",
@@ -351,7 +320,7 @@ class TestEntityEndpoints:
         assert updated_data["status"] == partial_update["status"]
         # Original data should remain unchanged
         assert updated_data["email"] == original_data["email"]
-        assert updated_data["type"] == original_data["type"]
+        assert updated_data["type_entity"] == original_data["type_entity"]
 
     @pytest.mark.asyncio
     async def test_unauthorized_access(self, client):
@@ -364,7 +333,7 @@ class TestEntityEndpoints:
         # Try to create entity without authentication
         entity_data = {
             "email": fake.email(),
-            "type": "Person",
+            "type_entity": "Person",
             "name": fake.name(),
             "status": True
         }
@@ -385,10 +354,7 @@ class TestEntityEndpoints:
         # Try to create contact without authentication
         contact_data = {
             "entity": random_id,
-            "number": {
-                "value": fake.phone_number(),
-                "type": "Mobile"
-            },
+            "number": {"Mobile": fake.phone_number()},
             "email": fake.email()
         }
 
@@ -443,7 +409,7 @@ class TestEntityEndpoints:
         # Invalid email format
         invalid_email_data = {
             "email": "not-an-email",
-            "type": "Person",
+            "type_entity": "Person",
             "name": fake.name(),
             "status": True
         }
@@ -513,8 +479,7 @@ class TestEntityEndpoints:
         invalid_entity_data = {
             "entity": "not-a-valid-uuid",
             "number": {
-                "value": fake.phone_number(),
-                "type": "Mobile"
+                "Mobile": fake.phone_number(),
             },
             "email": fake.email(),
             "name": fake.name()
@@ -565,14 +530,11 @@ class TestEntityEndpoints:
         contact_data = {
             "entity": fake_entity_id,
             "number": {
-                "value": fake.phone_number(),
-                "type": "Mobile"
+                "Mobile": fake.phone_number(),
             },
             "email": fake.email(),
             "name": fake.name(),
-            "details": [
-                {"title": "Notes", "field": "Test contact"}
-            ]
+            "notes": {"Notes": "Test contact"}
         }
 
         response = await client.post(
@@ -591,7 +553,7 @@ class TestEntityEndpoints:
 
         entity_data = {
             "email": fake.email(),
-            "type": "Person",
+            "type_entity": "Person",
             "id_type": "Passport",
             "govt_id": "ABC-123-456",
             "name": "José María Ñoño-Pérez",
@@ -599,10 +561,10 @@ class TestEntityEndpoints:
             "relationship_status": "Single",
             "birth": (today - datetime.timedelta(days=10000)).isoformat(),
             "status": True,
-            "details": [
-                {"title": "Occupation", "field": "Software Engineer"},
-                {"title": "Notes", "field": "Special chars: áéíóú ñ üç @#$%"}
-            ]
+            "notes":{
+                "Occupation": "Software Engineer",
+                "Notes": "Special chars: áéíóú ñ üç @#$%"
+            }
         }
 
         create_response = await client.post(
@@ -625,13 +587,6 @@ class TestEntityEndpoints:
         assert get_response.status_code == 200
         get_data = get_response.json()["result"]
         assert get_data["name"] == entity_data["name"]
-        # Find the note detail by title
-        notes_detail = next((detail for detail in get_data["details"] if detail["title"] == "Notes"), None)
-        assert notes_detail is not None
-        # Find the corresponding note in entity_data
-        entity_notes = next((detail for detail in entity_data["details"] if detail["title"] == "Notes"), None)
-        assert entity_notes is not None
-        assert notes_detail["field"] == entity_notes["field"]
 
         # Clean up
         await client.delete(

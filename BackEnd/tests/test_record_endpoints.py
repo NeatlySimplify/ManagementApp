@@ -27,13 +27,9 @@ class TestRecordEndpoints:
                     "id_service": f"REC-{fake.random_number(digits=6)}",
                     "active": True,
                     "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-                    "type": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
+                    "type_record": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
                     "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-                    "details": [
-                        {"title": "Notes", "field": fake.paragraph()},
-                        {"title": "Reference", "field": str(fake.uuid4())},
-                        {"title": "Category", "field": fake.random_element(["Business", "Personal", "Education"])}
-                    ],
+                    "notes": {"Note": fake.paragraph(), "Reference": str(fake.uuid4()), "Category": fake.random_element(["Business", "Personal", "Education"])},
                     "entity": entity  # Entity is required - record must be associated with a client/organization
                 }
             else:
@@ -43,16 +39,9 @@ class TestRecordEndpoints:
                     "id_service": f"REC-{fake.random_number(digits=6)}",
                     "active": True,
                     "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-                    "type": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
+                    "type_record": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
                     "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-                    "details": {
-                        "change": True,
-                        "body": [
-                            {"title": "Notes", "field": "..." },
-                            {"title": "Reference", "field": "..." },
-                            {"title": "Category", "field": "..." }
-                        ]
-                    }
+                    "notes": {},
                 }
         data = record_stub(entity=entity_id)
         create_response = await client.post(
@@ -80,14 +69,10 @@ class TestRecordEndpoints:
         assert get_data["id_service"] == data["id_service"]
         assert get_data["active"] == data["active"]
         assert get_data["status"] == data["status"]
-        assert get_data["type"] == data["type"]
+        assert get_data["type_record"] == data["type_record"]
         assert Decimal(get_data["str_value"]) == Decimal(data["value"])
         # Verify details structure
-        assert len(get_data["details"]) == len(data["details"])
-        for detail in get_data["details"]:
-            matching_detail = next((d for d in data["details"] if d["title"] == detail["title"]), None)
-            assert matching_detail is not None
-            assert detail["field"] == matching_detail["field"]
+        assert len(get_data["notes"]) == len(data["notes"])
         assert len(get_data["entity"]) > 0
         assert get_data["entity"][0]["id"] == entity_id
 
@@ -114,7 +99,7 @@ class TestRecordEndpoints:
         assert updated_data["id_service"] == update_data["id_service"]
         assert updated_data["active"] == update_data["active"]
         assert updated_data["status"] == update_data["status"]
-        assert updated_data["type"] == update_data["type"]
+        assert updated_data["type_record"] == update_data["type_record"]
         assert Decimal(updated_data["str_value"]) == Decimal(update_data["value"])
         assert len(updated_data["entity"]) > 0
         assert updated_data["entity"][0]["id"] == entity_id
@@ -148,11 +133,11 @@ class TestRecordEndpoints:
             "id_service": f"REC-{fake.random_number(digits=6)}",
             "active": True,
             "status": fake.random_element(["Pending", "Completed"]),
-            "type": fake.random_element(["Invoice", "Receipt"]),
+            "type_record": fake.random_element(["Invoice", "Receipt"]),
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-            "details": [
-                {"title": "Notes", "field": fake.paragraph()}
-            ],
+            "notes": {
+                "Note": fake.paragraph()
+            },
             "entity": entity_id  # Entity is required - represents the client/organization
         }
         print("On create\n")
@@ -171,13 +156,7 @@ class TestRecordEndpoints:
             "id": record_id,
             "name": fake.sentence(nb_words=4),
             "active": False,
-            "details": {
-                "body": [
-                    {"title": "Notes", "field": fake.paragraph()},
-                    {"title": "Additional Info", "field": fake.sentence()}
-                ],
-                "change": True
-            }
+            "notes": { "Note": fake.paragraph(), "Additional Info": fake.sentence()},
         }
         print("On update\n")
         print("Entity: ", entity_id)
@@ -201,7 +180,7 @@ class TestRecordEndpoints:
         updated_data = get_response.json()["result"]
         assert updated_data["name"] == partial_update["name"]
         assert updated_data["active"] == partial_update["active"]
-        assert updated_data["type"] == data["type"]  # This should remain unchanged
+        assert updated_data["type_record"] == data["type_record"]  # This should remain unchanged
 
         # Clean up
         await client.delete(
@@ -222,11 +201,9 @@ class TestRecordEndpoints:
             "id_service": f"REC-{fake.random_number(digits=6)}",
             "active": True,
             "status": "Active",
-            "type": "Invoice",
+            "type_record": "Invoice",
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-            "details": [
-                {"title": "Notes", "field": fake.paragraph()}
-            ],
+            "notes": {"Note": fake.paragraph()},
             "entity": entity_id  # Required - record must be associated with a client/organization
         }
 
@@ -293,7 +270,7 @@ class TestRecordEndpoints:
         # Note: Entity creation endpoint has changed from /api/entity/create to /api/entity/
         another_entity_data = {
             "email": fake.email(),
-            "type": "Person",
+            "type_entity": "Person",
             "id_type": "ID",
             "govt_id": str(fake.random_number(digits=9)),
             "name": fake.name(),
@@ -316,11 +293,9 @@ class TestRecordEndpoints:
             "id_service": f"REC-{fake.random_number(digits=6)}",
             "active": True,
             "status": "Active",
-            "type": "Invoice",  # Type of service/action
+            "type_record": "Invoice",  # Type of service/action
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),  # Financial value
-            "details": [
-                {"title": "Notes", "field": fake.paragraph()}
-            ],
+            "notes": {"Notes": fake.paragraph()},
             "entity": entity_id  # Primary client/organization (required and must exist in DB)
         }
 
@@ -455,7 +430,7 @@ class TestRecordEndpoints:
         record_data = {
             "name": "Test Record",
             "active": True,
-            "type": "Invoice",  # Type of service/action
+            "type_record": "Invoice",  # Type of service/action
             "value": "100.00",   # Financial value
             "entity": str(uuid.uuid4())  # Required client/organization
         }
@@ -501,7 +476,7 @@ class TestRecordEndpoints:
         invalid_entity_missing = {
             "name": "Test Record",
             "active": True,
-            "type": "Invoice",
+            "type_record": "Invoice",
             "value": "100.00"
             # No entity provided
         }
@@ -518,7 +493,7 @@ class TestRecordEndpoints:
         invalid_entity_data = {
             "name": "Test Record",
             "active": True,
-            "type": "Invoice",
+            "type_record": "Invoice",
             "value": "100.00",
             "entity": "not-a-valid-uuid"  # Entity must be a valid UUID format
         }

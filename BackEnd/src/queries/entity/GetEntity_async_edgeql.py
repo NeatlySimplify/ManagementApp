@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -31,14 +29,14 @@ class NoPydanticValidation:
 class GetEntityResult(NoPydanticValidation):
     id: uuid.UUID
     email: str
-    type: str | None
+    type_entity: str | None
     id_type: str | None
     status: bool | None
     govt_id: str | None
     name: str | None
     sex: str | None
     relationship_status: str | None
-    details: list[GetEntityResultDetailsItem]
+    notes: str | None
     birth: datetime.date | None
     phone: list[GetEntityResultPhoneItem]
     address: list[GetEntityResultAddressItem]
@@ -46,6 +44,7 @@ class GetEntityResult(NoPydanticValidation):
 
 @dataclasses.dataclass
 class GetEntityResultAddressItem(NoPydanticValidation):
+    id: uuid.UUID
     city: str | None
     complement: str | None
     district: str | None
@@ -53,29 +52,15 @@ class GetEntityResultAddressItem(NoPydanticValidation):
     postal: str | None
     state: str | None
     street: str | None
-    id: uuid.UUID
-
-
-@dataclasses.dataclass
-class GetEntityResultDetailsItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
 
 
 @dataclasses.dataclass
 class GetEntityResultPhoneItem(NoPydanticValidation):
-    number: list[GetEntityResultPhoneItemNumberItem]
+    id: uuid.UUID
     email: str | None
     name: str | None
-    id: uuid.UUID
-
-
-@dataclasses.dataclass
-class GetEntityResultPhoneItemNumberItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
+    notes: str | None
+    number: str | None
 
 
 async def GetEntity(
@@ -87,16 +72,16 @@ async def GetEntity(
         """\
         select Entity {
             email,
-            type,
+            type_entity:= .type,
             id_type,
             status,
             govt_id,
             name,
             sex,
             relationship_status,
-            details: {*},
+            notes,
             birth,
-            phone: {*, number:{*}},
+            phone: {*},
             address: {*}
         } filter .id = <uuid>$entity\
         """,

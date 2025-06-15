@@ -10,5 +10,6 @@ update old_entity set {
     name:= <optional str>$name ?? old_entity.name,
     sex:= <optional str>$sex ?? old_entity.sex,
     relationship_status:= <optional str>$relationship_status ?? old_entity.relationship_status,
+    notes:=<optional json>$notes ?? .notes,
     birth:= <optional cal::local_date>$birth ?? old_entity.birth
 }

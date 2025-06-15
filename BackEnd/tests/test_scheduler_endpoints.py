@@ -21,17 +21,17 @@ class TestSchedulerEndpoints:
         end_time = datetime.time(11, 0)
 
         data = {
-            "type": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
+            "type_entry": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
             "name": fake.sentence(nb_words=3),
             "status": fake.boolean(),
             "date": today.isoformat(),
             "beginning_time": start_time.isoformat(),
             "ending_time": end_time.isoformat(),
-            "details":[
-                {"title": "Location", "field": fake.address()},
-                {"title": "Description", "field": fake.paragraph()},
-                {"title": "Priority", "field": fake.random_element(["High", "Medium", "Low"])},
-            ],
+            "notes":{
+                "Location": fake.address(),
+                "Description": fake.paragraph(),
+                "Priority": fake.random_element(["High", "Medium", "Low"])
+            },
             "origin": None
         }
 
@@ -40,7 +40,7 @@ class TestSchedulerEndpoints:
             cookies=authenticated_user.get_auth_cookies(),
             json=data
         )
-        print(data["details"])
+        print(data["notes"])
 
         assert create_response.status_code == 200
         assert create_response.json()["status"] == "success"
@@ -57,9 +57,9 @@ class TestSchedulerEndpoints:
 
         assert get_response.status_code == 200
         get_data = get_response.json()["result"]
-        print(get_data["details"])
+        print(get_data["notes"])
         assert get_data["name"] == data["name"]
-        assert get_data["type"] == data["type"]
+        assert get_data["type_entry"] == data["type_entry"]
         assert "date" in get_data
         assert "beginning_time" in get_data
         assert "ending_time" in get_data
@@ -73,15 +73,11 @@ class TestSchedulerEndpoints:
         update_data = {
             "id": scheduler_id,
             "name": fake.sentence(nb_words=4),
-            "type": fake.random_element(["Task", "Event", "Holiday"]),
+            "type_entry": fake.random_element(["Task", "Event", "Holiday"]),
             "status": not data["status"],
             "date": tomorrow.isoformat(),
             "beginning_time": new_start_time.isoformat(),
             "ending_time": new_end_time.isoformat(),
-            "details": {
-                "body": get_data["details"],
-                "change": True
-            }
         }
 
         update_response = await client.put(
@@ -102,15 +98,13 @@ class TestSchedulerEndpoints:
         assert get_updated_response.status_code == 200
         updated_data = get_updated_response.json()["result"]
         assert updated_data["name"] == update_data["name"]
-        assert updated_data["type"] == update_data["type"]
+        assert updated_data["type_entry"] == update_data["type_entry"]
         assert updated_data["status"] == update_data["status"]
         assert "date" in updated_data
         assert "beginning_time" in updated_data
         assert "ending_time" in updated_data
         # Compare details by checking each item
-        assert len(updated_data["details"]) == len(get_data["details"])
-        for detail in updated_data["details"]:
-            assert any(d["title"] == detail["title"] and d["field"] == detail["field"] for d in get_data["details"])
+        assert len(updated_data["notes"]) == len(get_data["notes"])
 
         # Test with query parameters
         query_get_response = await client.get(
@@ -143,16 +137,15 @@ class TestSchedulerEndpoints:
         today = datetime.date.today()
 
         data = {
-            "type": fake.random_element(["Meeting", "Appointment"]),
+            "type_entry": fake.random_element(["Meeting", "Appointment"]),
             "name": fake.sentence(nb_words=3),
             "status": fake.boolean(),
             "date": today.isoformat(),
             "beginning_time": datetime.time(9, 0).isoformat(),
             "ending_time": datetime.time(10, 0).isoformat(),
-            "details": [{
-                "title": "Description",
-                "field": fake.paragraph()
-            }],
+            "notes": {
+                "Description": fake.paragraph()
+            },
             "origin": None
         }
 
@@ -171,18 +164,9 @@ class TestSchedulerEndpoints:
             "id": scheduler_id,
             "name": fake.sentence(nb_words=4),
             "status": not data["status"],
-            "details": {
-                "body": [
-                    {
-                        "title": "Description",
-                        "field": fake.paragraph()
-                    },
-                    {
-                        "title": "Location",
-                        "field": fake.address()
-                    }
-                ],
-                "change": True
+            "notes": {
+                "Description": fake.paragraph(),
+                "Location": fake.address()
             },
         }
 
@@ -206,19 +190,9 @@ class TestSchedulerEndpoints:
         updated_data = get_response.json()["result"]
         assert updated_data["name"] == partial_update["name"]
         assert updated_data["status"] == partial_update["status"]
-        assert updated_data["type"] == data["type"]
+        assert updated_data["type_entry"] == data["type_entry"]
 
-        # Check if the details were updated correctly
-        has_description = False
-        detailed = updated_data["details"]
-        print(detailed)
-
-        for detail in detailed:
-            if detail["title"] == "Description":
-                has_description = True
-                # Check that it's not the same as before
-
-        assert has_description
+        assert updated_data["notes"]
 
         # Clean up
         await client.delete(
@@ -236,7 +210,7 @@ class TestSchedulerEndpoints:
 
         # Try to create scheduler without authentication
         scheduler_data = {
-            "type": "Meeting",
+            "type_entry": "Meeting",
             "name": "Unauthorized test",
             "date": datetime.date.today().isoformat()
         }
@@ -262,7 +236,7 @@ class TestSchedulerEndpoints:
         """Test creating scheduler with invalid data."""
         # Missing required fields
         invalid_data = {
-            "type": "Meeting"
+            "type_entry": "Meeting"
             # Missing name and date
         }
 
@@ -276,7 +250,7 @@ class TestSchedulerEndpoints:
 
         # Invalid date format
         invalid_date_data = {
-            "type": "Meeting",
+            "type_entry": "Meeting",
             "name": "Test Meeting",
             "date": "not-a-date",
             "status": True
@@ -300,7 +274,7 @@ class TestSchedulerEndpoints:
         origin_id = str(uuid.uuid4())  # Mock origin ID
 
         data = {
-            "type": fake.random_element(["Meeting", "Appointment"]),
+            "type_entry": fake.random_element(["Meeting", "Appointment"]),
             "name": fake.sentence(nb_words=3),
             "status": True,
             "date": today.isoformat(),

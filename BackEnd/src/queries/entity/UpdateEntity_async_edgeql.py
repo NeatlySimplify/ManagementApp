@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -44,6 +42,7 @@ async def UpdateEntity(
     name: str | None = None,
     sex: str | None = None,
     relationship_status: str | None = None,
+    notes: str | None = None,
     birth: datetime.date | None = None,
 ) -> UpdateEntityResult | None:
     return await executor.query_single(
@@ -60,6 +59,7 @@ async def UpdateEntity(
             name:= <optional str>$name ?? old_entity.name,
             sex:= <optional str>$sex ?? old_entity.sex,
             relationship_status:= <optional str>$relationship_status ?? old_entity.relationship_status,
+            notes:=<optional json>$notes ?? .notes,
             birth:= <optional cal::local_date>$birth ?? old_entity.birth
         }\
         """,
@@ -72,5 +72,6 @@ async def UpdateEntity(
         name=name,
         sex=sex,
         relationship_status=relationship_status,
+        notes=notes,
         birth=birth,
     )

@@ -25,7 +25,8 @@ movementRoute = APIRouter(prefix='/api/movement')
 
 
 @movementRoute.get('/{id}', response_class=JSONResponse)
-@handle_result()
+#@handle_result()
+@movementRoute.get('/{id}', response_class=JSONResponse)
 async def get_movement(id: UUID, user=Depends(get_current_user), db=Depends(get_gel_client)):
     return await getMovement(db, id)
 
@@ -42,7 +43,7 @@ async def update_movement(data: MovementUpdate, user=Depends(get_current_user), 
     return await updateMovement(
         db,
         movement_id=data.id,
-        details=data.details
+        details=data.notes
     )
 
 
@@ -52,8 +53,8 @@ async def create_movement(movement: MovementCreate, user=Depends(get_current_use
     return await createMovement(
         db,
         user=user,
-        type=movement.type,
-        details=movement.details,
+        type=movement.type_movement,
+        details=movement.notes,
         record=movement.record,
         parts=movement.parts,
         total=movement.total,

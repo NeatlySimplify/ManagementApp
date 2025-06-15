@@ -7,6 +7,7 @@ select (insert Entity {
     govt_id:= <str>$govt_id,
     name:= <str>$name,
     sex:= <optional str>$sex,
+    notes:=<optional json>$notes,
     relationship_status:= <optional str>$relationship_status,
     birth:= <optional cal::local_date>$birth
 }){id}

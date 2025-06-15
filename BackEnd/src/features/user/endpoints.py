@@ -53,11 +53,11 @@ async def createAccount(data: BankAccountCreate, user = Depends(get_current_user
         db,
         user=user,
         bank_name=data.bank_name,
-        type=data.type,
+        type=data.type_account,
         account_name=data.account_name,
         balance=data.balance,
         category=data.category,
-        details=data.details,
+        details=data.notes,
         ignore=data.ignore_on_totals,
     )
 
@@ -87,10 +87,10 @@ async def updateAccount(bank_account: BankAccountUpdate, user = Depends(get_curr
     return await updateBankAccount(
         db,
         bank_account=bank_account.id,
-        type=bank_account.type,
+        type=bank_account.type_account,
         bank_name=bank_account.bank_name,
         account_name=bank_account.account_name,
-        details=bank_account.details,
+        details=bank_account.notes,
         ignore=bank_account.ignore_on_totals,
         category=bank_account.category
     )

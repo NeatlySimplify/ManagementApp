@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,28 +21,21 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
 @dataclasses.dataclass
 class GetScheduleResult(NoPydanticValidation):
     id: uuid.UUID
-    type: str | None
+    type_entry: str | None
     name: str | None
     status: bool | None
     date: datetime.date | None
     beginning_time: datetime.time | None
     ending_time: datetime.time | None
-    details: list[GetScheduleResultDetailsItem]
+    notes: str | None
     origin: GetScheduleResultOrigin | None
-
-
-@dataclasses.dataclass
-class GetScheduleResultDetailsItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
 
 
 @dataclasses.dataclass
@@ -60,13 +51,13 @@ async def GetSchedule(
     return await executor.query_single(
         """\
         select Scheduler{
-            type,
+            type_entry := .type,
             name,
             status,
             date,
             beginning_time,
             ending_time,
-            details: {*},
+            notes,
             origin: {id}
         }filter .id = <uuid>$id\
         """,

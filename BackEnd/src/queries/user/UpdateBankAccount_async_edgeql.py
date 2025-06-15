@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,7 +20,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -39,6 +37,7 @@ async def UpdateBankAccount(
     ignore_on_totals: bool | None = None,
     category: str | None = None,
     type: str | None = None,
+    notes: str | None = None,
     bank_account: uuid.UUID,
 ) -> UpdateBankAccountResult | None:
     return await executor.query_single(
@@ -48,7 +47,8 @@ async def UpdateBankAccount(
             account_name:= <optional str>$account_name ?? .account_name,
             ignore_on_totals:= <optional bool>$ignore_on_totals ?? .ignore_on_totals,
             category:= <optional str>$category ?? .category,
-            type:= <optional str>$type ?? .type
+            type:= <optional str>$type ?? .type,
+            notes:=<optional json>$notes ?? .notes,
         }\
         """,
         bank_name=bank_name,
@@ -56,5 +56,6 @@ async def UpdateBankAccount(
         ignore_on_totals=ignore_on_totals,
         category=category,
         type=type,
+        notes=notes,
         bank_account=bank_account,
     )

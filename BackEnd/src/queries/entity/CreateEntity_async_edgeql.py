@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -43,6 +41,7 @@ async def CreateEntity(
     govt_id: str,
     name: str,
     sex: str | None = None,
+    notes: str | None = None,
     relationship_status: str | None = None,
     birth: datetime.date | None = None,
 ) -> CreateEntityResult:
@@ -57,6 +56,7 @@ async def CreateEntity(
             govt_id:= <str>$govt_id,
             name:= <str>$name,
             sex:= <optional str>$sex,
+            notes:=<optional json>$notes,
             relationship_status:= <optional str>$relationship_status,
             birth:= <optional cal::local_date>$birth
         }){id}\
@@ -69,6 +69,7 @@ async def CreateEntity(
         govt_id=govt_id,
         name=name,
         sex=sex,
+        notes=notes,
         relationship_status=relationship_status,
         birth=birth,
     )

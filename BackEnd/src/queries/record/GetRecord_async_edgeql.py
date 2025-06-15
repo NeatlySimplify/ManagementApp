@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-
 import dataclasses
 import datetime
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -23,7 +21,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -34,19 +32,12 @@ class GetRecordResult(NoPydanticValidation):
     id_service: str | None
     active: bool | None
     status: str | None
-    type: str | None
+    type_record: str | None
     str_value: str | None
-    details: list[GetRecordResultDetailsItem]
+    notes: str | None
     entity: list[GetRecordResultEntityItem]
     event: list[GetRecordResultEventItem]
     movement: list[GetRecordResultMovementItem]
-
-
-@dataclasses.dataclass
-class GetRecordResultDetailsItem(NoPydanticValidation):
-    title: str | None
-    field: str | None
-    id: uuid.UUID
 
 
 @dataclasses.dataclass
@@ -59,7 +50,7 @@ class GetRecordResultEntityItem(NoPydanticValidation):
 class GetRecordResultEventItem(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type: str | None
+    type_entry: str | None
     status: bool | None
     date: datetime.date | None
 
@@ -67,9 +58,17 @@ class GetRecordResultEventItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetRecordResultMovementItem(NoPydanticValidation):
     id: uuid.UUID
-    type: str | None
+    type_movement: str | None
     str_value: str
     installment: int
+    payment: list[GetRecordResultMovementItemPaymentItem]
+
+
+@dataclasses.dataclass
+class GetRecordResultMovementItemPaymentItem(NoPydanticValidation):
+    id: uuid.UUID
+    status: bool | None
+    payment_date: datetime.date | None
 
 
 async def GetRecord(
@@ -84,9 +83,9 @@ async def GetRecord(
             id_service,
             active,
             status,
-            type,
+            type_record:= .type,
             str_value:=to_str(.value),
-            details: {*},
+            notes,
             entity: {
                 id,
                 name,
@@ -94,15 +93,20 @@ async def GetRecord(
             event: {
                 id,
                 name,
-                type,
+                type_entry:= .type,
                 status,
                 date
             },
             movement: {
                 id,
-                type,
+                type_movement:= .type,
                 str_value:=to_str(.value),
                 installment,
+                payment: {
+                    id,
+                    status,
+                    payment_date
+                }
             }
         } filter .id = <uuid>$id\
         """,

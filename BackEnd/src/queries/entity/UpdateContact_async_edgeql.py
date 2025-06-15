@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,7 +20,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -36,16 +34,22 @@ async def UpdateContact(
     *,
     name: str | None = None,
     email: str | None = None,
+    notes: str | None = None,
+    number: str | None = None,
     contact: uuid.UUID,
 ) -> UpdateContactResult | None:
     return await executor.query_single(
         """\
         update Contact filter .id = <uuid>$contact set{
             name:= <optional str>$name ?? .name,
-            email:= <optional str>$email ?? .email
+            email:= <optional str>$email ?? .email,
+            notes:=<optional json>$notes ?? .notes,
+            number:= <optional json>$number ?? .number,
         }\
         """,
         name=name,
         email=email,
+        notes=notes,
+        number=number,
         contact=contact,
     )

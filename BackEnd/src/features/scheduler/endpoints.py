@@ -28,13 +28,13 @@ async def createScheduler(data: SchedulerCreate, user=Depends(get_current_user),
         db,
         user_id=user,
         origin=data.origin,
-        type=data.type,
+        type=data.type_entry,
         name=data.name,
         status=data.status,
         date=data.date,
         beginning_time=data.beginning_time,
         ending_time=data.ending_time,
-        details=data.details
+        details=data.notes
     )
 
 
@@ -44,13 +44,13 @@ async def updateScheduler(data: SchedulerUpdate, user=Depends(get_current_user),
     return await updateEvent(
         db,
         name=data.name,
-        type=data.type,
+        type=data.type_entry,
         event_id=data.id,
         status=data.status,
         beginning_time=data.beginning_time,
         ending_time=data.ending_time,
         date=data.date,
-        details=data.details
+        details=data.notes
     )
 
 

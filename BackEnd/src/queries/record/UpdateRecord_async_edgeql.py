@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,7 +20,7 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
@@ -40,6 +38,7 @@ async def UpdateRecord(
     status: str | None = None,
     type: str | None = None,
     active: bool | None = None,
+    notes: str | None = None,
     id: uuid.UUID,
 ) -> UpdateRecordResult | None:
     return await executor.query_single(
@@ -53,6 +52,7 @@ async def UpdateRecord(
             type:= <optional str>$type ?? .type,
             active:= <optional bool>$active ?? .active,
             value := decimal_value ?? .value,
+            notes:=<optional json>$notes ?? .notes,
         }\
         """,
         value=value,
@@ -61,5 +61,6 @@ async def UpdateRecord(
         status=status,
         type=type,
         active=active,
+        notes=notes,
         id=id,
     )

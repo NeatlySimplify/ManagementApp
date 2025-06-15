@@ -51,12 +51,12 @@ async def createEntity(
         db,
         user=user,
         email=entity.email,
-        type=entity.type,
+        type=entity.type_entity,
         govt_id=entity.govt_id,
         name=entity.name,
         sex=entity.sex,
         relationship_status=entity.relationship_status,
-        details=entity.details,
+        details=entity.notes,
         birth=entity.birth,
         status=entity.status,
         id_type=entity.id_type
@@ -73,14 +73,14 @@ async def updateEntity(
     return await update_entity(
         db,
         email=entity.email,
-        type=entity.type,
+        type=entity.type_entity,
         status=entity.status,
         id_type=entity.id_type,
         govt_id=entity.govt_id,
         name=entity.name,
         sex=entity.sex,
         relationship_status=entity.relationship_status,
-        details=entity.details,
+        details=entity.notes,
         birth=entity.birth,
         entity=entity.id,
     )
@@ -160,7 +160,7 @@ async def createContact(
         number=contact.number,
         email=contact.email,
         name=contact.name,
-        details=contact.details
+        details=contact.notes
     )
 
 
@@ -177,7 +177,7 @@ async def updateContact(
         number=contact.number,
         email=contact.email,
         name=contact.name,
-        details=contact.details
+        details=contact.notes
     )
 
 

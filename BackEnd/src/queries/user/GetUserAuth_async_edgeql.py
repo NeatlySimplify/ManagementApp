@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-
 import dataclasses
-import uuid
-
 import gel
+import uuid
 
 
 class NoPydanticValidation:
@@ -22,16 +20,19 @@ class NoPydanticValidation:
         # Pydantic 1.x
         from pydantic.dataclasses import dataclass as pydantic_dataclass
         _ = pydantic_dataclass(cls)
-        cls.__pydantic_model__.__get_validators__ = list
+        cls.__pydantic_model__.__get_validators__ = lambda: []
         return []
 
 
 @dataclasses.dataclass
 class GetUserAuthResult(NoPydanticValidation):
     id: uuid.UUID
+    email: str
+    name: str
     password: str
     refresh_token: uuid.UUID | None
     use_token: bool | None
+    first_access: bool | None
 
 
 async def GetUserAuth(
@@ -41,11 +42,14 @@ async def GetUserAuth(
 ) -> GetUserAuthResult | None:
     return await executor.query_single(
         """\
-        select User {
+        select InternalUser {
             id,
+            email,
+            name,
             password,
             refresh_token,
             use_token,
+            first_access,
         } filter .email = <str>$email limit 1;\
         """,
         email=email,

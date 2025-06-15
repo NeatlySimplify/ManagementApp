@@ -7,4 +7,5 @@ update Record filter .id = <uuid>$id set {
     type:= <optional str>$type ?? .type,
     active:= <optional bool>$active ?? .active,
     value := decimal_value ?? .value,
+    notes:=<optional json>$notes ?? .notes,
 }
