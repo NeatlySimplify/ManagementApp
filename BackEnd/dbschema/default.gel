@@ -54,7 +54,7 @@ module default {
 
 
     type Contact{
-        name: str;
+        type: str;
         email: str;
         number: json;
         notes: json;
