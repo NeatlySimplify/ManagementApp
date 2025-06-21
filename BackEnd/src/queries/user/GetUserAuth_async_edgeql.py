@@ -27,8 +27,7 @@ class NoPydanticValidation:
 @dataclasses.dataclass
 class GetUserAuthResult(NoPydanticValidation):
     id: uuid.UUID
-    email: str
-    name: str
+    tag_type: str | None
     password: str
     refresh_token: uuid.UUID | None
     use_token: bool | None
@@ -42,10 +41,9 @@ async def GetUserAuth(
 ) -> GetUserAuthResult | None:
     return await executor.query_single(
         """\
-        select InternalUser {
+        select User {
             id,
-            email,
-            name,
+            tag_type,
             password,
             refresh_token,
             use_token,

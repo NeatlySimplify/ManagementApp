@@ -30,14 +30,15 @@ from src.features.entity.schema import (
 entityRoute = APIRouter(prefix='/api/entity')
 
 
-@entityRoute.get('/{id}', response_class=JSONResponse)
+@entityRoute.get('/{entity}', response_class=JSONResponse)
 @handle_result()
 async def getEntity(
-    id: UUID,
+    entity: UUID,
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    return await get_entity(db, entity=id)
+    db = db.with_globals({"current_user": user.get('user')})
+    return await get_entity(db, entity=entity)
 
 
 @entityRoute.post('/', response_class=JSONResponse)
@@ -47,19 +48,19 @@ async def createEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await create_entity(
         db,
-        user=user,
         email=entity.email,
-        type=entity.type_entity,
-        govt_id=entity.govt_id,
+        type_tag=entity.type_tag,
+        document=entity.document,
         name=entity.name,
         sex=entity.sex,
         relationship_status=entity.relationship_status,
         details=entity.notes,
         birth=entity.birth,
         status=entity.status,
-        id_type=entity.id_type
+        document_type=entity.document_type
     )
 
 
@@ -70,13 +71,14 @@ async def updateEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await update_entity(
         db,
         email=entity.email,
-        type=entity.type_entity,
+        type_tag=entity.type_tag,
         status=entity.status,
-        id_type=entity.id_type,
-        govt_id=entity.govt_id,
+        document_type=entity.document_type,
+        document=entity.document,
         name=entity.name,
         sex=entity.sex,
         relationship_status=entity.relationship_status,
@@ -86,14 +88,15 @@ async def updateEntity(
     )
 
 
-@entityRoute.delete('/{id}', response_class=JSONResponse)
+@entityRoute.delete('/{entity}', response_class=JSONResponse)
 @handle_result()
 async def deleteEntity(
-    id: UUID,
+    entity: UUID,
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    return await delete_entity(db, id)
+    db = db.with_globals({"current_user": user[0]})
+    return await delete_entity(db, entity)
 
 
 @entityRoute.post('/address', response_class=JSONResponse)
@@ -103,6 +106,7 @@ async def createAddress(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await create_address(
         db,
         address.entity,
@@ -123,6 +127,7 @@ async def updateAddress(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await update_address(
         db,
         address.id,
@@ -136,15 +141,16 @@ async def updateAddress(
     )
 
 
-@entityRoute.delete('/{id}/address/', response_class=JSONResponse)
+@entityRoute.delete('/{entity}/address/', response_class=JSONResponse)
 @handle_result()
 async def deleteAddress(
-    id: UUID,
+    entity: UUID,
     address: UUID,
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    return await delete_address(db, id, address)
+    db = db.with_globals({"current_user": user.get('user')})
+    return await delete_address(db, entity, address)
 
 
 @entityRoute.post('/contact', response_class=JSONResponse)
@@ -154,12 +160,13 @@ async def createContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await create_contact(
         db,
         entity=contact.entity,
         number=contact.number,
-        email=contact.email,
-        name=contact.name,
+        email=contact.extra_email,
+        type_tag=contact.type_tag,
         details=contact.notes
     )
 
@@ -171,22 +178,23 @@ async def updateContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await update_contact(
         db,
-        contact=contact.id,
+        contact=contact.entity,
         number=contact.number,
-        email=contact.email,
-        name=contact.name,
+        extra_email=contact.extra_email,
+        type_tag=contact.type_tag,
         details=contact.notes
     )
 
 
-@entityRoute.delete('/{id}/contact/', response_class=JSONResponse)
+@entityRoute.delete('/{entity}/contact/', response_class=JSONResponse)
 @handle_result()
 async def deleteContact(
-    id:UUID,
+    entity:UUID,
     contact: UUID,
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    return await delete_contact(db, id, contact)
+    return await delete_contact(db, entity, contact)

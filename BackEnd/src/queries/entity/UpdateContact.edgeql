@@ -1,6 +1,6 @@
 update Contact filter .id = <uuid>$contact set{
-    name:= <optional str>$name ?? .name,
-    email:= <optional str>$email ?? .email,
+    type_tag:= <optional str>$type_tag ?? .type_tag,
+    extra_email:= <optional str>$extra_email ?? .extra_email,
     notes:=<optional json>$notes ?? .notes,
-    number:= <optional json>$number ?? .number,
+    number:= <optional str>$number ?? .number,
 }

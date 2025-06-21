@@ -4,9 +4,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+
+from pathlib import Path
 
 from src.dependencies.db import lifetime
 from src.dependencies.loggingMiddleware import ErrorLoggingMiddleware
@@ -16,7 +18,7 @@ from src.features.movement.endpoints import movementRoute
 from src.features.record.endpoints import recordRoute
 from src.features.scheduler.endpoints import eventRoute
 from src.features.user.endpoints import userRoute
-from src.settings import instance
+from src.settings import get_settings
 
 logging.basicConfig(
     level=logging.DEBUG,  # or DEBUG for more verbosity
@@ -33,7 +35,8 @@ cors_config = {
     "allow_headers": ["*"],
 }
 
-instance()
+settings = get_settings()
+
 app = FastAPI(lifespan=lifetime)
 app.add_middleware(CORSMiddleware, **cors_config)
 app.add_middleware(ErrorLoggingMiddleware)
@@ -44,15 +47,17 @@ app.include_router(movementRoute)
 app.include_router(entityRoute)
 app.include_router(recordRoute)
 
+current = Path(__file__).parent
+index_path = Path(current, "static", "index.html")
+_cached_index_html: str = ''
 
-index_path = os.path.join("static", "index.html")
-_cached_index_html = None
 
-@app.on_event("startup")
-async def load_index_html():
+def load_index_html():
     global _cached_index_html
-    with open(index_path, "r", encoding="utf-8") as f:
+    with index_path.open() as f:
         _cached_index_html = f.read()
+
+load_index_html()
 
 
 @app.exception_handler(RequestValidationError)
@@ -75,9 +80,7 @@ app.mount('/assets', StaticFiles(directory='src/static/assets/', html=True), nam
 
 @app.get("/{full_path:path}", response_class=HTMLResponse)
 async def catch_all(request: Request, full_path: str):
-    index_path = os.path.join("build", "index.html")
-
-    if full_path.startswith("api") or full_path.startswith("assets") or "." in full_path:
+    if full_path.startswith(("api", "assets")) or "." in full_path:
         raise HTTPException(status_code=404)
 
     backend_url = str(request.base_url).rstrip("/")

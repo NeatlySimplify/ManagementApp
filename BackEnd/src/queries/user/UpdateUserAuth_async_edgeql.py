@@ -34,20 +34,15 @@ async def UpdateUserAuth(
     *,
     email: str | None = None,
     password: str | None = None,
-    id: uuid.UUID,
 ) -> UpdateUserAuthResult | None:
     return await executor.query_single(
         """\
-        with raw_email:= <optional str>$email,
-        str_email:= (if exists raw_email then raw_email else <str>{}),
-        raw_password:= <optional str>$password,
-        str_password:=(if exists raw_password then raw_password else <str>{}),
-        update User filter .id=<uuid>$id set {
-            email := str_email ?? .email,
-            password := str_password ?? .password,
+        with user := (select global current_user_obj)
+        update user set {
+            email := <optional str>$email ?? .email,
+            password := <optional str>$password ?? .password,
         };\
         """,
         email=email,
         password=password,
-        id=id,
     )

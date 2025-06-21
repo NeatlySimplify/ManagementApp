@@ -1,4 +1,5 @@
-with setup:=(
+with user:= (select global current_user_obj),
+setup:=(
     insert UserSettings {
         default_bank_account:= assert_single((select BankAccount filter .id = <uuid>$bank_account)),
         record_title := <str>$record_title,
@@ -6,6 +7,6 @@ with setup:=(
         entity_title := <str>$entity_title,
     }
 )
-update InternalUser filter .id = <uuid>$user set {
+update user set {
     settings:= setup
 }

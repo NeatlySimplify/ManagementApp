@@ -1,3 +1,4 @@
+# ruff: noqa: TRY003
 from typing import Self
 from uuid import UUID
 
@@ -10,20 +11,20 @@ class BankAccountUpdate(BaseModel):
     id: UUID
     bank_name: str | None = None
     account_name: str | None = None
-    type_account: str | None = None
+    type_tag: str | None = None
     notes: dict[str, str | int | float] | None = None
     ignore_on_totals: bool | None = None
-    category: str | None = None
+    category_tag: str | None = None
 
 
 class BankAccountCreate(BaseModel):
     bank_name: str
     account_name: str
-    type_account: str | None = None
+    type_tag: str | None = None
     balance: str
     notes: dict[str, str | int | float] | None = None
     ignore_on_totals: bool = False
-    category: str | None = None
+    category_tag: str | None = None
 
 
 
@@ -62,7 +63,7 @@ class SettingsUpdate(BaseModel):
     entity_title: str | None = None
     account_types: list[str] | None = None
     entity_types: list[str] | None = None
-    entity_id_types: list[str] | None = None
+    entity_document_types: list[str] | None = None
     contact_number_types: list[str] | None = None
     record_types: list[str] | None = None
     record_status: list[str] | None = None

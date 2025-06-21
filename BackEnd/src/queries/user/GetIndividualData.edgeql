@@ -1,10 +1,10 @@
-with user_id:= (<uuid>$id),
-selected_user:= assert_single((select InternalUser filter .id = user_id)),
-select selected_user {
+with selected_user:= (select global current_user),
+converted := (select Individual filter .id = selected_user),
+select converted{
     name,
     email,
     auth:= true,
-    total_balance:= to_str(sum((select selected_user.account.balance))),
+    total_balance:= to_str(sum((select converted.account.balance))),
     settings: {
         id,
         account_types,
@@ -13,7 +13,7 @@ select selected_user {
         movement_title,
         entity_title,
         entity_types,
-        entity_id_types,
+        entity_document_types,
         contact_number_types,
         record_types,
         record_status,
@@ -24,7 +24,7 @@ select selected_user {
     },
     movement: {
         id,
-        type_movement:= .type,
+        type_tag,
         value_str:= to_str(.value),
         installment,
         payment: {
@@ -37,19 +37,20 @@ select selected_user {
         id,
         name,
         email,
-        govt_id,
-        type_entity:= .type,
-        id_type,
+        document,
+        type_tag,
+        document_type,
         status,
         address: {
             state,
             city,
         },
+        phone: {number}
     },
     payment_income:{
         id,
         name,
-        type_payment:= .type,
+        type_tag,
         value_str:=to_str(.value),
         payment_date,
         status,
@@ -58,7 +59,7 @@ select selected_user {
     payment_expense:{
         id,
         name,
-        type_payment:= .type,
+        type_tag,
         value_str:=to_str(.value),
         payment_date,
         status,
@@ -67,14 +68,14 @@ select selected_user {
     record: {
         id,
         name,
-        id_service,
-        active,
+        service_id,
         status,
-        type_record:= .type,
+        optional_status,
+        type_tag,
     },
     event:{
         id,
-        type_entry:= .type,
+        type_tag,
         name,
         status,
         date,
@@ -84,5 +85,5 @@ select selected_user {
         bank_name,
         account_name,
         balance_str:=to_str(.balance),
-    },
+    }
 }

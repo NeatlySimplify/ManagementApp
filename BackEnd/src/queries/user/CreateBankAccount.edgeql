@@ -1,18 +1,14 @@
-with user:= <uuid>$user,
+with user:= (select global current_user_obj),
 add_bank:=(
     insert BankAccount {
         bank_name:= <str>$bank_name,
         account_name:= <str>$account_name,
         balance:= to_decimal(<str>$balance, 'FM999999999999D99'),
-        category:= <optional str>$category,
+        category_tag:= <optional str>$category,
         ignore_on_totals:= <bool>$ignore_on_totals,
-        type:= <optional str>$type,
+        type_tag:= <optional str>$type,
         notes:= <optional json>$notes,
+        owner:= user
     }
 ),
-update_user:= (
-    update InternalUser filter .id = <uuid>$user set {
-        account += add_bank
-    }
-)
-select add_bank{id};
+select (add_bank){id};

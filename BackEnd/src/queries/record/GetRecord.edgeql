@@ -1,9 +1,9 @@
 select Record {
     name,
-    id_service,
-    active,
+    service_id,
     status,
-    type_record:= .type,
+    optional_status,
+    type_tag,
     str_value:=to_str(.value),
     notes,
     entity: {
@@ -13,13 +13,13 @@ select Record {
     event: {
         id,
         name,
-        type_entry:= .type,
+        type_tag,
         status,
         date
     },
     movement: {
         id,
-        type_movement:= .type,
+        type_tag,
         str_value:=to_str(.value),
         installment,
         payment: {

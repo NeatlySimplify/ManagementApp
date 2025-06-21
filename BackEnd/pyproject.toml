@@ -46,9 +46,7 @@ fix = true
 lint.select = [
     "E",  # pycodestyle errors
     "F",  # pyflakes
-    "B",  # bugbear
     "I",  # isort (import sorting)
-    "N",  # pep8-naming
     "UP", # pyupgrade (modern syntax)
     "A",  # flake8-builtins
     "ASYNC",  # async-specific checks
@@ -82,6 +80,6 @@ asyncio_default_fixture_loop_scope = "function"  # Or "module", depending on you
 
 [tool.taskipy.tasks]
 run = "task ruff && pytest && task app"
-ruff = "ruff check src/ && ruff check tests/ && ruff format src/ && ruff format tests/"
+ruff = "ruff check --fix src/ && ruff check --fix tests/ && ruff format src/ && ruff format tests/"
 app = "fastapi dev src/main.py"
 build = "poetry build --clean -f wheel"

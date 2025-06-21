@@ -1,9 +1,10 @@
+# ruff: noqa: TRY003
 from bcrypt import checkpw, gensalt, hashpw
 
 
 def hash_password(password: str) -> str:
     if not isinstance(password, str):
-        raise ValueError("Password must be a string.")
+        raise TypeError("Password must be a string.")
     # Generate a salt
     salt = gensalt()
     # Hash the password
@@ -14,5 +15,5 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed_password: str) -> bool:
     if not isinstance(password, str) or not isinstance(hashed_password, str):
-        raise ValueError("Both password and hashed_password must be strings.")
+        raise TypeError("Both password and hashed_password must be strings.")
     return checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))

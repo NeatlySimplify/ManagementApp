@@ -1,3 +1,4 @@
+# ruff: noqa: F811
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport

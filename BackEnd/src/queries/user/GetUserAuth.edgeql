@@ -1,7 +1,6 @@
-select InternalUser {
+select User {
     id,
-    email,
-    name,
+    tag_type,
     password,
     refresh_token,
     use_token,

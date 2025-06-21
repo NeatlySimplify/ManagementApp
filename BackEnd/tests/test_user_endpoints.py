@@ -1,3 +1,4 @@
+# ruff: noqa: F811
 import pytest
 import pytest_asyncio
 import uuid
@@ -98,14 +99,14 @@ class TestUserEndpoints:
         data = {
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Checking", "Savings", "Investment"]),
-            "type_account": fake.random_element(["Personal", "Business", "Joint"]),
+            "type_tag": fake.random_element(["Personal", "Business", "Joint"]),
             "balance": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
             "notes": {
                 "Account Number":str(fake.random_number(digits=10)),
                 "Routing Number": str(fake.random_number(digits=9))
             },
             "ignore_on_totals": False,
-            "category": fake.random_element(["Primary", "Secondary", "Emergency"])
+            "category_tag": fake.random_element(["Primary", "Secondary", "Emergency"])
         }
 
         create_response = await client.post(
@@ -135,7 +136,7 @@ class TestUserEndpoints:
         get_data = get_response.json()["result"]
         assert get_data["bank_name"] == bank_data["bank_name"]
         assert get_data["account_name"] == bank_data["account_name"]
-        assert get_data["type_account"] == bank_data["type_account"]
+        assert get_data["type_tag"] == bank_data["type_tag"]
         assert "balance" in get_data
         assert len(get_data["notes"]) == len(bank_data["notes"])
 
@@ -144,13 +145,13 @@ class TestUserEndpoints:
             "id": bank["id"],
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Premium", "Gold", "Platinum"]),
-            "type_account": fake.random_element(["Personal", "Business"]),
+            "type_tag": fake.random_element(["Personal", "Business"]),
             "notes": {
                 "Account Number": str(fake.random_number(digits=10)),
                 "Updated Flag": "true"
             },
             "ignore_on_totals": True,
-            "category": fake.random_element(["Primary", "Secondary"])
+            "category_tag": fake.random_element(["Primary", "Secondary"])
         }
 
         update_response = await client.put(
@@ -175,7 +176,7 @@ class TestUserEndpoints:
         updated_data = get_updated_response.json()["result"]
         assert updated_data["bank_name"] == update_data["bank_name"]
         assert updated_data["account_name"] == update_data["account_name"]
-        assert updated_data["type_account"] == update_data["type_account"]
+        assert updated_data["type_tag"] == update_data["type_tag"]
         # The response format may vary depending on how your API serializes the details
         # This assertion checks that the update was processed, but doesn't make assumptions
         # about the exact format of the returned details

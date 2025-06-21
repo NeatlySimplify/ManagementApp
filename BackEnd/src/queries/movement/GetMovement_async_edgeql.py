@@ -29,7 +29,7 @@ class NoPydanticValidation:
 @dataclasses.dataclass
 class GetMovementResult(NoPydanticValidation):
     id: uuid.UUID
-    type_movement: str | None
+    type_tag: str
     value: decimal.Decimal
     installment: int
     notes: str | None
@@ -58,7 +58,7 @@ class GetMovementResultPaymentItem(NoPydanticValidation):
 class GetMovementResultRecord(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    id_service: str | None
+    service_id: str | None
 
 
 async def GetMovement(
@@ -69,14 +69,14 @@ async def GetMovement(
     return await executor.query_single(
         """\
         select Movement{
-            type_movement:= .type,
+            type_tag,
             value,
             installment,
             notes,
             record: {
                 id,
                 name,
-                id_service
+                service_id
             },
             accounts:{
                 id,

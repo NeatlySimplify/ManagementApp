@@ -1,3 +1,4 @@
+# ruff: noqa: F811
 import pytest
 import pytest_asyncio
 import uuid
@@ -20,13 +21,15 @@ class TestEntityEndpoints:
         # Create entity
         entity_data = {
             "email": fake.email(),
-            "type_entity": fake.random_element(["Person", "Company", "Institution"]),
-            "id_type": fake.random_element(["SSN", "EIN", "Passport"]),
-            "govt_id": str(fake.random_number(digits=9)),
+            "type_tag": fake.random_element(["Person", "Company", "Institution"]),
+            "document_type": fake.random_element(["SSN", "EIN", "Passport"]),
+            "document": str(fake.random_number(digits=9)),
             "name": fake.name(),
             "sex": fake.random_element(["Male", "Female", "Other"]),
             "relationship_status": fake.random_element(["Single", "Married", "Divorced"]),
-            "birth": (today - datetime.timedelta(days=fake.random_int(min=7000, max=25000))).isoformat(),
+            "birth": (today - datetime.timedelta(
+                days=fake.random_int(min=7000, max=25000))
+            ).isoformat(),
             "status": fake.boolean(),
             "notes":{
                 "Occupation": fake.job(),
@@ -64,9 +67,9 @@ class TestEntityEndpoints:
         assert get_response.status_code == 200
         get_data = get_response.json()["result"]
         assert get_data["email"] == entity_data["email"]
-        assert get_data["type_entity"] == entity_data["type_entity"]
-        assert get_data["id_type"] == entity_data["id_type"]
-        assert get_data["govt_id"] == entity_data["govt_id"]
+        assert get_data["type_tag"] == entity_data["type_tag"]
+        assert get_data["document_type"] == entity_data["document_type"]
+        assert get_data["document"] == entity_data["document"]
         assert get_data["name"] == entity_data["name"]
         assert get_data["sex"] == entity_data["sex"]
         assert get_data["relationship_status"] == entity_data["relationship_status"]
@@ -78,13 +81,15 @@ class TestEntityEndpoints:
         update_data = {
             "id": entity_id,
             "email": fake.email(),
-            "type_entity": fake.random_element(["Organization", "Government"]),
-            "id_type": fake.random_element(["TIN", "VAT"]),
-            "govt_id": str(fake.random_number(digits=8)),
+            "type_tag": fake.random_element(["Organization", "Government"]),
+            "document_type": fake.random_element(["TIN", "VAT"]),
+            "document": str(fake.random_number(digits=8)),
             "name": fake.company(),
             "sex": fake.random_element(["Male", "Female", "Other"]),
             "relationship_status": fake.random_element(["Partnered", "Separated"]),
-            "birth": (today - datetime.timedelta(days=fake.random_int(min=5000, max=20000))).isoformat(),
+            "birth": (today - datetime.timedelta(
+                days=fake.random_int(min=5000, max=20000))
+            ).isoformat(),
             "status": not entity_data["status"],
             "notes": {
                 "Industry": fake.word(),
@@ -109,9 +114,9 @@ class TestEntityEndpoints:
         assert get_updated_response.status_code == 200
         updated_data = get_updated_response.json()["result"]
         assert updated_data["email"] == update_data["email"]
-        assert updated_data["type_entity"] == update_data["type_entity"]
-        assert updated_data["id_type"] == update_data["id_type"]
-        assert updated_data["govt_id"] == update_data["govt_id"]
+        assert updated_data["type_tag"] == update_data["type_tag"]
+        assert updated_data["document_type"] == update_data["document_type"]
+        assert updated_data["document"] == update_data["document"]
         assert updated_data["name"] == update_data["name"]
         assert updated_data["status"] == update_data["status"]
 
@@ -176,7 +181,9 @@ class TestEntityEndpoints:
         # Check if addresses are included in entity response
         if "addresses" in entity_data:
             addresses = entity_data["addresses"]
-            created_address = next((addr for addr in addresses if addr["id"] == address["id"]), None)
+            created_address = next(
+                (addr for addr in addresses if addr["id"] == address["id"])
+                , None)
             assert created_address is not None
             assert created_address["state"] == address_data["state"]
             assert created_address["city"] == address_data["city"]
@@ -320,7 +327,7 @@ class TestEntityEndpoints:
         assert updated_data["status"] == partial_update["status"]
         # Original data should remain unchanged
         assert updated_data["email"] == original_data["email"]
-        assert updated_data["type_entity"] == original_data["type_entity"]
+        assert updated_data["type_tag"] == original_data["type_tag"]
 
     @pytest.mark.asyncio
     async def test_unauthorized_access(self, client):
@@ -333,7 +340,7 @@ class TestEntityEndpoints:
         # Try to create entity without authentication
         entity_data = {
             "email": fake.email(),
-            "type_entity": "Person",
+            "type_tag": "Person",
             "name": fake.name(),
             "status": True
         }
@@ -409,7 +416,7 @@ class TestEntityEndpoints:
         # Invalid email format
         invalid_email_data = {
             "email": "not-an-email",
-            "type_entity": "Person",
+            "type_tag": "Person",
             "name": fake.name(),
             "status": True
         }
@@ -553,9 +560,9 @@ class TestEntityEndpoints:
 
         entity_data = {
             "email": fake.email(),
-            "type_entity": "Person",
-            "id_type": "Passport",
-            "govt_id": "ABC-123-456",
+            "type_tag": "Person",
+            "document_type": "Passport",
+            "document": "ABC-123-456",
             "name": "José María Ñoño-Pérez",
             "sex": "Male",
             "relationship_status": "Single",

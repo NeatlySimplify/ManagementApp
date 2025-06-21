@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class MovementCreate(BaseModel):
-    type_movement: str
+    type_tag: str
     notes: dict[str, str |int | float] | None = None
     record: UUID | None = None
     name: str

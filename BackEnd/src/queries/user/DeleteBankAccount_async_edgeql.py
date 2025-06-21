@@ -33,18 +33,10 @@ async def DeleteBankAccount(
     executor: gel.AsyncIOExecutor,
     *,
     account: uuid.UUID,
-    user: uuid.UUID,
 ) -> DeleteBankAccountResult | None:
     return await executor.query_single(
         """\
-        with account:= <uuid>$account,
-        deleteAccount:= (
-            delete BankAccount filter .id = account
-        )
-        update InternalUser filter .id = <uuid>$user set {
-            account -= (select deleteAccount)
-        }\
+        delete BankAccount filter .id = <uuid>$account\
         """,
         account=account,
-        user=user,
     )

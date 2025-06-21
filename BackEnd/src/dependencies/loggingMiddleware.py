@@ -20,10 +20,11 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
                     request.url,
                     response.status_code
                 )
-            return response
+            else:
+                return response
 
         except HTTPException as http_exc:
-            logger.error(
+            logger.exception(
                 "HTTPException: %s %s\nStatus: %s\nDetail: %s",
                 request.method,
                 request.url,

@@ -28,19 +28,13 @@ class NoPydanticValidation:
 @dataclasses.dataclass
 class GetScheduleResult(NoPydanticValidation):
     id: uuid.UUID
-    type_entry: str | None
+    type_tag: str | None
     name: str | None
     status: bool | None
     date: datetime.date | None
     beginning_time: datetime.time | None
     ending_time: datetime.time | None
     notes: str | None
-    origin: GetScheduleResultOrigin | None
-
-
-@dataclasses.dataclass
-class GetScheduleResultOrigin(NoPydanticValidation):
-    id: uuid.UUID
 
 
 async def GetSchedule(
@@ -51,14 +45,13 @@ async def GetSchedule(
     return await executor.query_single(
         """\
         select Scheduler{
-            type_entry := .type,
+            type_tag,
             name,
             status,
             date,
             beginning_time,
             ending_time,
             notes,
-            origin: {id}
         }filter .id = <uuid>$id\
         """,
         id=id,

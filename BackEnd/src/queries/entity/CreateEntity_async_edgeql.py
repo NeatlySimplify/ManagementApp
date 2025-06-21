@@ -33,13 +33,12 @@ class CreateEntityResult(NoPydanticValidation):
 async def CreateEntity(
     executor: gel.AsyncIOExecutor,
     *,
-    user: uuid.UUID,
-    email: str,
-    type: str,
-    id_type: str,
-    status: bool | None = None,
-    govt_id: str,
     name: str,
+    email: str,
+    type_tag: str,
+    document_type: str,
+    document: str,
+    status: bool | None = None,
     sex: str | None = None,
     notes: str | None = None,
     relationship_status: str | None = None,
@@ -47,27 +46,27 @@ async def CreateEntity(
 ) -> CreateEntityResult:
     return await executor.query_single(
         """\
-        select (insert Entity {
-            user:= <InternalUser><uuid>$user,
-            email:= <str>$email,
-            type:= <str>$type,
-            id_type:= <str>$id_type,
-            status:= <optional bool>$status,
-            govt_id:= <str>$govt_id,
+        with user:= (select global current_user_obj),
+        insert Entity {
             name:= <str>$name,
+            email:= <str>$email,
+            type_tag:= <str>$type_tag,
+            document_type:= <str>$document_type,
+            document:= <str>$document,
+            status:= <optional bool>$status,
             sex:= <optional str>$sex,
             notes:=<optional json>$notes,
             relationship_status:= <optional str>$relationship_status,
-            birth:= <optional cal::local_date>$birth
-        }){id}\
+            birth:= <optional cal::local_date>$birth,
+            owner:= user
+        }\
         """,
-        user=user,
-        email=email,
-        type=type,
-        id_type=id_type,
-        status=status,
-        govt_id=govt_id,
         name=name,
+        email=email,
+        type_tag=type_tag,
+        document_type=document_type,
+        document=document,
+        status=status,
         sex=sex,
         notes=notes,
         relationship_status=relationship_status,

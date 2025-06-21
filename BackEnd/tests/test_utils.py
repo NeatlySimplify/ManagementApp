@@ -1,3 +1,4 @@
+# basedpyright: reportOptionalSubscript: "none"
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from faker import Faker
@@ -74,7 +75,7 @@ async def authenticated_user(client):
 
         # Extract user ID from the token
         payload = user.get_token_payload()
-        user.user_id = payload["sub"]
+        user.user_id = payload["user"]
 
         yield user
     finally:
@@ -99,14 +100,14 @@ class BankAccountData:
         return {
             "bank_name": fake.company(),
             "account_name": fake.random_element(["Checking", "Savings", "Investment"]),
-            "type_account": fake.random_element(["Personal", "Business", "Joint"]),
+            "type_tag": fake.random_element(["Personal", "Business", "Joint"]),
             "balance": str(Decimal(random_number_in_range) / Decimal(100)),
             "notes":{
                 "Account Number": str(fake.random_number(digits=10)),
                 "Routing Number": str(fake.random_number(digits=9))
             },
             "ignore_on_totals": False,
-            "category": fake.random_element(["Primary", "Secondary", "Emergency"])
+            "category_tag": fake.random_element(["Primary", "Secondary", "Emergency"])
         }
 
 
@@ -238,13 +239,17 @@ async def test_entity(client, authenticated_user):
     today = datetime.date.today()
     entity_data = {
         "email": fake.email(),
-        "type_entity": fake.random_element(["Person", "Company", "Institution"]),
+        "type_tag": fake.random_element(["Person", "Company", "Institution"]),
         "id_type": fake.random_element(["SSN", "EIN", "Passport"]),
         "govt_id": str(fake.random_number(digits=9)),
         "name": fake.name(),
         "sex": fake.random_element(["Male", "Female", "Other"]),
         "relationship_status": fake.random_element(["Single", "Married", "Divorced"]),
-        "birth": (today - datetime.timedelta(days=fake.random_int(min=7000, max=25000))).isoformat(),
+        "birth": (
+            today - datetime.timedelta(
+                days=fake.random_int(min=7000, max=25000)
+            )
+        ).isoformat(),
         "status": fake.boolean(),
         "notes": {
             "Ocupation":fake.job(),
@@ -298,9 +303,9 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
     record_id_to_yield = str(uuid.uuid4())
     # Ensure movement_data_to_yield is always defined for the yield statement
     movement_data_to_yield = {
-        "type_movement": "Expense", "name": "Dummy Movement", "parts": 1, "total": "0.00",
+        "type_tag": "Expense", "name": "Dummy Movement", "parts": 1, "total": "0.00",
         "is_due": today.isoformat(), "payment_date": today.isoformat(),
-        "bank_account": bank_id, "category": "Dummy", "subcategory": "Dummy",
+        "bank_account": bank_id, "category_tag": "Dummy", "subcategory_tag": "Dummy",
         "status": False, "notes": {}, "cycle": "only", "record": record_id_to_yield
     }
 
@@ -315,7 +320,7 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
             "id_service": f"REC-{fake.random_number(digits=6)}",
             "active": True,
             "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-            "type_record": fake.random_element(["Invoice", "Receipt"]),
+            "type_tag": fake.random_element(["Invoice", "Receipt"]),
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
             "notes": {"Note": fake.paragraph()},
             "entity": entity_id
@@ -333,15 +338,15 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
 
             # Now create a movement linked to that record
             movement_data = {
-                "type_movement": fake.random_element(["Income", "Expense"]),
+                "type_tag": fake.random_element(["Income", "Expense"]),
                 "name": fake.sentence(nb_words=3),
                 "parts": 1,
                 "total": str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
                 "is_due": today.isoformat(),
                 "payment_date": today.isoformat(),
                 "bank_account": bank_id,
-                "category": "Test Category",
-                "subcategory": "Test Subcategory",
+                "category_tag": "Test Category",
+                "subcategory_tag": "Test Subcategory",
                 "status": False,
                 "notes": {
                     "Description": fake.sentence(),
@@ -367,7 +372,11 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
                 created_movement_id = movement_response.json()["result"]["id"]
                 movement_id_to_yield = created_movement_id
             else:
-                print(f"Failed to create movement: {movement_response.status_code}, {movement_response.text}")
+                print(
+                    f"""Failed to create movement:
+                    {movement_response.status_code},
+                    {movement_response.text}
+                    """)
                 # movement_id_to_yield remains a dummy UUID
         else:
             print(f"Failed to create record: {record_response.status_code}, {record_response.text}")
@@ -412,7 +421,7 @@ async def test_scheduler(client, authenticated_user):
     """
     today = datetime.date.today()
     scheduler_data = {
-        "type_entry": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
+        "type_tag": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
         "name": fake.sentence(nb_words=3),
         "status": fake.boolean(),
         "date": today.isoformat(),

@@ -1,3 +1,4 @@
+# ruff: noqa: F811, RET505
 import pytest
 import pytest_asyncio
 import uuid
@@ -5,7 +6,13 @@ from decimal import ROUND_HALF_EVEN, Decimal, ROUND_DOWN
 import json
 from faker import Faker
 from src.dependencies.pwHash import hash_password
-from .test_utils import authenticated_user, client, test_bank_account, test_settings, test_bank_account_2
+from .test_utils import (
+    authenticated_user,
+    client,
+    test_bank_account,
+    test_settings,
+    test_bank_account_2
+)
 
 
 fake = Faker()
@@ -49,8 +56,8 @@ def valid_movement(
 
     # --- CREATE Mode ---
     if id_param is None and mode=="basic":
-        payload = {
-            "type_movement": fake.random_element(["income", "expense"]),
+        return {
+            "type_tag": fake.random_element(["income", "expense"]),
             "notes": {
                 "Description": fake.sentence(),
                 "Note": fake.paragraph(),
@@ -65,14 +72,12 @@ def valid_movement(
             "interest": str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
             "penalty": str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
             "ignore_in_totals": False,
-            "category": fake.word(),
-            "subcategory": fake.word(),
+            "category_tag": fake.word(),
+            "subcategory_tag": fake.word(),
             "payment_date": fake.date(),
             "is_due": fake.date(),
             "status": True
         }
-
-        return payload
 
     elif id_param is None and mode=="custom":
         # Determine final_cycle
@@ -85,44 +90,52 @@ def valid_movement(
         if unique_param is not None: # Test explicitly provided unique_param
             final_unique = unique_param
         else: # unique_param was not provided by test, so default it based on final_cycle
-            if final_cycle == "custom":
-                final_unique = fake.random_int(min=1, max=30) # Default interval for "custom" cycle
-            else:
-                final_unique = None
+            final_unique = fake.random_int(min=1, max=30) if final_cycle == "custom" else None
 
-        payload = {
-            "type_movement": type_param if type_param is not None else fake.random_element(["income", "expense"]),
+        return {
+            "type_tag": type_param if type_param is not None else fake.random_element(
+                ["income", "expense"]
+            ),
             "notes": {
                 "Description": fake.sentence(),
                 "Note": fake.paragraph(),
                 "Category": fake.random_element(["Primary", "Secondary", "Tertiary"])
             },
-            "record": record_param if record_param is not None else str(uuid.uuid4()),
-            "parts": parts_param if parts_param is not None else fake.random_int(min=1, max=10),
-            "total": str(total_param) if total_param is not None else str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
+            "record": record_param if record_param is not None
+                else str(uuid.uuid4()),
+            "parts": parts_param if parts_param is not None
+                else fake.random_int(min=1, max=10),
+            "total": str(total_param) if total_param is not None
+                else str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
             "cycle": final_cycle,
             "bank_account": bank_id,
-            "name": name_param if name_param is not None else fake.word(),
-            "interest": interest_param if interest_param is not None else str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
-            "penalty": penalty_param if penalty_param is not None else str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
-            "ignore_in_totals": ignore_in_totals_param if ignore_in_totals_param is not None else False,
-            "category": category_param if category_param is not None else fake.word(),
-            "subcategory": subcategory_param if subcategory_param is not None else fake.word(),
-            "payment_date": payment_date_param if payment_date_param is not None else fake.date(),
-            "is_due": is_due_param if is_due_param is not None else fake.date(),
-            "status": status_param if status_param is not None else True,
+            "name": name_param if name_param is not None
+                else fake.word(),
+            "interest": interest_param if interest_param is not None
+                else str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
+            "penalty": penalty_param if penalty_param is not None
+                else str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
+            "ignore_in_totals": ignore_in_totals_param if ignore_in_totals_param is not None
+                else False,
+            "category_tag": category_param if category_param is not None
+                else fake.word(),
+            "subcategory_tag": subcategory_param if subcategory_param is not None
+                else fake.word(),
+            "payment_date": payment_date_param if payment_date_param is not None
+                else fake.date(),
+            "is_due": is_due_param if is_due_param is not None
+                else fake.date(),
+            "status": status_param if status_param is not None
+                else True,
             "unique": final_unique
         }
 
-        return payload
-
     # --- UPDATE Mode ---
     else:
-        payload = {
+        return {
             "id": id_param,
             "notes": details_param,
         }
-        return payload
 
 def valid_payment(
     payment_id,
@@ -146,8 +159,8 @@ def valid_payment(
         "interest": interest_param,
         "penalty": penalty_param,
         "ignore_in_totals": ignore_in_totals_param,
-        "category": category_param,
-        "subcategory": subcategory_param,
+        "category_tag": category_param,
+        "subcategory_tag": subcategory_param,
         "payment_date": payment_date_param,
         "is_due": is_due_param,
         "status": status_param
@@ -158,7 +171,10 @@ async def get_bank_account(bank_id, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.get(f"/api/user/bank-account/{bank_id}")
     else:
-        response = await client.get(f"/api/user/bank-account/{bank_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.get(
+            f"/api/user/bank-account/{bank_id}",
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -167,7 +183,10 @@ async def get_movement(movement_id, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.get(f"/api/movement/{movement_id}")
     else:
-        response = await client.get(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.get(
+            f"/api/movement/{movement_id}",
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -176,7 +195,10 @@ async def get_payment(payment_id, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.get(f"/api/movement/payment/{payment_id}")
     else:
-        response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.get(
+            f"/api/movement/payment/{payment_id}",
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -185,7 +207,11 @@ async def post_movement(movement, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.post("/api/movement/", json=movement)
     else:
-        response = await client.post("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.post(
+            "/api/movement/",
+            json=movement,
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -194,7 +220,11 @@ async def update_movement(movement, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.put("/api/movement/", json=movement)
     else:
-        response = await client.put("/api/movement/", json=movement, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.put(
+            "/api/movement/",
+            json=movement,
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -203,7 +233,11 @@ async def update_payment(payment, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.put("/api/movement/payment", json=payment)
     else:
-        response = await client.put("/api/movement/payment", json=payment, cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.put(
+            "/api/movement/payment",
+            json=payment,
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -212,7 +246,10 @@ async def delete_movement(movement_id, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.delete(f"/api/movement/{movement_id}")
     else:
-        response = await client.delete(f"/api/movement/{movement_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.delete(
+            f"/api/movement/{movement_id}",
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -221,7 +258,10 @@ async def delete_payment(payment_id, client, authenticated_user=None):
     if authenticated_user is None:
         response = await client.get(f"/api/movement/payment/{payment_id}")
     else:
-        response = await client.get(f"/api/movement/payment/{payment_id}", cookies=authenticated_user.get_auth_cookies()) # Corrected endpoint
+        response = await client.get(
+            f"/api/movement/payment/{payment_id}",
+            cookies=authenticated_user.get_auth_cookies()
+        ) # Corrected endpoint
     return response.status_code, response.json()
 
 
@@ -229,7 +269,12 @@ class TestMovementEndpoints:
     """Test the movement endpoints."""
 
     @pytest.mark.asyncio
-    async def test_create_get_update_delete_movement(self, client, authenticated_user, test_bank_account):
+    async def test_create_get_update_delete_movement(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account
+    ):
         """Test the complete movement CRUD operations."""
         bank_id, _ = test_bank_account
 
@@ -248,19 +293,22 @@ class TestMovementEndpoints:
 
         assert status < 300
         get_data = get_response["result"]
-        assert get_data["type_movement"] == data["type_movement"]
+        assert get_data["type_tag"] == data["type_tag"]
         # Verify details array contains expected items
 
         details = get_data["notes"]
         update_data = valid_movement(bank_id, id_param=movement["id"], details_param=details)
 
-
-        status, update_response = await update_movement(update_data, client, authenticated_user)
+        status, _ = await update_movement(update_data, client, authenticated_user)
 
         assert status < 300
 
         # Verify update
-        status, get_updated_response = await get_movement(movement["id"], client, authenticated_user)
+        status, get_updated_response = await get_movement(
+            movement["id"],
+            client,
+            authenticated_user
+        )
 
         assert status < 300
         assert get_updated_response["status"] == "success"
@@ -279,7 +327,12 @@ class TestMovementEndpoints:
 
 
     @pytest.mark.asyncio
-    async def test_create_get_update_delete_payment(self, client, authenticated_user, test_bank_account):
+    async def test_create_get_update_delete_payment(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account
+    ):
         """Test the complete payment CRUD operations."""
         bank_id, _ = test_bank_account
 
@@ -306,7 +359,10 @@ class TestMovementEndpoints:
         assert get_response["status"] == "success"
 
         # Update payment
-        update_data = valid_payment(payment, name_param=(fake.word() + " updated"), is_due_param=fake.date())
+        update_data = valid_payment(payment, name_param=(
+            fake.word() + " updated"),
+            is_due_param=fake.date()
+        )
 
         status_update, _ = await update_payment(update_data, client, authenticated_user)
         assert status_update == 200
@@ -324,7 +380,6 @@ class TestMovementEndpoints:
 
         assert status == 200
         assert delete_response["status"] == "success"
-
 
     @pytest.mark.asyncio
     async def test_movement_invalid_uuid(self, client, authenticated_user):
@@ -352,8 +407,6 @@ class TestMovementEndpoints:
 
         # Try to create movement without authentication
 
-
-
     @pytest.mark.asyncio
     async def test_unauthorized_access_payment(self, client):
         # Try to get payment data without authentication
@@ -368,16 +421,24 @@ class TestMovementEndpoints:
         payment_response = await client.put("/api/movement/payment", json=payment_data)
         assert payment_response.status_code == 401
 
-
     @pytest.mark.asyncio
-    async def test_balance_after_movement_creation(self, client, authenticated_user, test_bank_account):
+    async def test_balance_after_movement_creation(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account
+    ):
         """Test bank account balance updates correctly after a movement is created."""
         bank_id, _ = test_bank_account
 
         _, initial_bank_details = await get_bank_account(bank_id, client, authenticated_user)
-        initial_balance = Decimal(initial_bank_details["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        initial_balance = Decimal(
+            initial_bank_details["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         movement_type = fake.random_element(["income", "expense"])
-        movement_total = (Decimal(fake.random_number(digits=3, fix_len=True)) / Decimal('100')).quantize(Decimal('0.01'))
+        movement_total = (Decimal(
+            fake.random_number(digits=3, fix_len=True)
+        ) / Decimal('100')).quantize(Decimal('0.01'))
 
 
         movement_data = valid_movement(
@@ -395,7 +456,9 @@ class TestMovementEndpoints:
         assert status == 200
 
         _, updated_bank_details = await get_bank_account(bank_id, client, authenticated_user)
-        new_balance = Decimal(updated_bank_details["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        new_balance = Decimal(
+            updated_bank_details["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
         if movement_type == "income":
             expected_balance = initial_balance + movement_total
@@ -406,7 +469,12 @@ class TestMovementEndpoints:
 
 
     @pytest.mark.asyncio
-    async def test_balance_on_payment_value_update(self, client, authenticated_user, test_bank_account):
+    async def test_balance_on_payment_value_update(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account
+    ):
         """Test bank account balance updates correctly when a payment's value is changed."""
         bank_id, _ = test_bank_account
 
@@ -473,7 +541,9 @@ class TestMovementEndpoints:
         _, initial_balance = await get_bank_account(bank_id_1, client, authenticated_user)
         balance["before movement acc1"] = Decimal(initial_balance["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         _, initial_balance = await get_bank_account(bank_id_2, client, authenticated_user)
-        balance["before movement acc2"] = Decimal(initial_balance["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["before movement acc2"] = Decimal(
+            initial_balance["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
         movement_data = valid_movement(bank_id_1, mode="custom", parts_param=1, cycle_param="only", total_param=payment_value, type_param="expense")
         status, create_response = await post_movement(movement_data, client, authenticated_user)
@@ -483,26 +553,39 @@ class TestMovementEndpoints:
         status, get_movement_response = await get_movement(movement_id, client, authenticated_user)
         assert status == 200
         movement_details = get_movement_response["result"]
-        assert "payment" in movement_details and len(movement_details["payment"]) > 0, "Payment list not found in movement"
+        assert "payment" in movement_details and len(movement_details["payment"]) > 0,
+        "Payment list not found in movement"
         payment_to_update = movement_details["payment"][0]
         payment_id = payment_to_update["id"]
 
         # Get initial balances (after the payment has been posted from account 1)
         _, initial_details_acc1 = await get_bank_account(bank_id_1, client, authenticated_user)
-        balance["after movement acc1"] = Decimal(initial_details_acc1["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["after movement acc1"] = Decimal(
+            initial_details_acc1["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         _, initial_details_acc2 = await get_bank_account(bank_id_2, client, authenticated_user)
-        balance["after movement acc2"] = Decimal(initial_details_acc2["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["after movement acc2"] = Decimal(
+            initial_details_acc2["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
 
         payment_update_data = valid_payment(payment_id, bank_id=bank_id_2)
-        status, update_response = await update_payment(payment_update_data, client, authenticated_user)
+        status, update_response = await update_payment(
+            payment_update_data,
+            client,
+            authenticated_user
+        )
         assert status == 200, f"Payment account update failed: {update_response}"
 
         # Get new balances
         _, final_details_acc1 = await get_bank_account(bank_id_1, client, authenticated_user)
-        balance["after update acc1"] = Decimal(final_details_acc1["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["after update acc1"] = Decimal(
+            final_details_acc1["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         _, final_details_acc2 = await get_bank_account(bank_id_2, client, authenticated_user)
-        balance["after update acc2"] = Decimal(final_details_acc2["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["after update acc2"] = Decimal(
+            final_details_acc2["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
 
         assert balance["after movement acc1"] == balance["before movement acc1"] - payment_value
@@ -511,7 +594,12 @@ class TestMovementEndpoints:
 
 
     @pytest.mark.asyncio
-    async def test_schedule_entry_creation_on_payment_insert(self, client, authenticated_user, test_bank_account):
+    async def test_schedule_entry_creation_on_payment_insert(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account
+    ):
         """Test that a schedule entry is created when a recurring movement/payment is made."""
         bank_id, _ = test_bank_account
         movement_data = valid_movement(bank_id)
@@ -539,4 +627,5 @@ class TestMovementEndpoints:
             if "event" in payment and "id" in payment["event"]:
                 scheduler_id_found = True
 
-        assert scheduler_id_found, "Scheduler ID (event_id) not found in any payment for a recurring movement."
+        assert scheduler_id_found,
+        "Scheduler ID (event_id) not found in any payment for a recurring movement."

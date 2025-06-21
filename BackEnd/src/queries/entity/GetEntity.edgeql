@@ -1,9 +1,9 @@
 select Entity {
     email,
-    type_entity:= .type,
-    id_type,
+    type_tag,
+    document_type,
     status,
-    govt_id,
+    document,
     name,
     sex,
     relationship_status,

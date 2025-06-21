@@ -1,13 +1,12 @@
-select (insert Record{
-    user:= assert_single((select InternalUser filter .id = <uuid>$user)),
+with user:= (select global current_user_obj),
+insert Record{
+    owner:= user,
     name:= <str>$name,
-    id_service := <optional str>$id_service,
-    active:= <optional bool>$active ?? <bool>true,
-    status := <optional str>$status,
-    type:= <str>$type,
-    value := to_decimal(<str>$value, 'FM999999999999.99'),
+    service_id := <optional str>$id_service,
+    status:= <optional bool>$status ?? <bool>true,
+    optional_status := <optional str>$optional_status,
+    type_tag:= <str>$type_tag,
+    value := to_decimal(<str>$value, 'FM999999999999D99'),
     notes:=<optional json>$notes,
-    entity := assert_single((select Entity filter .id = <uuid>$entity))
-}){
-    id
+    entity := (select Entity filter .id in array_unpack(<array<uuid>>$entities))
 }

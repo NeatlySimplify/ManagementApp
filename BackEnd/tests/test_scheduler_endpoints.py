@@ -1,8 +1,8 @@
+# ruff: noqa: F811
 import pytest
 import pytest_asyncio
 import uuid
 import datetime
-from decimal import Decimal
 from faker import Faker
 from .test_utils import authenticated_user, client
 
@@ -21,7 +21,7 @@ class TestSchedulerEndpoints:
         end_time = datetime.time(11, 0)
 
         data = {
-            "type_entry": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
+            "type_tag": fake.random_element(["Meeting", "Appointment", "Deadline", "Reminder"]),
             "name": fake.sentence(nb_words=3),
             "status": fake.boolean(),
             "date": today.isoformat(),
@@ -59,7 +59,7 @@ class TestSchedulerEndpoints:
         get_data = get_response.json()["result"]
         print(get_data["notes"])
         assert get_data["name"] == data["name"]
-        assert get_data["type_entry"] == data["type_entry"]
+        assert get_data["type_tag"] == data["type_tag"]
         assert "date" in get_data
         assert "beginning_time" in get_data
         assert "ending_time" in get_data
@@ -73,7 +73,7 @@ class TestSchedulerEndpoints:
         update_data = {
             "id": scheduler_id,
             "name": fake.sentence(nb_words=4),
-            "type_entry": fake.random_element(["Task", "Event", "Holiday"]),
+            "type_tag": fake.random_element(["Task", "Event", "Holiday"]),
             "status": not data["status"],
             "date": tomorrow.isoformat(),
             "beginning_time": new_start_time.isoformat(),
@@ -98,7 +98,7 @@ class TestSchedulerEndpoints:
         assert get_updated_response.status_code == 200
         updated_data = get_updated_response.json()["result"]
         assert updated_data["name"] == update_data["name"]
-        assert updated_data["type_entry"] == update_data["type_entry"]
+        assert updated_data["type_tag"] == update_data["type_tag"]
         assert updated_data["status"] == update_data["status"]
         assert "date" in updated_data
         assert "beginning_time" in updated_data
@@ -137,7 +137,7 @@ class TestSchedulerEndpoints:
         today = datetime.date.today()
 
         data = {
-            "type_entry": fake.random_element(["Meeting", "Appointment"]),
+            "type_tag": fake.random_element(["Meeting", "Appointment"]),
             "name": fake.sentence(nb_words=3),
             "status": fake.boolean(),
             "date": today.isoformat(),
@@ -190,7 +190,7 @@ class TestSchedulerEndpoints:
         updated_data = get_response.json()["result"]
         assert updated_data["name"] == partial_update["name"]
         assert updated_data["status"] == partial_update["status"]
-        assert updated_data["type_entry"] == data["type_entry"]
+        assert updated_data["type_tag"] == data["type_tag"]
 
         assert updated_data["notes"]
 
@@ -210,7 +210,7 @@ class TestSchedulerEndpoints:
 
         # Try to create scheduler without authentication
         scheduler_data = {
-            "type_entry": "Meeting",
+            "type_tag": "Meeting",
             "name": "Unauthorized test",
             "date": datetime.date.today().isoformat()
         }
@@ -236,7 +236,7 @@ class TestSchedulerEndpoints:
         """Test creating scheduler with invalid data."""
         # Missing required fields
         invalid_data = {
-            "type_entry": "Meeting"
+            "type_tag": "Meeting"
             # Missing name and date
         }
 
@@ -250,7 +250,7 @@ class TestSchedulerEndpoints:
 
         # Invalid date format
         invalid_date_data = {
-            "type_entry": "Meeting",
+            "type_tag": "Meeting",
             "name": "Test Meeting",
             "date": "not-a-date",
             "status": True
@@ -274,7 +274,7 @@ class TestSchedulerEndpoints:
         origin_id = str(uuid.uuid4())  # Mock origin ID
 
         data = {
-            "type_entry": fake.random_element(["Meeting", "Appointment"]),
+            "type_tag": fake.random_element(["Meeting", "Appointment"]),
             "name": fake.sentence(nb_words=3),
             "status": True,
             "date": today.isoformat(),

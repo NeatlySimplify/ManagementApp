@@ -1,10 +1,10 @@
 with entity:=assert_single((select Entity filter .id = <uuid>$entity)),
 add_contact:= (
     insert Contact{
-        name:= <str>$name,
-        email:= <optional str>$email,
+        type_tag:= <str>$type_tag,
+        extra_email:= <optional str>$extra_email,
         notes:=<optional json>$notes,
-        number:= <json>$number,
+        number:= <str>$number,
     }
 ) if exists entity else <Contact>{},
 update_entity:= (update entity set {

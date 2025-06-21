@@ -33,12 +33,12 @@ class UpdateEntityResult(NoPydanticValidation):
 async def UpdateEntity(
     executor: gel.AsyncIOExecutor,
     *,
-    email: str | None = None,
     entity: uuid.UUID,
-    type: str | None = None,
-    id_type: str | None = None,
+    email: str | None = None,
+    type_tag: str | None = None,
+    document_type: str | None = None,
     status: bool | None = None,
-    govt_id: str | None = None,
+    document: str | None = None,
     name: str | None = None,
     sex: str | None = None,
     relationship_status: str | None = None,
@@ -47,15 +47,13 @@ async def UpdateEntity(
 ) -> UpdateEntityResult | None:
     return await executor.query_single(
         """\
-        with raw_email:= <optional str>$email,
-        str_email:=(raw_email if exists raw_email else <str>{}),
-        old_entity:=(select Entity filter .id = <uuid>$entity)
+        with old_entity:=(select Entity filter .id = <uuid>$entity)
         update old_entity set {
-            email:= str_email ?? .email,
-            type:= <optional str>$type ?? old_entity.type,
-            id_type:= <optional str>$id_type ?? old_entity.id_type,
+            email:= <optional str>$email ?? .email,
+            type_tag:= <optional str>$type_tag ?? .type_tag,
+            document_type:= <optional str>$document_type ?? .document_type,
             status:= <optional bool>$status ?? old_entity.status,
-            govt_id:= <optional str>$govt_id ?? old_entity.govt_id,
+            document:= <optional str>$document ?? .document,
             name:= <optional str>$name ?? old_entity.name,
             sex:= <optional str>$sex ?? old_entity.sex,
             relationship_status:= <optional str>$relationship_status ?? old_entity.relationship_status,
@@ -63,12 +61,12 @@ async def UpdateEntity(
             birth:= <optional cal::local_date>$birth ?? old_entity.birth
         }\
         """,
-        email=email,
         entity=entity,
-        type=type,
-        id_type=id_type,
+        email=email,
+        type_tag=type_tag,
+        document_type=document_type,
         status=status,
-        govt_id=govt_id,
+        document=document,
         name=name,
         sex=sex,
         relationship_status=relationship_status,

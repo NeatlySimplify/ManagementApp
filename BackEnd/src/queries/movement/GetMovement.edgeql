@@ -1,12 +1,12 @@
 select Movement{
-    type_movement:= .type,
+    type_tag,
     value,
     installment,
     notes,
     record: {
         id,
         name,
-        id_service
+        service_id
     },
     accounts:{
         id,

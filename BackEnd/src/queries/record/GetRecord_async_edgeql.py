@@ -29,10 +29,10 @@ class NoPydanticValidation:
 class GetRecordResult(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    id_service: str | None
-    active: bool | None
-    status: str | None
-    type_record: str | None
+    service_id: str | None
+    status: bool | None
+    optional_status: str | None
+    type_tag: str | None
     str_value: str | None
     notes: str | None
     entity: list[GetRecordResultEntityItem]
@@ -50,7 +50,7 @@ class GetRecordResultEntityItem(NoPydanticValidation):
 class GetRecordResultEventItem(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type_entry: str | None
+    type_tag: str | None
     status: bool | None
     date: datetime.date | None
 
@@ -58,7 +58,7 @@ class GetRecordResultEventItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetRecordResultMovementItem(NoPydanticValidation):
     id: uuid.UUID
-    type_movement: str | None
+    type_tag: str
     str_value: str
     installment: int
     payment: list[GetRecordResultMovementItemPaymentItem]
@@ -80,10 +80,10 @@ async def GetRecord(
         """\
         select Record {
             name,
-            id_service,
-            active,
+            service_id,
             status,
-            type_record:= .type,
+            optional_status,
+            type_tag,
             str_value:=to_str(.value),
             notes,
             entity: {
@@ -93,13 +93,13 @@ async def GetRecord(
             event: {
                 id,
                 name,
-                type_entry:= .type,
+                type_tag,
                 status,
                 date
             },
             movement: {
                 id,
-                type_movement:= .type,
+                type_tag,
                 str_value:=to_str(.value),
                 installment,
                 payment: {

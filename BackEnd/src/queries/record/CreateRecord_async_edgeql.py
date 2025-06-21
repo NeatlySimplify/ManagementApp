@@ -32,39 +32,36 @@ class CreateRecordResult(NoPydanticValidation):
 async def CreateRecord(
     executor: gel.AsyncIOExecutor,
     *,
-    user: uuid.UUID,
     name: str,
     id_service: str | None = None,
-    active: bool | None = None,
-    status: str | None = None,
-    type: str,
+    status: bool | None = None,
+    optional_status: str | None = None,
+    type_tag: str,
     value: str,
     notes: str | None = None,
-    entity: uuid.UUID,
+    entities: list[uuid.UUID],
 ) -> CreateRecordResult:
     return await executor.query_single(
         """\
-        select (insert Record{
-            user:= assert_single((select InternalUser filter .id = <uuid>$user)),
+        with user:= (select global current_user_obj),
+        insert Record{
+            owner:= user,
             name:= <str>$name,
-            id_service := <optional str>$id_service,
-            active:= <optional bool>$active ?? <bool>true,
-            status := <optional str>$status,
-            type:= <str>$type,
-            value := to_decimal(<str>$value, 'FM999999999999.99'),
+            service_id := <optional str>$id_service,
+            status:= <optional bool>$status ?? <bool>true,
+            optional_status := <optional str>$optional_status,
+            type_tag:= <str>$type_tag,
+            value := to_decimal(<str>$value, 'FM999999999999D99'),
             notes:=<optional json>$notes,
-            entity := assert_single((select Entity filter .id = <uuid>$entity))
-        }){
-            id
+            entity := (select Entity filter .id in array_unpack(<array<uuid>>$entities))
         }\
         """,
-        user=user,
         name=name,
         id_service=id_service,
-        active=active,
         status=status,
-        type=type,
+        optional_status=optional_status,
+        type_tag=type_tag,
         value=value,
         notes=notes,
-        entity=entity,
+        entities=entities,
     )

@@ -5,7 +5,7 @@ from typing import Literal
 from dotenv import load_dotenv
 from pydantic import BaseModel, EmailStr, computed_field
 
-load_dotenv()
+_ = load_dotenv()
 
 class Settings(BaseModel):
     stage: str = "prod"
@@ -20,20 +20,19 @@ class Settings(BaseModel):
     session_secret: str
     algorithm: str
     jwt_expire_base: float
+    admin_id: str
 
 
     @computed_field
     @property
     def jwt_exp(self) -> int:
-        value = int((datetime.now() + timedelta(minutes=self.jwt_expire_base)).timestamp())
-        return value
+        return int((datetime.now() + timedelta(minutes=self.jwt_expire_base)).timestamp())
 
 
     @computed_field
     @property
     def jwt_refresh_exp(self) -> int:
-        value = int((datetime.now() + timedelta(minutes=self.jwt_expire_base*100)).timestamp())
-        return value
+        return int((datetime.now() + timedelta(minutes=self.jwt_expire_base*100)).timestamp())
 
 
 
@@ -41,7 +40,7 @@ class Settings(BaseModel):
 _config: Settings | None = None
 
 
-def instance() -> None:
+def instance() -> Settings:
     global _config
 
     stage = os.getenv('STAGE', 'dev')
@@ -57,7 +56,8 @@ def instance() -> None:
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
-            "jwt_expire_base": 30
+            "jwt_expire_base": 30,
+            "admin_id": os.getenv('ADMIN_ID')
         },
         'prod': {
             'debug': False,
@@ -69,7 +69,8 @@ def instance() -> None:
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
-            "jwt_expire_base": 30
+            "jwt_expire_base": 30,
+            "admin_id": os.getenv('ADMIN_ID')
         },
     }
 
@@ -79,14 +80,14 @@ def instance() -> None:
     if settings.use_rich_traceback:
         from rich.traceback import install
 
-        install(show_locals=True)
+        _ = install(show_locals=True)
 
     _config = settings
-    return
+    return settings
 
 
 def get_settings() -> Settings:
     global _config
     if _config is None:
-        instance()
+        return instance()
     return _config

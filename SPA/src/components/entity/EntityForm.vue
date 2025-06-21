@@ -3,9 +3,25 @@ import BareModal from "@/components/BareModal"
 import api from '@/api'
 import useUserStore from '@/stores/user'
 import useEntityStore from '@/stores/entity'
+import { defineProps } from "vue"
+import { defineEmits } from "vue"
 
 
 const route = "/api/entity"
+defineProps({
+  entity,
+  mode
+})
+
+const isReadOnly = ref(false)
+const change = ref(false)
+
+const emit = defineEmits(['change'])
+
+const onChange = (change) => {
+  emit('change', change)
+}
+
 const userStore = useUserStore()
 const entityStore = useEntityStore()
 const settings = userStore.getSettings;
@@ -26,14 +42,6 @@ const phonePlaceholder = ref({})
 const showFormAddress = ref(false)
 const showFormPhone = ref(false)
 
-const props = defineProps({
-  mode: {
-    type: String,
-    default: "create"
-  },
-  id: String
-})
-uniqueMode.value = props.mode
 
 const zeroingVars = () => {
   if (PFPJ.value === "PJ") {

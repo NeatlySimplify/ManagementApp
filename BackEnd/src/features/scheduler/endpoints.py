@@ -15,20 +15,28 @@ from src.features.scheduler.schema import (
 eventRoute = APIRouter(prefix='/api/scheduler')
 
 
-@eventRoute.get('/{id}', response_class=JSONResponse)
+@eventRoute.get('/{schedule}', response_class=JSONResponse)
 @handle_result()
-async def getScheduler(id: UUID, user=Depends(get_current_user), db=Depends(get_gel_client)):
-    return await getEvent(db, id)
+async def getScheduler(
+    schedule: UUID,
+    user=Depends(get_current_user),
+    db=Depends(get_gel_client)
+):
+    db = db.with_globals({"current_user": user.get('user')})
+    return await getEvent(db, schedule)
 
 
 @eventRoute.post('/', response_class=JSONResponse)
 @handle_result()
-async def createScheduler(data: SchedulerCreate, user=Depends(get_current_user), db=Depends(get_gel_client)):
+async def createScheduler(
+    data: SchedulerCreate,
+    user=Depends(get_current_user),
+    db=Depends(get_gel_client)
+):
+    db = db.with_globals({"current_user": user.get('user')})
     return await createEvent(
         db,
-        user_id=user,
-        origin=data.origin,
-        type=data.type_entry,
+        type_tag=data.type_tag,
         name=data.name,
         status=data.status,
         date=data.date,
@@ -40,11 +48,16 @@ async def createScheduler(data: SchedulerCreate, user=Depends(get_current_user),
 
 @eventRoute.put('/', response_class=JSONResponse)
 @handle_result()
-async def updateScheduler(data: SchedulerUpdate, user=Depends(get_current_user), db=Depends(get_gel_client)):
+async def updateScheduler(
+    data: SchedulerUpdate,
+    user=Depends(get_current_user),
+    db=Depends(get_gel_client)
+):
+    db = db.with_globals({"current_user": user.get('user')})
     return await updateEvent(
         db,
         name=data.name,
-        type=data.type_entry,
+        type_tag=data.type_tag,
         event_id=data.id,
         status=data.status,
         beginning_time=data.beginning_time,
@@ -54,7 +67,12 @@ async def updateScheduler(data: SchedulerUpdate, user=Depends(get_current_user),
     )
 
 
-@eventRoute.delete('/{id}', response_class=JSONResponse)
+@eventRoute.delete('/{schedule}', response_class=JSONResponse)
 @handle_result()
-async def deleteScheduler(id: UUID, user=Depends(get_current_user), db=Depends(get_gel_client)):
-    return await deleteEvent(db, id)
+async def deleteScheduler(
+    schedule: UUID,
+    user=Depends(get_current_user),
+    db=Depends(get_gel_client)
+):
+    db = db.with_globals({"current_user": user.get('user')})
+    return await deleteEvent(db, schedule)

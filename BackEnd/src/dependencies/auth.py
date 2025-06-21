@@ -1,4 +1,4 @@
-# pyright: ignore[reportReturnType]
+# ruff: noqa: TRY300
 from http import HTTPStatus
 from typing import Any
 from uuid import UUID
@@ -8,23 +8,25 @@ from fastapi import HTTPException, Request
 
 from src.settings import get_settings
 
-set = get_settings()
+setting = get_settings()
 
-def create_token(user_id: Any, type: str = "access"):
+def create_token(user_id: Any, role: str, cookie_type: str = "access"):
     user_id = UUID(str(user_id))
-    if type == "refresh":
+    if cookie_type == "refresh":
         payload = {
             "sub": str(user_id),
-            "exp": set.jwt_refresh_exp,
-            "type": type
+            "role": str(role),
+            "exp": setting.jwt_refresh_exp,
+            "type": cookie_type
         }
     else:
         payload = {
             "sub": str(user_id),
-            "exp": set.jwt_exp,
-            "type": type
+            "role": str(role),
+            "exp": setting.jwt_exp,
+            "type": cookie_type
         }
-    return jwt.encode(payload, set.secret, algorithm=set.algorithm)
+    return jwt.encode(payload, setting.secret, algorithm=setting.algorithm)
 
 
 def extract_token(request: Request, token_name: str = "access_token"):
@@ -37,36 +39,30 @@ def extract_token(request: Request, token_name: str = "access_token"):
     return token
 
 
-def decode_token(token: str, expected_type: str = "access") -> UUID:
+def decode_token(token: str, expected_type: str = "access") -> dict[str, str]:
     try:
-        payload: dict[str, Any] = jwt.decode(token, set.secret, algorithms=[set.algorithm])
+        payload: dict[str, Any] = jwt.decode(token, setting.secret, algorithms=[setting.algorithm])
         if payload.get("type") != expected_type:
             raise HTTPException(
                 status_code=HTTPStatus.UNAUTHORIZED,
                 detail=f"Invalid token type: expected {expected_type}.",
             )
-        return UUID(payload.get("sub"))
+        return {"user": payload["sub"], "role": payload["role"]}
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail="Token expired.",
-        )
+        ) from None
     except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail="Invalid token.",
-        )
+        ) from None
 
 
 async def get_current_user(request: Request):
     try:
         token = extract_token(request, "access_token")
-        if not token:
-            raise HTTPException(status_code=401, detail="Missing token")
-
-        user_id = decode_token(token, expected_type="access")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_id
+        return decode_token(token, expected_type="access")
     except Exception:
-        raise HTTPException(status_code=401, detail="Some error on Auth Token!!!")
+        raise HTTPException(status_code=401, detail="Some error on Auth Token!!!") from None

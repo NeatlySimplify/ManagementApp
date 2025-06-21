@@ -1,8 +1,7 @@
 {
   "typeCheckingMode": "basic",
-  "include": ["src", "tests"],
-  "exclude": ["queries", "static"],
-  "reportArgumentType": false,
-  "reportOperatorIssue": false,
-  "reportOptionalIterable": false
+  "include": ["src/", "tests/"],
+  "exclude": ["**/queries/", "**/static/"],
+  "reportUnknownMemberType": false,
+  "reportInvalidTypeForm": false
 }

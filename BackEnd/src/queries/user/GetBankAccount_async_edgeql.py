@@ -30,11 +30,11 @@ class GetBankAccountResult(NoPydanticValidation):
     id: uuid.UUID
     bank_name: str
     account_name: str
-    type_account: str | None
+    type_tag: str | None
     balance: decimal.Decimal | None
     notes: str | None
     ignore_on_totals: bool | None
-    category: str | None
+    category_tag: str | None
 
 
 async def GetBankAccount(
@@ -47,11 +47,11 @@ async def GetBankAccount(
         select BankAccount {
             bank_name,
             account_name,
-            type_account:= .type,
+            type_tag,
             balance,
             notes,
             ignore_on_totals,
-            category,
+            category_tag,
         } filter .id = <uuid>$bank_account\
         """,
         bank_account=bank_account,

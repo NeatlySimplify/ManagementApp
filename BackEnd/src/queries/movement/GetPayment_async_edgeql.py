@@ -30,13 +30,13 @@ class NoPydanticValidation:
 class GetPaymentResult(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type: str | None
+    type_tag: str
     value: decimal.Decimal | None
     ignore_in_totals: bool | None
     interest: str | None
     penalty: str | None
-    category: str | None
-    subcategory: str | None
+    category_tag: str | None
+    subcategory_tag: str | None
     payment_date: datetime.date | None
     is_due: datetime.date | None
     status: bool | None
@@ -71,13 +71,13 @@ async def GetPayment(
         """\
         select Payment {
             name,
-            type,
+            type_tag,
             value,
             ignore_in_totals,
             interest,
             penalty,
-            category,
-            subcategory,
+            category_tag,
+            subcategory_tag,
             payment_date,
             is_due,
             status,

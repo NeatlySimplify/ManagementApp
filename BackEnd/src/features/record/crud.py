@@ -1,6 +1,7 @@
+import json
 from dataclasses import asdict
 from uuid import UUID
-import json
+
 from src.dependencies import db
 from src.queries.record import (
     CreateRecord_async_edgeql,
@@ -22,7 +23,8 @@ async def getRecord(
         record: UUID,
     ) -> dict | None:
     result = await GetRecord_async_edgeql.GetRecord(db, id=record)
-    if result is None: return None
+    if result is None:
+        return None
     result_dict = asdict(result)
     if result_dict["notes"] is not None:
         result_dict["notes"] = json.loads(result_dict["notes"])
@@ -33,25 +35,23 @@ async def getRecord(
 @db.handle_database_errors
 async def createRecord(
         db,
-        user: UUID,
         name: str,
         id_service: str | None,
         active: bool | None,
         status: str | None,
-        type: str,
+        type_tag: str,
         value: str,
         details: dict[str, str | int | float] | None,
-        entity: UUID,
+        entities: list[UUID],
     ) -> dict | None:
     result = await CreateRecord_async_edgeql.CreateRecord(
         db,
-        user=user,
-        entity=entity,
+        entities=entities,
         name=name,
         id_service=id_service,
-        active=active,
-        status=status,
-        type=type,
+        status=active,
+        optional_status=status,
+        type_tag=type_tag,
         value=value,
         notes=json.dumps(details) if details is not None else None,
     )
@@ -77,23 +77,23 @@ async def deleteRecord(
 @db.handle_database_errors
 async def updateRecord(
         db,
-        id: UUID,
+        record: UUID,
         name: str | None,
         id_service: str | None,
         active: bool | None,
         status: str | None,
-        type: str | None,
+        type_tag: str | None,
         value: str | None,
         details: dict[str, str | int | float] | None,
     ) -> dict | None:
     result = await UpdateRecord_async_edgeql.UpdateRecord(
         db,
-        id=id,
+        id=record,
         name=name,
-        id_service=id_service,
-        active=active,
-        status=status,
-        type=type,
+        service_id=id_service,
+        status=active,
+        optional_status=status,
+        type=type_tag,
         value=value,
         notes=json.dumps(details) if details is not None else None,
     )

@@ -6,13 +6,14 @@ from http import HTTPStatus
 
 import gel
 from fastapi import HTTPException, Request
+from gel import AsyncIOClient
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifetime(app):
-    app.state = gel.create_async_client()
+    app.state: AsyncIOClient = gel.create_async_client()
     await app.state.ensure_connected()
     try:
         yield

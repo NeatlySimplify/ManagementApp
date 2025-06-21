@@ -1,3 +1,4 @@
+# ruff: noqa: TRY003
 from typing import Self
 from uuid import UUID, uuid4
 
@@ -32,6 +33,7 @@ class LoginOnToken(BaseModel):
 class Register(Login):
     name: str
     confirm_password: str
+    type_user: str
 
 
     @model_validator(mode="after")

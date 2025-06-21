@@ -1,13 +1,14 @@
-select (insert Entity {
-    user:= <InternalUser><uuid>$user,
-    email:= <str>$email,
-    type:= <str>$type,
-    id_type:= <str>$id_type,
-    status:= <optional bool>$status,
-    govt_id:= <str>$govt_id,
+with user:= (select global current_user_obj),
+insert Entity {
     name:= <str>$name,
+    email:= <str>$email,
+    type_tag:= <str>$type_tag,
+    document_type:= <str>$document_type,
+    document:= <str>$document,
+    status:= <optional bool>$status,
     sex:= <optional str>$sex,
     notes:=<optional json>$notes,
     relationship_status:= <optional str>$relationship_status,
-    birth:= <optional cal::local_date>$birth
-}){id}
+    birth:= <optional cal::local_date>$birth,
+    owner:= user
+}

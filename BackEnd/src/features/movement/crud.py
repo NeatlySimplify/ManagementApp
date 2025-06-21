@@ -1,13 +1,14 @@
+# ruff: noqa: TRY003
+# pyright: reportAssignmentType=false
 import datetime
+import json
 from dataclasses import asdict
 from decimal import ROUND_HALF_EVEN, Decimal
 from uuid import UUID
-import json
 
 from dateutil.relativedelta import relativedelta
 
 from src.dependencies import db
-
 from src.queries.movement import (
     CreateMovement_async_edgeql,
     CreatePayment_async_edgeql,
@@ -15,25 +16,29 @@ from src.queries.movement import (
     DeletePayment_async_edgeql,
     GetMovement_async_edgeql,
     GetPayment_async_edgeql,
+    UpdateMovement_async_edgeql,
     UpdatePayment_async_edgeql,
-    UpdateMovement_async_edgeql
 )
 
 CycleMap = {
-    "daily": relativedelta(days=1),
-    "weekly": relativedelta(weeks=1),
-    "fortnightly": relativedelta(weeks=2),
-    "monthly": relativedelta(months=1),
-    "bimonthly": relativedelta(months=2),
-    "quarterly": relativedelta(months=3),
-    "semi-annual": relativedelta(months=6),
-    "yearly": relativedelta(years=1),
-    "custom": lambda n: relativedelta(days=n),  # handled specially
+    "Diário": relativedelta(days=1),
+    "Semanal": relativedelta(weeks=1),
+    "Quinzenal": relativedelta(weeks=2),
+    "Mensal": relativedelta(months=1),
+    "Trimestral": relativedelta(months=3),
+    "Semestral": relativedelta(months=6),
+    "Anual": relativedelta(years=1),
+    "Personalizado": lambda n: relativedelta(days=n),  # handled specially
 }
 
-def date_cycle_generator(start: datetime.date, period: str, count: int, custom_days: int| None = None):
+def date_cycle_generator(
+    start: datetime.date,
+    period: str,
+    count: int,
+    custom_days: int| None = None
+):
     current: datetime.date = start
-    if period == "only":
+    if period == "Único":
         yield start
         return
     for _ in range(count):
@@ -64,7 +69,6 @@ def dividir_com_erro_no_final(valor: Decimal, parts: int):
 async def _create_payment(
     db,
     movement: UUID,
-    user: UUID,
     account: UUID,
     name: str,
     value: str,
@@ -89,19 +93,18 @@ async def _create_payment(
         payment_date=payment_date,
         is_due=is_due,
         status=status,
-        user=user,
         account=account,
         movement=movement
     )
     if result is not None:
-        result = asdict(result)
+        result = asdict(result[1])
     return result
 
 
 @db.handle_database_errors
 async def updatePayment(
     db,
-    id: UUID,
+    payment: UUID,
     account: UUID | None,
     name: str | None,
     value: str | None,
@@ -116,15 +119,15 @@ async def updatePayment(
 ) -> dict | None:
     result = await UpdatePayment_async_edgeql.UpdatePayment(
         db,
-        payment_id=id,
+        payment_id=payment,
         account=account,
         name=name,
         value=value,
         interest=interest,
         penalty=penalty,
         ignore_in_totals=ignore_in_totals,
-        category=category,
-        subcategory=subcategory,
+        category_tag=category,
+        subcategory_tag=subcategory,
         paymentDate=payment_date,
         is_due=is_due,
         status=status
@@ -162,8 +165,7 @@ async def deletePayment(
 @db.handle_database_errors
 async def createMovement(
     db,
-    user: UUID,
-    type: str,
+    type_tag: str,
     details: dict[str, str | int | float] | None,
     record: UUID | None,
     parts: int,
@@ -183,23 +185,22 @@ async def createMovement(
 ) -> dict | None:
     result = await CreateMovement_async_edgeql.CreateMovement(
         db,
-        type=type,
-        user=user,
+        type_tag=type_tag,
         record_id=record,
         notes=json.dumps(details) if details is not None else None,
     )
     if result is not None:
         result = asdict(result)
-        id = result["id"]
-        if cycle=="custom": unique = None
+        movement = result["id"]
+        if cycle=="custom":
+            unique = None
         offset = date_cycle_generator(is_due, cycle, parts, unique)
         value_list = list(map(str, dividir_com_erro_no_final(Decimal(total),parts)))
 
         for n, i in enumerate(offset):
             await _create_payment(
                 db,
-                movement=id,
-                user=user,
+                movement=movement,
                 account=bank_account,
                 name=name,
                 value=value_list[n],
@@ -227,9 +228,9 @@ async def updateMovement(
             movement=movement_id,
             notes=json.dumps(details) if details is not None else None,
         )
-        if result is None: return None
-        result = asdict(result)
-        return result
+        if result is None:
+            return None
+        return asdict(result)
     return None
 
 
@@ -256,7 +257,8 @@ async def getMovement(
         executor=db,
         movement=movement_id
     )
-    if result is None: return None
+    if result is None:
+        return None
     result_dict = asdict(result)
     if result_dict["notes"] is not None:
         result_dict["notes"] = json.loads(result_dict["notes"])

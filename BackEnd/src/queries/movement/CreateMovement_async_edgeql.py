@@ -33,23 +33,22 @@ async def CreateMovement(
     executor: gel.AsyncIOExecutor,
     *,
     record_id: uuid.UUID | None = None,
-    user: uuid.UUID,
-    type: str,
+    type_tag: str,
     notes: str | None = None,
 ) -> CreateMovementResult:
     return await executor.query_single(
         """\
         with recorded := <optional uuid>$record_id,
+        user:= (select global current_user_obj)
         select (insert Movement {
-            user := assert_single((select InternalUser filter .id = <uuid>$user)),
-            type:= <str>$type,
+            owner := user,
+            type_tag:= <str>$type_tag,
             notes:=<optional json>$notes,
             record := assert_single((select Record filter .id = recorded)) if exists recorded else {}
             }
         ){id}\
         """,
         record_id=record_id,
-        user=user,
-        type=type,
+        type_tag=type_tag,
         notes=notes,
     )

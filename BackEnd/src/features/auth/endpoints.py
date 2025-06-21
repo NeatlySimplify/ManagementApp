@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
@@ -23,9 +24,8 @@ async def login(
             status_code=404,
             detail="User doesn't exist or password doesn't match."
         )
-
-    a_token = create_token(result, "access")
-    r_token = create_token(result, "refresh")
+    a_token = create_token(result["id"], result["tag_type"], "access")
+    r_token = create_token(result["id"], result["tag_type"], "refresh")
     user_data = {
         "name": result["name"],
         "email": result["email"],
@@ -55,7 +55,13 @@ async def register(
     register: Register,
     db=Depends(get_gel_client)
 ):
-    await createUser(db, register.email, register.hash, register.name, register.token)
+    await createUser(
+        db,
+        register.email,
+        register.type_user,
+        register.hash,
+        register.name,
+        register.token)
     return {
         "status": "success"
     }
@@ -91,8 +97,8 @@ async def loginOnToken(
             status_code=404,
             detail="User doesn't exist or token doesn't match."
         )
-    a_token = create_token(user, "access")
-    r_token = create_token(user, "refresh")
+    a_token = create_token(result["id"], result["tag_type"], "access")
+    r_token = create_token(result["id"], result["tag_type"], "refresh")
     user_data = {
         "name": result["name"],
         "email": result["email"],
@@ -113,8 +119,8 @@ async def refresh_jwt(
     response: Response
 ):
     refresh_token = extract_token(request, "refresh_token")
-    user_id = decode_token(refresh_token, expected_type="refresh")
-    new_access_token = create_token(user_id)
+    user_id, role = decode_token(refresh_token, expected_type="refresh")
+    new_access_token = create_token(user_id, role)
     response.set_cookie("access_token", new_access_token)
     return {
         "status": "success"

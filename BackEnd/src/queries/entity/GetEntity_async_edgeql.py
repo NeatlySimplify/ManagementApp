@@ -29,10 +29,10 @@ class NoPydanticValidation:
 class GetEntityResult(NoPydanticValidation):
     id: uuid.UUID
     email: str
-    type_entity: str | None
-    id_type: str | None
+    type_tag: str | None
+    document_type: str | None
     status: bool | None
-    govt_id: str | None
+    document: str | None
     name: str | None
     sex: str | None
     relationship_status: str | None
@@ -57,10 +57,10 @@ class GetEntityResultAddressItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetEntityResultPhoneItem(NoPydanticValidation):
     id: uuid.UUID
-    email: str | None
-    name: str | None
+    extra_email: str | None
     notes: str | None
     number: str | None
+    type_tag: str | None
 
 
 async def GetEntity(
@@ -72,10 +72,10 @@ async def GetEntity(
         """\
         select Entity {
             email,
-            type_entity:= .type,
-            id_type,
+            type_tag,
+            document_type,
             status,
-            govt_id,
+            document,
             name,
             sex,
             relationship_status,

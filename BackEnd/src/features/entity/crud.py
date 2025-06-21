@@ -1,7 +1,7 @@
+import json
 from dataclasses import asdict
 from datetime import date
 from uuid import UUID
-import json
 
 from src.dependencies import db
 from src.queries.entity import (
@@ -21,12 +21,11 @@ from src.queries.entity import (
 @db.handle_database_errors
 async def create_entity(
     db,
-    user: UUID,
     email: str,
-    type: str,
-    id_type: str,
+    type_tag: str,
+    document_type: str,
     status: bool | None,
-    govt_id: str,
+    document: str,
     name: str,
     sex: str | None,
     relationship_status: str | None,
@@ -35,12 +34,11 @@ async def create_entity(
 ) -> dict | None:
     result = await CreateEntity_async_edgeql.CreateEntity(
         executor=db,
-        user=user,
         email=email,
-        type=type,
-        id_type=id_type,
+        type_tag=type_tag,
+        document_type=document_type,
         status=status,
-        govt_id=govt_id,
+        document=document,
         name=name,
         sex=sex,
         relationship_status=relationship_status,
@@ -57,10 +55,10 @@ async def update_entity(
     db,
     entity: UUID,
     email: str | None,
-    type: str | None,
-    id_type: str | None,
+    type_tag: str | None,
+    document_type: str | None,
     status: bool | None,
-    govt_id: str | None,
+    document: str | None,
     name: str | None,
     sex: str | None,
     relationship_status: str | None,
@@ -70,10 +68,10 @@ async def update_entity(
     result = await UpdateEntity_async_edgeql.UpdateEntity(
         executor=db,
         email=email,
-        type=type,
-        id_type=id_type,
+        type_tag=type_tag,
+        document_type=document_type,
         status=status,
-        govt_id=govt_id,
+        document=document,
         name=name,
         sex=sex,
         relationship_status=relationship_status,
@@ -91,6 +89,7 @@ async def delete_entity(
     db,
     entity: UUID,
 ) -> dict | None:
+
     result = await DeleteEntity_async_edgeql.DeleteEntity(
         executor=db,
         entity=entity
@@ -109,12 +108,12 @@ async def get_entity(
         executor=db,
         entity=entity
     )
-    if result is None: return None
+    if result is None:
+        return None
     result_dict = asdict(result)
     if result_dict["notes"] is not None:
         result_dict["notes"] = json.loads(result_dict["notes"])
     for i in result_dict["phone"]:
-        i["number"] = json.loads(i["number"])
         if i["notes"] is not None:
             i["notes"] = json.loads(i["notes"])
     return result_dict
@@ -193,22 +192,23 @@ async def delete_address(
 async def create_contact(
     db,
     entity: UUID,
-    number: dict[str, str],
-    name: str,
+    number: str,
+    type_tag: str,
     email: str | None,
     details: dict[str, str | int | float] | None,
 ) -> dict | None:
     result = await CreateContact_async_edgeql.CreateContact(
         executor=db,
-        name=name,
-        email=email,
-        number=json.dumps(number),
+        type_tag=type_tag,
+        extra_email=email,
+        number=number,
         entity=entity,
         notes=json.dumps(details) if details is not None else None
     )
     if result is not None:
         result = asdict(result)
-    if result["contact"] is None: return None
+    if result["contact"] is None:
+        return None
     return result
 
 
@@ -216,18 +216,18 @@ async def create_contact(
 async def update_contact(
     db,
     contact: UUID,
-    number: dict[str, str] | None,
-    email: str | None,
-    name: str | None,
+    number: str | None,
+    extra_email: str | None,
+    type_tag: str | None,
     details: dict[str, str | int | float] | None,
 ) -> dict | None:
     result = await UpdateContact_async_edgeql.UpdateContact(
         executor=db,
-        name=name,
-        email=email,
+        type_tag=type_tag,
+        extra_email=extra_email,
         contact=contact,
         notes=json.dumps(details) if details is not None else None,
-        number=json.dumps(number) if number is not None else None,
+        number=number,
     )
     if result is not None:
         result = asdict(result)

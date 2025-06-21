@@ -1,9 +1,9 @@
 select BankAccount {
     bank_name,
     account_name,
-    type_account:= .type,
+    type_tag,
     balance,
     notes,
     ignore_on_totals,
-    category,
+    category_tag,
 } filter .id = <uuid>$bank_account

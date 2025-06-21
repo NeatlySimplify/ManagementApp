@@ -1,9 +1,16 @@
 module default {
-    abstract type Record_OR_Payment;
 
+    global current_user: uuid;
+    global current_user_obj := assert_single((
+        select User filter .id = global current_user
+    ));
 
     abstract type User{
         required name: str;
+        tag_type: str;
+        is_admin: bool {
+            default:= <bool>false;
+        }
         required email: str {
             delegated constraint exclusive;
         };
@@ -12,6 +19,27 @@ module default {
         use_token: bool {
             default := false;
         };
+        timestamp: datetime {
+            default := datetime_of_statement();
+        };
+        first_access: bool {
+            default:= true;
+        };
+        settings: UserSettings {
+            on source delete delete target
+        };
+
+        # Link to Other Types
+        multi account:= (select detached BankAccount filter .owner = __source__);
+        multi movement:= .<owner[is Movement];
+        multi entity := .<owner[is Entity];
+        multi record := (select detached Record filter .owner = __source__);
+        multi event := (select detached Scheduler filter .owner = __source__);
+
+
+        # Computed Properties:
+        payment_income:=(select __source__.movement.payment filter .type_tag = "income" order by .payment_date desc);
+        payment_expense:=(select __source__.movement.payment filter .type_tag = "expense" order by .payment_date desc);
 
         trigger log_update after update for each when (
             __old__.password != __new__.password
@@ -34,13 +62,55 @@ module default {
         );
     }
 
-
-    type InternalOrg extending User{
-        multi user: InternalUser {
-            on target delete allow;
+    type Administator extending User {
+        overloaded tag_type: str {
+            default:= "is_admin";
         };
+        overloaded is_admin:bool{
+            default:= <bool>true;
+        };
+        access policy admin_only allow select, update, delete using (__subject__ ?= global current_user_obj)
+    };
+
+    type Account extending User{
+        overloaded tag_type: str {
+            default:= "is_account";
+        };
+        multi grouping:= .<owner[is Project];
+        multi collaborator_pool: Individual;
+
+        access policy user_access allow select, update using (__subject__ ?= global current_user_obj);
+        access policy admin_only allow insert, delete using (global current_user_obj.is_admin ?? false)
     }
 
+    type Project {
+        name: str;
+        required owner: Account {
+            on target delete delete source;
+            on source delete allow;
+        };
+        notes: json;
+        multi people: Individual {
+            role: str;
+        };
+        single record: Record {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi schedule: Scheduler {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi movement: Movement {
+            on source delete delete target;
+            on target delete allow;
+        }
+        multi entity: Entity {
+            on source delete allow;
+        }
+
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
+    }
 
     type Address {
         state: str;
@@ -50,13 +120,13 @@ module default {
         number: int64;
         complement: str;
         postal: str;
+
     }
 
-
     type Contact{
-        type: str;
-        email: str;
-        number: json;
+        type_tag: str;
+        extra_email: str;
+        number: str;
         notes: json;
     }
 
@@ -68,115 +138,21 @@ module default {
         user: uuid;
         action: str;
         details: json;
+
+        access policy admin_only allow select, update, delete using (global current_user_obj.is_admin ?? false);
     }
 
-
-    # Person or Organization
-    type Entity{
-        timestamp: datetime {
-            default := datetime_of_statement();
+    type Individual extending User{
+        overloaded tag_type: str {
+            default:= "is_individual";
         };
-        required email: str {
-            constraint exclusive;
-        };
-        type: str;
-        id_type: str;
-        status: bool {
-            default := true;
-        }
-        govt_id: str;
-        name: str;
-        sex: str;
-        relationship_status: str;
+        # Shared Resources
+        multi projects:= .<people[is Project];
+        multi shared_schdeule := (__source__.projects.schedule);
 
-        birth: cal::local_date;
-
-        user: InternalUser {
-            on target delete delete source;
-        };
-
-        notes: json;
-        multi phone : Contact{
-            on source delete delete target;
-            on target delete allow;
-        };
-        multi address : Address{
-            on source delete delete target;
-            on target delete allow;
-        };
-
-
-        trigger log_update after update for each when ( <json>__old__ {*} != <json>__new__ {*}
-        ) do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "update",
-                details := to_json(
-                    '{' ++
-                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
-                    '"after": ' ++ to_str(<json>__new__{*}) ++
-                    '}'
-                ),
-            }
-        );
-
-        trigger log_insert after insert for each do (
-            insert Auditable {
-                user := __new__.user.id,
-                object_id := __new__.id,
-                action := "insert",
-                details := <json>__new__{*}
-            }
-        );
-
-        trigger log_delete after delete for each do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "delete",
-                details := <json>__old__{*}
-            }
-        );
+        access policy user_access allow select, update, delete using (__subject__ ?= global current_user_obj);
+        access policy admin_only allow insert, delete using (global current_user_obj.is_admin ?? false)
     }
-
-
-    type InternalUser extending User{
-        optional single org: InternalOrg;
-
-        is_active: bool{
-            default := false;
-        };
-        first_access: bool {
-            default:= true;
-        };
-        settings: UserSettings {
-            on source delete delete target
-        };
-        last_active_date: datetime;
-
-
-        # Link to Other Types
-        multi account: BankAccount {
-            on target delete allow;
-            on source delete delete target;
-            constraint exclusive;
-        };
-        multi movement:= .<user[is Movement];
-        multi entity := .<user[is Entity];
-        multi record := .<user[is Record];
-        multi event := .<user[is Scheduler];
-
-
-        # Computed Properties:
-        payment_income:=(select __source__.movement.payment filter .type = "income" order by .payment_date desc);
-        payment_expense:=(select __source__.movement.payment filter .type = "expense" order by .payment_date desc);
-
-        trigger link_delete after delete for each do (
-            delete (select InternalUser.<user)
-        );
-    }
-
 
     type UserSettings {
         account_types: array<str>{
@@ -189,8 +165,8 @@ module default {
         entity_types: array<str>{
             default := ["Cliente PF", "Cliente PJ", "Sócio"];
         };
-        entity_id_types: array<str>{
-            default:= ["CPF", "CNPJ", "RG", "CNH"]
+        entity_document_types: array<str>{
+            default:= ["CPF", "CNPJ", "RG", "CNH"];
         };
         contact_number_types: array<str>{
             default:= ["Casa", "Celular", "Trabalho"];
@@ -199,88 +175,79 @@ module default {
             default := ["Serviço"];
         };
         record_status: array<str>{
-            default := ["Em Andamento", "Concluído"]
+            default := ["Em Andamento", "Concluído"];
         };
         movement_income_types: array<str>{
             default := ["Benefícios", "Comissão", "Pagamentos", "Rendimentos", "Serviços", "Outros"];
         };
         movement_expense_types: array<str>{
-            default := ["Alimentação", "Transporte", "Cartão de Crédito", "Educação", "Família", "Lazer", "Moradia", "Pagamentos", "Saúde", "Serviços", "Outros"]
+            default := ["Alimentação", "Transporte", "Cartão de Crédito", "Educação", "Família", "Lazer", "Moradia", "Pagamentos", "Saúde", "Serviços", "Outros"];
         }
         scheduler_types: array<str>{
-            default := ["Evento", "Tarefa", "Reunião"]
+            default := ["Evento", "Tarefa", "Reunião"];
         };
         movement_cycle_types: array<str>{
-            default:= ["Diário", "Semanal", "Quinzenal", "Mensal", "Trimestral", "Semestral", "Anual", "Personalizado"]
+            default:= ["Diário", "Semanal", "Quinzenal", "Mensal", "Trimestral", "Semestral", "Anual", "Personalizado"];
         };
     }
 
-
-    # Service or Action
-    type Record extending Record_OR_Payment{
+    # Client, Person or Organization
+    type Entity{
         name: str;
-        id_service: str;
-        active: bool;
-        status: str;
-        type: str;
-        value: decimal;
-
+        required email: str {
+            constraint exclusive;
+        };
+        type_tag: str;
+        document_type: str;
+        document: str;
+        status: bool {
+            default := true;
+        };
+        sex: str;
+        relationship_status: str;
+        birth: cal::local_date;
         notes: json;
 
-        user: InternalUser {
+        required owner: User {
+            on target delete delete source;
+        };
+        multi phone : Contact{
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi address : Address{
+            on source delete delete target;
+            on target delete allow;
+        };
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
+    }
+
+    # Service or Action
+    type Record{
+        name: str;
+        service_id: str;
+        status: bool;
+        optional_status: str;
+        type_tag: str;
+        value: decimal;
+        notes: json;
+
+        required owner: User {
             on target delete delete source;
         };
         multi entity: Entity {
-            on source delete delete target;
             on target delete allow;
         };
-        multi event: Scheduler {
-            on source delete delete target;
-            on target delete allow;
-        };
+        multi event: Scheduler;
         multi movement: Movement {
             on source delete delete target;
             on target delete allow;
         };
-
-        trigger log_update after update for each when (
-            <json>__old__{*} != <json>__new__{*}
-        ) do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "update",
-                details := to_json(
-                    '{' ++
-                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
-                    '"after": ' ++ to_str(<json>__new__{*}) ++
-                    '}'
-                )
-            }
-        );
-
-        trigger log_insert after insert for each do (
-           insert Auditable {
-                user := __new__.user.id,
-                object_id := __new__.id,
-                action := "insert",
-                details := <json>__new__{*}
-            }
-        );
-
-        trigger log_delete after delete for each do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "delete",
-                details := <json>__old__{*},
-            }
-        );
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
    }
 
-
     type Scheduler{
-        type: str;
+        type_tag: str;
         name: str;
         status: bool {
             default:= false;
@@ -290,12 +257,10 @@ module default {
         optional ending_time: cal::local_time;
         notes: json;
 
-        user: InternalUser {
+        required owner: User {
             on target delete delete source;
         };
-        optional origin: Record_OR_Payment{
-            on target delete delete source;
-        };
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
     type BankAccount{
@@ -309,88 +274,61 @@ module default {
         ignore_on_totals: bool {
             default:= <bool>false;
         };
-        category:str;
-        type: str;
+        category_tag:str;
+        type_tag: str;
+        required owner: User {
+            on target delete delete source;
+        };
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
+
     type Movement{
-        type: str;
+        required type_tag: str;
         value:= (sum(__source__.payment.value));
         installment:= (count(__source__.payment));
         notes: json;
-        user: InternalUser {
+        required owner: User {
             on target delete delete source;
         };
-        optional single record: Record;
+        record: Record;
         accounts:= (distinct(__source__.payment.account));
-        multi payment:= (select Payment filter .movement.id = __source__.id);
-
-        trigger log_update after update for each when (
-            <json>__old__ {*} != <json>__new__ {*}
-        ) do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "update",
-                details := to_json(
-                    '{' ++
-                    '"before": ' ++ to_str(<json>__old__{*}) ++ ',' ++
-                    '"after": ' ++ to_str(<json>__new__{*}) ++
-                    '}'
-                )
-            }
-        );
-
-        trigger log_insert after insert for each do (
-            insert Auditable {
-                user := __new__.user.id,
-                object_id := __new__.id,
-                action := "insert",
-                details := <json>__new__ {*}
-            }
-        );
-
-        trigger log_delete after delete for each do (
-            insert Auditable {
-                user := __old__.user.id,
-                object_id := __old__.id,
-                action := "delete",
-                details := <json>__old__ {*}
-            }
-        );
+        multi payment:= .<movement[is Payment];
+        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
-    type Payment extending Record_OR_Payment{
+
+    type Payment{
         name: str;
-        type:= (__source__.movement.type);
+        type_tag:= (__source__.movement.type_tag);
         value: decimal;
         interest: str;
         penalty: str;
         ignore_in_totals: bool{
             default := false;
         };
-        category: str;
-        subcategory: str;
+        category_tag: str;
+        subcategory_tag: str;
         payment_date: cal::local_date;
         is_due: cal::local_date;
         status: bool{
             default:= false;
         };
         required account: BankAccount {
-        };
-        user: InternalUser {
-            on target delete delete source;
+            on target delete restrict;
         };
         required movement: Movement {
             on target delete delete source;
         };
-        event:= assert_single((select Scheduler filter .origin = __source__));
+        event: Scheduler {
+            on source delete delete target;
+        };
 
         trigger update_balance_on_insert after insert for each when (
             __new__.status = true and __new__.ignore_in_totals = false
         ) do (
             update BankAccount filter .id = __new__.account.id set {
-                balance := .balance + (__new__.value * (if __new__.type = "income" then 1 else -1))
+                balance := .balance + (__new__.value * (if __new__.type_tag = "income" then 1 else -1))
             }
         );
 
@@ -409,7 +347,7 @@ module default {
                 new_payment_status := __new__.status,
                 old_ignore := __old__.ignore_in_totals,
                 new_ignore := __new__.ignore_in_totals,
-                payment_type := __new__.type,
+                payment_type := __new__.type_tag,
 
                 net_impact := (
                     (new_value if new_payment_status and not new_ignore else 0) -
@@ -433,7 +371,7 @@ module default {
                 new_payment_status := __new__.status,
                 old_ignore := __old__.ignore_in_totals,
                 new_ignore := __new__.ignore_in_totals,
-                new_type := __new__.type,
+                new_type := __new__.type_tag,
                 old_account_id := __old__.account.id,
                 new_account_id := __new__.account.id,
 
@@ -465,18 +403,6 @@ module default {
             }
         );
 
-        # Insert Payment.event.
-        trigger create_event after insert for each do (
-            insert Scheduler {
-                user:= __new__.user,
-                name:= __new__.name,
-                type:= __new__.type,
-                status:= __new__.status,
-                date:= __new__.is_due,
-                origin:= <Record_OR_Payment>__new__.id
-            }
-        );
-
 
         # Updates Payment.event.
         trigger update_event after update for each when (
@@ -496,32 +422,4 @@ module default {
             }
         )
     }
-
-    #Count Number of institutions or individuals from user
-    function EntityNum (user_id: uuid) -> int64
-    using (
-        with entities := assert_single((select InternalUser filter .id = <uuid>user_id)),
-        total_entities:= (select entities.entity)
-        select count(total_entities)
-    );
-
-    # Count Number of Services or Actions from user
-    function RecordNum (user_id: uuid) -> int64
-    using (
-        with recorded := assert_single((select InternalUser filter .id = <uuid>user_id)),
-        total_record:= (select recorded.record)
-        select count(total_record)
-    );
-
-        # Count Number of Transactions from user
-
-    # Return total balance from user
-    function balanceTotal (user_id: uuid) -> decimal
-    using (
-        with total := assert_single((select InternalUser filter .id = <uuid>user_id)),
-        total_balance := (select total.account.balance)
-
-        select sum(total_balance)
-    );
-
 }

@@ -44,8 +44,8 @@ async def CreateContact(
     executor: gel.AsyncIOExecutor,
     *,
     entity: uuid.UUID,
-    name: str,
-    email: str | None = None,
+    type_tag: str,
+    extra_email: str | None = None,
     notes: str | None = None,
     number: str,
 ) -> CreateContactResult:
@@ -54,10 +54,10 @@ async def CreateContact(
         with entity:=assert_single((select Entity filter .id = <uuid>$entity)),
         add_contact:= (
             insert Contact{
-                name:= <str>$name,
-                email:= <optional str>$email,
+                type_tag:= <str>$type_tag,
+                extra_email:= <optional str>$extra_email,
                 notes:=<optional json>$notes,
-                number:= <json>$number,
+                number:= <str>$number,
             }
         ) if exists entity else <Contact>{},
         update_entity:= (update entity set {
@@ -69,8 +69,8 @@ async def CreateContact(
         }\
         """,
         entity=entity,
-        name=name,
-        email=email,
+        type_tag=type_tag,
+        extra_email=extra_email,
         notes=notes,
         number=number,
     )

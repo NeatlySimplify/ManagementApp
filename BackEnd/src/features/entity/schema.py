@@ -8,10 +8,10 @@ from pydantic.networks import EmailStr
 class EntityUpdate(BaseModel):
     id: UUID
     email: EmailStr | None = None
-    type_entity: str | None = None
-    id_type: str | None = None
+    type_tag: str | None = None
+    document_type: str | None = None
     status: bool | None = None
-    govt_id: str | None = None
+    document: str | None = None
     name: str | None = None
     sex: str | None = None
     relationship_status: str | None = None
@@ -21,10 +21,10 @@ class EntityUpdate(BaseModel):
 
 class EntityCreate(BaseModel):
     email: str
-    type_entity: str
-    id_type: str
+    type_tag: str
+    document_type: str
     status: bool | None = False
-    govt_id: str
+    document: str
     name: str
     sex: str | None = None
     relationship_status: str | None = None
@@ -55,16 +55,16 @@ class AddressCreate(BaseModel):
 
 
 class ContactUpdate(BaseModel):
-    id: UUID
-    number: dict[str, str] | None = None
-    name: str | None = None
-    email: EmailStr | None = None
+    entity: UUID
+    number: str | None = None
+    type_tag: str | None = None
+    extra_email: EmailStr | None = None
     notes: dict[str, str | int | float] | None = None
 
 
 class ContactCreate(BaseModel):
     entity: UUID
-    number: dict[str, str]
-    name: str
-    email: EmailStr | None
+    number: str
+    type_tag: str
+    extra_email: EmailStr | None
     notes: dict[str, str | int | float] | None = None
