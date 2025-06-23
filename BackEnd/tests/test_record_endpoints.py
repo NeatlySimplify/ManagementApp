@@ -1,11 +1,11 @@
-# ruff: noqa: F811
-import pytest
-import pytest_asyncio
+# ruff: noqa: F811, F401
 import uuid
-import datetime
 from decimal import Decimal
+
+import pytest
 from faker import Faker
-from .test_utils import authenticated_user, client, test_entity, test_scheduler, test_bank_account, test_movement
+
+from .test_utils import client, authenticated_user, test_entity, test_scheduler, test_movement, test_bank_account
 
 fake = Faker()
 
@@ -25,25 +25,28 @@ class TestRecordEndpoints:
             if entity:
                 return {
                     "name": fake.sentence(nb_words=3),
-                    "id_service": f"REC-{fake.random_number(digits=6)}",
-                    "active": True,
-                    "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-                    "type_tag": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
+                    "service_id": f"REC-{fake.random_number(digits=6)}",
+                    "status": True,
+                    "optional_status": fake.random_element(["Pending", "Completed", "Canceled"]),
+                    "type_tag": fake.random_element(
+                        ["Invoice", "Receipt", "Contract", "Statement"]
+                    ),
                     "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-                    "notes": {"Note": fake.paragraph(), "Reference": str(fake.uuid4()), "Category": fake.random_element(["Business", "Personal", "Education"])},
-                    "entity": entity  # Entity is required - record must be associated with a client/organization
+                    "notes": {"Note": fake.paragraph(), "Reference": str(fake.uuid4()),
+                    "Category": fake.random_element(["Business", "Personal", "Education"])},
+                    "entities": [entity]
+                    # Entity is required - record must be associated with a client/organization
                 }
-            else:
-                return {
-                    "id": record,
-                    "name": fake.sentence(nb_words=3),
-                    "id_service": f"REC-{fake.random_number(digits=6)}",
-                    "active": True,
-                    "status": fake.random_element(["Pending", "Completed", "Canceled"]),
-                    "type_tag": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
-                    "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
-                    "notes": {},
-                }
+            return {
+                "id": record,
+                "name": fake.sentence(nb_words=3),
+                "service_id": f"REC-{fake.random_number(digits=6)}",
+                "status": True,
+                "optional_status": fake.random_element(["Pending", "Completed", "Canceled"]),
+                "type_tag": fake.random_element(["Invoice", "Receipt", "Contract", "Statement"]),
+                "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
+                "notes": {},
+            }
         data = record_stub(entity=entity_id)
         create_response = await client.post(
             "/api/record/",
@@ -67,8 +70,7 @@ class TestRecordEndpoints:
         assert get_response.status_code == 200
         get_data = get_response.json()["result"]
         assert get_data["name"] == data["name"]
-        assert get_data["id_service"] == data["id_service"]
-        assert get_data["active"] == data["active"]
+        assert get_data["service_id"] == data["service_id"]
         assert get_data["status"] == data["status"]
         assert get_data["type_tag"] == data["type_tag"]
         assert Decimal(get_data["str_value"]) == Decimal(data["value"])
@@ -97,8 +99,7 @@ class TestRecordEndpoints:
         assert get_updated_response.status_code == 200
         updated_data = get_updated_response.json()["result"]
         assert updated_data["name"] == update_data["name"]
-        assert updated_data["id_service"] == update_data["id_service"]
-        assert updated_data["active"] == update_data["active"]
+        assert updated_data["service_id"] == update_data["service_id"]
         assert updated_data["status"] == update_data["status"]
         assert updated_data["type_tag"] == update_data["type_tag"]
         assert Decimal(updated_data["str_value"]) == Decimal(update_data["value"])
@@ -131,15 +132,15 @@ class TestRecordEndpoints:
         # Create a record first - note entity is required
         data = {
             "name": fake.sentence(nb_words=3),
-            "id_service": f"REC-{fake.random_number(digits=6)}",
-            "active": True,
-            "status": fake.random_element(["Pending", "Completed"]),
+            "service_id": f"REC-{fake.random_number(digits=6)}",
+            "status": True,
+            "optional_status": fake.random_element(["Pending", "Completed"]),
             "type_tag": fake.random_element(["Invoice", "Receipt"]),
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
             "notes": {
                 "Note": fake.paragraph()
             },
-            "entity": entity_id  # Entity is required - represents the client/organization
+            "entities": [entity_id]  # Entity is required - represents the client/organization
         }
         print("On create\n")
         print("Record data: ", data)
@@ -156,7 +157,7 @@ class TestRecordEndpoints:
         partial_update = {
             "id": record_id,
             "name": fake.sentence(nb_words=4),
-            "active": False,
+            "status": False,
             "notes": { "Note": fake.paragraph(), "Additional Info": fake.sentence()},
         }
         print("On update\n")
@@ -180,7 +181,7 @@ class TestRecordEndpoints:
         assert get_response.status_code == 200
         updated_data = get_response.json()["result"]
         assert updated_data["name"] == partial_update["name"]
-        assert updated_data["active"] == partial_update["active"]
+        assert updated_data["status"] == partial_update["status"]
         assert updated_data["type_tag"] == data["type_tag"]  # This should remain unchanged
 
         # Clean up
@@ -199,13 +200,13 @@ class TestRecordEndpoints:
         # Create a record with an entity (required)
         record_data = {
             "name": fake.sentence(nb_words=3),
-            "id_service": f"REC-{fake.random_number(digits=6)}",
-            "active": True,
-            "status": "Active",
+            "service_id": f"REC-{fake.random_number(digits=6)}",
+            "status": True,
+            "optional_status": "Active",
             "type_tag": "Invoice",
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
             "notes": {"Note": fake.paragraph()},
-            "entity": entity_id  # Required - record must be associated with a client/organization
+            "entities": [entity_id]  # Required - record must be associated with a client/organization
         }
 
         record_response = await client.post(
@@ -267,13 +268,14 @@ class TestRecordEndpoints:
         # Test linking and unlinking an additional entity to a record.
         entity_id, _ = test_entity
 
-        # Create another real entity in the database for linking (e.g., another client or organization involved in the record)
+        # Create another real entity in the database for linking
+        # (e.g., another client or organization involved in the record)
         # Note: Entity creation endpoint has changed from /api/entity/create to /api/entity/
         another_entity_data = {
             "email": fake.email(),
-            "type_entity": "Person",
-            "id_type": "ID",
-            "govt_id": str(fake.random_number(digits=9)),
+            "type_tag": "Person",
+            "document_type": "ID",
+            "document": str(fake.random_number(digits=9)),
             "name": fake.name(),
             "status": True
         }
@@ -291,13 +293,13 @@ class TestRecordEndpoints:
         # The system verifies that this entity exists in the database during record creation
         record_data = {
             "name": fake.sentence(nb_words=3),
-            "id_service": f"REC-{fake.random_number(digits=6)}",
-            "active": True,
-            "status": "Active",
+            "service_id": f"REC-{fake.random_number(digits=6)}",
+            "status": True,
+            "optional_status": "Active",
             "type_tag": "Invoice",  # Type of service/action
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),  # Financial value
             "notes": {"Notes": fake.paragraph()},
-            "entity": entity_id  # Primary client/organization (required and must exist in DB)
+            "entities": [entity_id]  # Primary client/organization (required and must exist in DB)
         }
 
         record_response = await client.post(
@@ -430,10 +432,10 @@ class TestRecordEndpoints:
         # Try to create record without authentication
         record_data = {
             "name": "Test Record",
-            "active": True,
+            "status": True,
             "type_tag": "Invoice",  # Type of service/action
             "value": "100.00",   # Financial value
-            "entity": str(uuid.uuid4())  # Required client/organization
+            "entities": [str(uuid.uuid4())]  # Required client/organization
         }
 
         create_response = await client.post("/api/record/", json=record_data)
@@ -461,7 +463,7 @@ class TestRecordEndpoints:
         invalid_data = {
             "name": "Test Record",
             # Missing active, type, value
-            "entity": entity_id
+            "entities": [entity_id]
         }
 
         response = await client.post(
@@ -472,11 +474,11 @@ class TestRecordEndpoints:
 
         assert response.status_code == 422  # Validation error
 
-        # Missing entity field - entity is required as records must be associated with a client/organization
-        # The database checks for both the existence of the entity field and whether that entity exists in the DB
+        # The database checks for both the existence of the entity field
+        # and whether that entity exists in the DB
         invalid_entity_missing = {
             "name": "Test Record",
-            "active": True,
+            "status": True,
             "type_tag": "Invoice",
             "value": "100.00"
             # No entity provided
@@ -490,13 +492,14 @@ class TestRecordEndpoints:
 
         assert response.status_code == 422  # Validation error
 
-        # Invalid entity ID format - must be a valid UUID even though entity validation occurs after format validation
+        # Invalid entity ID format - must be a valid UUID
+        # even though entity validation occurs after format validation
         invalid_entity_data = {
             "name": "Test Record",
-            "active": True,
+            "status": True,
             "type_tag": "Invoice",
             "value": "100.00",
-            "entity": "not-a-valid-uuid"  # Entity must be a valid UUID format
+            "entities": ["not-a-valid-uuid"]  # Entity must be a valid UUID format
         }
 
         response = await client.post(

@@ -83,11 +83,12 @@ async def create_movement(
         interest=movement.interest,
         penalty=movement.penalty,
         ignore_in_totals=movement.ignore_in_totals,
-        category=movement.category,
-        subcategory=movement.subcategory,
+        category=movement.category_tag,
+        subcategory=movement.subcategory_tag,
         payment_date=movement.payment_date,
         is_due=movement.is_due,
-        status=movement.status
+        status=movement.status,
+        user=user.get('user')
     )
 
 
@@ -130,8 +131,8 @@ async def update_payment(
         interest=data.interest,
         penalty=data.penalty,
         ignore_in_totals=data.ignore_in_totals,
-        category=data.category,
-        subcategory=data.subcategory,
+        category=data.category_tag,
+        subcategory=data.subcategory_tag,
         payment_date=data.payment_date,
         is_due=data.is_due,
         status=data.status

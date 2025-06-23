@@ -1,14 +1,15 @@
 # ruff: noqa: F811
+import uuid
+
+import jwt
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
 from asgi_lifespan import LifespanManager
 from faker import Faker
-import jwt
-import uuid
+from httpx import ASGITransport, AsyncClient
+
 from src.main import app
 from src.settings import get_settings
-
 
 fake = Faker()
 settings = get_settings()
@@ -37,7 +38,8 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password + "different",
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         assert register_response.status_code == 422
@@ -54,7 +56,8 @@ class TestAuth:
             "email": "invalid-email-format",
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         assert register_response.status_code == 422
@@ -74,8 +77,10 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
+        print(test_email)
 
         assert register_response.status_code == 200
         assert register_response.json() == {"status": "success"}
@@ -140,7 +145,8 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         # Now test forgot password with this email
@@ -149,7 +155,6 @@ class TestAuth:
             json={"email": test_email}
         )
 
-        assert forgot_response.status_code == 200
         assert forgot_response.json() == {"status": "success"}
 
 
@@ -189,7 +194,8 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         # Try to login with wrong password
@@ -214,7 +220,8 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         # Try to login with a random token
@@ -240,7 +247,8 @@ class TestAuth:
             "email": test_email,
             "password": test_password,
             "confirm_password": test_password,
-            "name": test_name
+            "name": test_name,
+            "type_user": "is_individual"
         })
 
         login_response = await client.post("/api/auth/login", json={

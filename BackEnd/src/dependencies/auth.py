@@ -11,7 +11,7 @@ from src.settings import get_settings
 setting = get_settings()
 
 def create_token(user_id: Any, role: str, cookie_type: str = "access"):
-    user_id = UUID(str(user_id))
+    user_id = str(user_id)
     if cookie_type == "refresh":
         payload = {
             "sub": str(user_id),

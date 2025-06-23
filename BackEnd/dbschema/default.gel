@@ -69,7 +69,7 @@ module default {
         overloaded is_admin:bool{
             default:= <bool>true;
         };
-        access policy admin_only allow select, update, delete using (__subject__ ?= global current_user_obj)
+        access policy admin_only allow all using (__subject__ ?= global current_user_obj)
     };
 
     type Account extending User{
@@ -80,7 +80,7 @@ module default {
         multi collaborator_pool: Individual;
 
         access policy user_access allow select, update using (__subject__ ?= global current_user_obj);
-        access policy admin_only allow insert, delete using (global current_user_obj.is_admin ?? false)
+        access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
     }
 
     type Project {
@@ -140,6 +140,7 @@ module default {
         details: json;
 
         access policy admin_only allow select, update, delete using (global current_user_obj.is_admin ?? false);
+        access policy allow_all_inserts allow insert using (true);
     }
 
     type Individual extending User{
@@ -151,7 +152,7 @@ module default {
         multi shared_schdeule := (__source__.projects.schedule);
 
         access policy user_access allow select, update, delete using (__subject__ ?= global current_user_obj);
-        access policy admin_only allow insert, delete using (global current_user_obj.is_admin ?? false)
+        access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
     }
 
     type UserSettings {
@@ -260,7 +261,7 @@ module default {
         required owner: User {
             on target delete delete source;
         };
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
+        #access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
     type BankAccount{
@@ -279,7 +280,7 @@ module default {
         required owner: User {
             on target delete delete source;
         };
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
+        # access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
 
@@ -323,6 +324,8 @@ module default {
         event: Scheduler {
             on source delete delete target;
         };
+        owner: User;
+        #access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
 
         trigger update_balance_on_insert after insert for each when (
             __new__.status = true and __new__.ignore_in_totals = false
@@ -420,6 +423,7 @@ module default {
                 status:= __new__.status,
                 date:= new_date,
             }
-        )
+        );
+
     }
 }

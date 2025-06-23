@@ -1,13 +1,10 @@
-# ruff: noqa: F811
-import pytest
-import pytest_asyncio
+# ruff: noqa: F811, F401
 import uuid
 from decimal import Decimal
-import json
+
+import pytest
 from faker import Faker
-from src.dependencies.pwHash import hash_password
-from .test_utils import authenticated_user, client, test_bank_account, test_settings
-import traceback
+from .test_utils import client, authenticated_user, test_bank_account
 
 fake = Faker()
 

@@ -1,7 +1,7 @@
 with new_account:= <optional uuid>$account,
 bank_account := assert_single((select BankAccount filter .id = new_account)) if exists new_account else <BankAccount>{},
 raw_value:= <optional str>$value,
-decimal_value:= (to_decimal(raw_value, 'FM999999999999D99') if exists raw_value else <decimal>{})
+decimal_value:= (to_decimal(raw_value, 'FM999999999999.99') if exists raw_value else <decimal>{})
 update Payment filter .id = <uuid>$payment_id set {
     name:= <optional str>$name ?? .name,
     value:= decimal_value ?? .value,

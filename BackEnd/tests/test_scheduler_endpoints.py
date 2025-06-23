@@ -1,10 +1,11 @@
-# ruff: noqa: F811
-import pytest
-import pytest_asyncio
-import uuid
+# ruff: noqa: F811, F401
 import datetime
+import uuid
+
+import pytest
 from faker import Faker
-from .test_utils import authenticated_user, client
+
+from .test_utils import client, authenticated_user
 
 fake = Faker()
 
@@ -32,7 +33,6 @@ class TestSchedulerEndpoints:
                 "Description": fake.paragraph(),
                 "Priority": fake.random_element(["High", "Medium", "Low"])
             },
-            "origin": None
         }
 
         create_response = await client.post(
@@ -146,7 +146,6 @@ class TestSchedulerEndpoints:
             "notes": {
                 "Description": fake.paragraph()
             },
-            "origin": None
         }
 
         create_response = await client.post(
@@ -263,51 +262,3 @@ class TestSchedulerEndpoints:
         )
 
         assert response.status_code == 422  # Validation error
-
-    @pytest.mark.asyncio
-    async def test_scheduler_with_origin(self, client, authenticated_user):
-        """Test creating a scheduler event with an origin reference."""
-        # Create a scheduler event
-        today = datetime.date.today()
-        start_time = datetime.time(10, 0)
-        end_time = datetime.time(11, 0)
-        origin_id = str(uuid.uuid4())  # Mock origin ID
-
-        data = {
-            "type_tag": fake.random_element(["Meeting", "Appointment"]),
-            "name": fake.sentence(nb_words=3),
-            "status": True,
-            "date": today.isoformat(),
-            "beginning_time": start_time.isoformat(),
-            "ending_time": end_time.isoformat(),
-            "origin": origin_id
-        }
-
-        create_response = await client.post(
-            "/api/scheduler/",
-            cookies=authenticated_user.get_auth_cookies(),
-            json=data
-        )
-
-        assert create_response.status_code == 200
-        assert create_response.json()["status"] == "success"
-
-        # Get the scheduler_id from the response
-        scheduler = create_response.json()["result"]
-        scheduler_id = scheduler["id"]
-
-        # Verify the event was created with the origin
-        get_response = await client.get(
-            f"/api/scheduler/{scheduler_id}",
-            cookies=authenticated_user.get_auth_cookies(),
-        )
-
-        assert get_response.status_code == 200
-        get_data = get_response.json()["result"]
-        assert "origin" in get_data
-
-        # Clean up
-        await client.delete(
-            f"/api/scheduler/{scheduler_id}",
-            cookies=authenticated_user.get_auth_cookies(),
-        )

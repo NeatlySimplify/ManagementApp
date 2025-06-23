@@ -26,13 +26,8 @@ async def login(
         )
     a_token = create_token(result["id"], result["tag_type"], "access")
     r_token = create_token(result["id"], result["tag_type"], "refresh")
-    user_data = {
-        "name": result["name"],
-        "email": result["email"],
-        "first_access": result["first_access"]
-    }
 
-    response = JSONResponse(content={"status": "success", "response": user_data})
+    response = JSONResponse(content={"status": "success"})
     response.set_cookie("access_token", a_token)
     response.set_cookie("refresh_token", r_token)
     return response

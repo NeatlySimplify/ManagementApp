@@ -26,17 +26,7 @@ class NoPydanticValidation:
 
 
 @dataclasses.dataclass
-class CreatePaymentResultItem(NoPydanticValidation):
-    id: uuid.UUID
-
-
-@dataclasses.dataclass
-class CreatePaymentResultItem02(NoPydanticValidation):
-    id: uuid.UUID
-
-
-@dataclasses.dataclass
-class CreatePaymentResultItem03(NoPydanticValidation):
+class CreatePaymentResult(NoPydanticValidation):
     id: uuid.UUID
 
 
@@ -44,6 +34,8 @@ async def CreatePayment(
     executor: gel.AsyncIOExecutor,
     *,
     name: str,
+    is_due: datetime.date,
+    status: bool,
     value: str,
     interest: str | None = None,
     penalty: str | None = None,
@@ -51,17 +43,21 @@ async def CreatePayment(
     category: str,
     subcategory: str | None = None,
     payment_date: datetime.date | None = None,
-    is_due: datetime.date,
-    status: bool,
     account: uuid.UUID,
     movement: uuid.UUID,
-) -> tuple[CreatePaymentResultItem, CreatePaymentResultItem02, CreatePaymentResultItem03, CreatePaymentResultItem02] | None:
+) -> CreatePaymentResult:
     return await executor.query_single(
         """\
         with user:=(select global current_user_obj),
-        pay:= (select (insert Payment {
+        event_:=(insert Scheduler{
+            name:=<str>$name,
+            date:=<cal::local_date>$is_due,
+            owner:=user,
+            status:=<bool>$status,
+        }),
+        insert Payment {
             name:= <str>$name,
-            value:=to_decimal(<str>$value, 'FM999999999999D99'),
+            value:=to_decimal(<str>$value, 'FM999999999999.99'),
             interest:= <optional str>$interest,
             penalty:= <optional str>$penalty,
             ignore_in_totals:= <optional bool>$ignore_in_totals,
@@ -71,20 +67,14 @@ async def CreatePayment(
             is_due:= <cal::local_date>$is_due,
             status:= <bool>$status,
             account:= assert_single((select BankAccount filter .id = <uuid>$account)),
-            movement:= assert_single((select Movement filter .id = <uuid>$movement))
-        }){*}),
-        pay_event:= (insert Scheduler {
-            type_tag:= pay.type_tag,
-            name := pay.name,
-            date:= pay.is_due,
-            owner:= user
-        }),
-        pay_update:= (update pay set {
-            event:= pay_event
-        }),
-        select (user, pay, pay_event, pay_update)\
+            movement:= assert_single((select Movement filter .id = <uuid>$movement)),
+            owner:=user,
+            event:=event_,
+        }\
         """,
         name=name,
+        is_due=is_due,
+        status=status,
         value=value,
         interest=interest,
         penalty=penalty,
@@ -92,8 +82,6 @@ async def CreatePayment(
         category=category,
         subcategory=subcategory,
         payment_date=payment_date,
-        is_due=is_due,
-        status=status,
         account=account,
         movement=movement,
     )

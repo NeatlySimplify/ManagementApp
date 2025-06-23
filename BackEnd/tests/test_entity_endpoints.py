@@ -1,11 +1,11 @@
 # ruff: noqa: F811
-import pytest
-import pytest_asyncio
-import uuid
 import datetime
-from decimal import Decimal
+import uuid
+
+import pytest
 from faker import Faker
-from .test_utils import authenticated_user, client, test_entity
+
+from .test_utils import client, authenticated_user, test_entity
 
 fake = Faker()
 
@@ -228,8 +228,9 @@ class TestEntityEndpoints:
         # Create contact
         contact_data = {
             "entity": entity_id,
-            "number": {str(fake.random_element(["Mobile", "Work", "Home"])): fake.phone_number()},
-            "email": fake.email(),
+            "type_tag": str(fake.random_element(["Mobile", "Work", "Home"])),
+            "number": fake.phone_number(),
+            "extra_email": fake.email(),
             "name": fake.name(),
             "notes": {
                 "Preferred": str(fake.boolean()),
@@ -361,8 +362,8 @@ class TestEntityEndpoints:
         # Try to create contact without authentication
         contact_data = {
             "entity": random_id,
-            "number": {"Mobile": fake.phone_number()},
-            "email": fake.email()
+            "number": fake.phone_number(),
+            "extra_email": fake.email()
         }
 
         contact_response = await client.post("/api/entity/contact", json=contact_data)
@@ -485,9 +486,7 @@ class TestEntityEndpoints:
         # Invalid entity UUID
         invalid_entity_data = {
             "entity": "not-a-valid-uuid",
-            "number": {
-                "Mobile": fake.phone_number(),
-            },
+            "number": fake.phone_number(),
             "email": fake.email(),
             "name": fake.name()
         }
@@ -536,9 +535,8 @@ class TestEntityEndpoints:
 
         contact_data = {
             "entity": fake_entity_id,
-            "number": {
-                "Mobile": fake.phone_number(),
-            },
+            "type_tag": "Mobile",
+            "number": fake.phone_number(),
             "email": fake.email(),
             "name": fake.name(),
             "notes": {"Notes": "Test contact"}

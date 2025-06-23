@@ -4,9 +4,12 @@ import datetime
 import json
 from dataclasses import asdict
 from decimal import ROUND_HALF_EVEN, Decimal
+from typing import Tuple, cast, reveal_type
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
+
+from src.queries.schedule.CreateSchedule_async_edgeql import CreateScheduleResult
 
 from src.dependencies import db
 from src.queries.movement import (
@@ -80,8 +83,8 @@ async def _create_payment(
     is_due: datetime.date,
     payment_date: datetime.date | None,
     status: bool,
-) -> dict | None:
-    result = await CreatePayment_async_edgeql.CreatePayment(
+) -> None:
+    await CreatePayment_async_edgeql.CreatePayment(
         db,
         name=name,
         value=value,
@@ -96,10 +99,6 @@ async def _create_payment(
         account=account,
         movement=movement
     )
-    if result is not None:
-        result = asdict(result[1])
-    return result
-
 
 @db.handle_database_errors
 async def updatePayment(
@@ -165,6 +164,7 @@ async def deletePayment(
 @db.handle_database_errors
 async def createMovement(
     db,
+    user: str,
     type_tag: str,
     details: dict[str, str | int | float] | None,
     record: UUID | None,
@@ -192,7 +192,7 @@ async def createMovement(
     if result is not None:
         result = asdict(result)
         movement = result["id"]
-        if cycle=="custom":
+        if cycle=="Personalizado":
             unique = None
         offset = date_cycle_generator(is_due, cycle, parts, unique)
         value_list = list(map(str, dividir_com_erro_no_final(Decimal(total),parts)))

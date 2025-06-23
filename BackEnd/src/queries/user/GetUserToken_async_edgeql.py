@@ -37,12 +37,8 @@ async def GetUserToken(
 ) -> GetUserTokenResult | None:
     return await executor.query_single(
         """\
-        with user:= assert_single((select User filter .email = <str>$email))
-        select (update user set {
-            use_token:= true,
-        }){
-            refresh_token,
-        }\
+        with user:= assert_single((select User filter .email = <str>$email)),
+        select (update user set {use_token:=true}){refresh_token}\
         """,
         email=email,
     )

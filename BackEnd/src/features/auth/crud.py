@@ -1,5 +1,6 @@
 from dataclasses import asdict
 from uuid import UUID
+import traceback
 
 from src.dependencies import db
 from src.dependencies.pwHash import verify_password
@@ -27,6 +28,7 @@ async def loginUser(
     if result is None:
         return None, None
     result_dict = asdict(result)
+    print(result_dict)
     return result_dict, verify_password(password, result.password)
 
 
@@ -82,6 +84,7 @@ async def getToken(
             email=email
         )
     )
+    print(result)
     if result is None:
         return None
     sender.send_email(email, result.refresh_token)

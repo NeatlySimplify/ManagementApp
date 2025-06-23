@@ -51,7 +51,7 @@ async def CreateRecord(
             status:= <optional bool>$status ?? <bool>true,
             optional_status := <optional str>$optional_status,
             type_tag:= <str>$type_tag,
-            value := to_decimal(<str>$value, 'FM999999999999D99'),
+            value := to_decimal(<str>$value, 'FM999999999999.99'),
             notes:=<optional json>$notes,
             entity := (select Entity filter .id in array_unpack(<array<uuid>>$entities))
         }\

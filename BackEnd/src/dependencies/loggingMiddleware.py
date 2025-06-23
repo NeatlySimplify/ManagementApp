@@ -10,6 +10,8 @@ logger = logging.getLogger("fastapi.middleware")
 
 class ErrorLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        request.state.body = await request.body()
+
         try:
             response = await call_next(request)
             # Optional: log all responses with non-2xx status
@@ -20,8 +22,7 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
                     request.url,
                     response.status_code
                 )
-            else:
-                return response
+            return response
 
         except HTTPException as http_exc:
             logger.exception(

@@ -95,7 +95,7 @@ async def deleteEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user[0]})
+    db = db.with_globals({"current_user": user.get('user')})
     return await delete_entity(db, entity)
 
 
@@ -181,7 +181,7 @@ async def updateContact(
     db = db.with_globals({"current_user": user.get('user')})
     return await update_contact(
         db,
-        contact=contact.entity,
+        contact=contact.id,
         number=contact.number,
         extra_email=contact.extra_email,
         type_tag=contact.type_tag,
@@ -197,4 +197,5 @@ async def deleteContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
+    db = db.with_globals({"current_user": user.get('user')})
     return await delete_contact(db, entity, contact)

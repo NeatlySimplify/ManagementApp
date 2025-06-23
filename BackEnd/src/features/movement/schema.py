@@ -20,8 +20,8 @@ class MovementCreate(BaseModel):
     unique: int | None = None
     interest: str | None = None
     penalty: str | None = None
-    category: str
-    subcategory: str | None
+    category_tag: str
+    subcategory_tag: str | None
 
 
 class MovementUpdate(BaseModel):
@@ -36,8 +36,8 @@ class PaymentUpdate(BaseModel):
     interest: str | None = None
     penalty: str | None = None
     ignore_in_totals: bool | None = None
-    category: str | None = None
-    subcategory: str | None = None
+    category_tag: str | None = None
+    subcategory_tag: str | None = None
     payment_date: datetime.date | None = None
     is_due: datetime.date | None = None
     status: bool | None = None

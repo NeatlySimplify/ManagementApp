@@ -1,19 +1,11 @@
 # ruff: noqa: F811, RET505
-import pytest
-import pytest_asyncio
 import uuid
-from decimal import ROUND_HALF_EVEN, Decimal, ROUND_DOWN
-import json
-from faker import Faker
-from src.dependencies.pwHash import hash_password
-from .test_utils import (
-    authenticated_user,
-    client,
-    test_bank_account,
-    test_settings,
-    test_bank_account_2
-)
+from decimal import ROUND_HALF_EVEN, Decimal
 
+from .test_utils import client, authenticated_user, test_bank_account_2, test_bank_account
+
+import pytest
+from faker import Faker
 
 fake = Faker()
 
@@ -54,6 +46,12 @@ def valid_movement(
     - Date fields are formatted to ISO strings if they are datetime.date objects.
     """
 
+    def format_decimal(value):
+        if value is None:
+            return None
+        return f"{Decimal(value):.2f}"
+
+
     # --- CREATE Mode ---
     if id_param is None and mode=="basic":
         return {
@@ -65,8 +63,8 @@ def valid_movement(
             },
             "record": str(uuid.uuid4()),
             "parts": fake.random_int(min=1, max=10),
-            "total": str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
-            "cycle": fake.random_element(["daily", "weekly", "monthly", "only"]),
+            "total": format_decimal(str(Decimal(fake.random_number(digits=4)) / Decimal(100))),
+            "cycle": fake.random_element(["Diário", "Semanal", "Mensal", "Único"]),
             "bank_account": bank_id,
             "name": fake.word(),
             "interest": str(Decimal(fake.random_number(digits=2)) / Decimal(100)),
@@ -84,13 +82,14 @@ def valid_movement(
         if cycle_param is not None:
             final_cycle = cycle_param
         else:
-            final_cycle = fake.random_element(["daily", "weekly", "monthly", "only", "custom"])
+            final_cycle = fake.random_element(["Diário", "Semanal", "Mensal", "Único"]),
 
         # Determine final_unique
         if unique_param is not None: # Test explicitly provided unique_param
             final_unique = unique_param
         else: # unique_param was not provided by test, so default it based on final_cycle
-            final_unique = fake.random_int(min=1, max=30) if final_cycle == "custom" else None
+            final_unique = fake.random_int(min=1, max=30) \
+            if final_cycle == "Personalizado" else None
 
         return {
             "type_tag": type_param if type_param is not None else fake.random_element(
@@ -105,8 +104,8 @@ def valid_movement(
                 else str(uuid.uuid4()),
             "parts": parts_param if parts_param is not None
                 else fake.random_int(min=1, max=10),
-            "total": str(total_param) if total_param is not None
-                else str(Decimal(fake.random_number(digits=4)) / Decimal(100)),
+            "total": format_decimal(str(total_param)) if total_param is not None
+                else format_decimal(str(Decimal(fake.random_number(digits=4)) / Decimal(100))),
             "cycle": final_cycle,
             "bank_account": bank_id,
             "name": name_param if name_param is not None
@@ -446,7 +445,7 @@ class TestMovementEndpoints:
             mode="custom",
             total_param=movement_total,
             type_param=movement_type,
-            cycle_param="only",
+            cycle_param="Único",
             parts_param=1,
             status_param=True,
             ignore_in_totals_param=False
@@ -481,8 +480,16 @@ class TestMovementEndpoints:
         # Create an initial movement
         initial_payment_value = Decimal("50.00").quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
-        movement_data = valid_movement(bank_id, mode="custom", total_param="50.00", cycle_param="only", type_param="expense", parts_param=1)
-        status, create_movement_response = await post_movement(movement_data, client, authenticated_user)
+        movement_data = valid_movement(
+            bank_id,
+            mode="custom",
+            total_param="50.00",
+            cycle_param="Único",
+            type_param="expense",
+            parts_param=1)
+        status, create_movement_response = await post_movement(
+            movement_data, client, authenticated_user
+        )
 
         assert status == 200, f"Movement creation failed: {create_movement_response}"
         movement_id = create_movement_response["result"]["id"]
@@ -492,7 +499,8 @@ class TestMovementEndpoints:
         assert status == 200
         movement_details = get_movement_response["result"]
 
-        assert "payment" in movement_details and len(movement_details["payment"]) > 0, "No payment list found in movement details"
+        assert "payment" in movement_details and len(movement_details["payment"]) > 0, \
+        "No payment list found in movement details"
         payment_to_update = movement_details["payment"][0] # Assuming first payment
         payment_id = payment_to_update["id"]
         status, payment_details = await get_payment(payment_id, client, authenticated_user)
@@ -501,51 +509,77 @@ class TestMovementEndpoints:
         assert payment_details["result"]["account"]["id"] == bank_id
 
         status, initial_bank_details = await get_bank_account(bank_id, client, authenticated_user)
-        balance_before_update = Decimal(initial_bank_details["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance_before_update = Decimal(
+            initial_bank_details["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
         # Update the payment's value
         new_payment_value = Decimal("70.00").quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
         # Fetch the full payment to update it, as PUT might require all fields
         payment_update_data = valid_payment(payment_id, value_param=new_payment_value)
-        status, update_response = await update_payment(payment_update_data, client, authenticated_user)
+        status, update_response = await update_payment(
+            payment_update_data,
+            client,
+            authenticated_user)
         assert status == 200, f"Payment update failed: {update_response}"
 
         status, updated_bank_details = await get_bank_account(bank_id, client, authenticated_user)
-        balance_after_update = Decimal(updated_bank_details["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance_after_update = Decimal(
+            updated_bank_details["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
         # Original movement was expense. Initial value was 50. New value is 70.
-        # Balance change = old_value - new_value (since it's an expense, higher value means more deduction)
-        expected_balance_after_update = balance_before_update - (new_payment_value - initial_payment_value)
+        # Balance change = old_value - new_value (since it's an expense,
+        # higher value means more deduction)
+        expected_balance_after_update = balance_before_update - (
+            new_payment_value - initial_payment_value
+        )
 
         assert balance_after_update == expected_balance_after_update, \
-            f"Balance mismatch after payment update: Initial {balance_before_update}, New {balance_after_update}, Expected {expected_balance_after_update}"
+            f"Balance mismatch after payment update: Initial {balance_before_update}, \
+            New {balance_after_update}, Expected {expected_balance_after_update}"
 
 
     @pytest.mark.asyncio
-    async def test_balance_of_two_bank_accounts_on_payment_account_update(self, client, authenticated_user, test_bank_account, test_bank_account_2):
+    async def test_balance_of_two_bank_accounts_on_payment_account_update(
+        self,
+        client,
+        authenticated_user,
+        test_bank_account,
+        test_bank_account_2
+    ):
         """Test balances of two bank accounts on update of a Payment's account_id."""
         bank_id_1, _ = test_bank_account
         bank_id_2, _ = test_bank_account_2
 
         payment_value = Decimal("30.00").quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         balance = {
-            "before movement acc1": 0,
-            "before movement acc2": 0,
-            "after movement acc1": 0,
-            "after movement acc2": 0,
-            "after update acc1": 0,
-            "after update acc2": 0,
+            "before movement acc1": Decimal(0),
+            "before movement acc2": Decimal(0),
+            "after movement acc1": Decimal(0),
+            "after movement acc2": Decimal(0),
+            "after update acc1": Decimal(0),
+            "after update acc2": Decimal(0),
         }
         # Create an initial movement (expense) from bank_id_1
         _, initial_balance = await get_bank_account(bank_id_1, client, authenticated_user)
-        balance["before movement acc1"] = Decimal(initial_balance["result"]["balance"]).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
+        balance["before movement acc1"] = Decimal(
+            initial_balance["result"]["balance"]
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
         _, initial_balance = await get_bank_account(bank_id_2, client, authenticated_user)
         balance["before movement acc2"] = Decimal(
             initial_balance["result"]["balance"]
         ).quantize(Decimal('0.01'), rounding=ROUND_HALF_EVEN)
 
-        movement_data = valid_movement(bank_id_1, mode="custom", parts_param=1, cycle_param="only", total_param=payment_value, type_param="expense")
+        movement_data = valid_movement(
+            bank_id_1,
+            mode="custom",
+            parts_param=1,
+            cycle_param="Único",
+            total_param=payment_value,
+            type_param="expense"
+        )
         status, create_response = await post_movement(movement_data, client, authenticated_user)
         assert status == 200, f"Movement creation failed: {create_response}"
         movement_id = create_response["result"]["id"]
@@ -553,7 +587,7 @@ class TestMovementEndpoints:
         status, get_movement_response = await get_movement(movement_id, client, authenticated_user)
         assert status == 200
         movement_details = get_movement_response["result"]
-        assert "payment" in movement_details and len(movement_details["payment"]) > 0,
+        assert "payment" in movement_details and len(movement_details["payment"]) > 0,\
         "Payment list not found in movement"
         payment_to_update = movement_details["payment"][0]
         payment_id = payment_to_update["id"]
@@ -627,5 +661,5 @@ class TestMovementEndpoints:
             if "event" in payment and "id" in payment["event"]:
                 scheduler_id_found = True
 
-        assert scheduler_id_found,
+        assert scheduler_id_found, \
         "Scheduler ID (event_id) not found in any payment for a recurring movement."

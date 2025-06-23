@@ -55,7 +55,7 @@ class AddressCreate(BaseModel):
 
 
 class ContactUpdate(BaseModel):
-    entity: UUID
+    id: UUID
     number: str | None = None
     type_tag: str | None = None
     extra_email: EmailStr | None = None

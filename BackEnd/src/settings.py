@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, EmailStr, computed_field
+from pydantic import BaseModel, computed_field
 
 _ = load_dotenv()
 
@@ -14,8 +14,7 @@ class Settings(BaseModel):
     httponly: bool = True
     secure: bool = True
     samesite: Literal["lax", "strict", "none"] = "strict"
-    email: EmailStr
-    password: str
+    mailgun: str
     secret: str
     session_secret: str
     algorithm: str
@@ -51,8 +50,7 @@ def instance() -> Settings:
             'use_rich_traceback': True,
             'secure': False,
             'samesite': "lax",
-            "email": os.getenv('EMAIL'),
-            "password": os.getenv('PASSWORD'),
+            "mailgun": os.getenv('MAILGUN_API'),
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
@@ -64,8 +62,7 @@ def instance() -> Settings:
             'use_rich_traceback': False,
             'secure': True,
             'samesite': "strict",
-            "email": os.getenv('EMAIL'),
-            "password": os.getenv('PASSWORD'),
+            "mailgun": os.getenv('MAILGUN_API'),
             "secret": os.getenv('SECRET'),
             "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",

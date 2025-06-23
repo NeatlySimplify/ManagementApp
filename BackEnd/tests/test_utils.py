@@ -1,14 +1,18 @@
-# basedpyright: reportOptionalSubscript: "none"
-import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from faker import Faker
-import uuid
-import jwt
-from decimal import Decimal
+# basedpyright: reportOptionalSubscript: false
+# ruff: noqa: F811, F401
 import datetime
+import uuid
+from decimal import Decimal
+from typing import Any
+
+import jwt
+import pytest_asyncio
+from asgi_lifespan import LifespanManager
+from faker import Faker
+from httpx import ASGITransport, AsyncClient
+
 from src.main import app
 from src.settings import get_settings
-from asgi_lifespan import LifespanManager
 
 fake = Faker()
 settings = get_settings()
@@ -33,6 +37,7 @@ class TestUser:
         self.user_id = None
         self.access_token = None
         self.refresh_token = None
+        self.type_user="is_individual"
 
     def get_auth_cookies(self):
         """Return the authentication cookies for requests."""
@@ -59,7 +64,8 @@ async def authenticated_user(client):
             "email": user.email,
             "password": user.password,
             "confirm_password": user.password,
-            "name": user.name
+            "name": user.name,
+            "type_user": user.type_user
         })
         assert register_response.status_code == 200
 
@@ -74,8 +80,8 @@ async def authenticated_user(client):
         user.refresh_token = login_response.cookies["refresh_token"]
 
         # Extract user ID from the token
-        payload = user.get_token_payload()
-        user.user_id = payload["user"]
+        payload: Any = user.get_token_payload()
+        user.user_id = payload["sub"]
 
         yield user
     finally:
@@ -240,8 +246,8 @@ async def test_entity(client, authenticated_user):
     entity_data = {
         "email": fake.email(),
         "type_tag": fake.random_element(["Person", "Company", "Institution"]),
-        "id_type": fake.random_element(["SSN", "EIN", "Passport"]),
-        "govt_id": str(fake.random_number(digits=9)),
+        "document_type": fake.random_element(["SSN", "EIN", "Passport"]),
+        "document": str(fake.random_number(digits=9)),
         "name": fake.name(),
         "sex": fake.random_element(["Male", "Female", "Other"]),
         "relationship_status": fake.random_element(["Single", "Married", "Divorced"]),
@@ -318,12 +324,12 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
         record_data = {
             "name": fake.sentence(nb_words=3),
             "id_service": f"REC-{fake.random_number(digits=6)}",
-            "active": True,
-            "status": fake.random_element(["Pending", "Completed", "Canceled"]),
+            "status": True,
+            "optionalstatus": fake.random_element(["Pending", "Completed", "Canceled"]),
             "type_tag": fake.random_element(["Invoice", "Receipt"]),
             "value": str(Decimal(fake.random_number(digits=5)) / Decimal(100)),
             "notes": {"Note": fake.paragraph()},
-            "entity": entity_id
+            "entities": [entity_id]
         }
 
         record_response = await client.post(
@@ -353,7 +359,7 @@ async def test_movement(client, authenticated_user, test_bank_account, test_enti
                     "Note": fake.paragraph(),
                     "Category": fake.random_element(["Primary", "Secondary", "Tertiary"])
                 },
-                "cycle": "only",
+                "cycle": "Único",
                 "unique": None,
                 "interest": None,
                 "penalty": None,
