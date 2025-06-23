@@ -1,25 +1,8 @@
-CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
+CREATE MIGRATION m1ewy335uiavcvrm2z7swivimluhmanxwio75diher4ihz6j6nnb2q
     ONTO initial
 {
   CREATE FUTURE simple_scoping;
-  CREATE ABSTRACT TYPE default::User {
-      CREATE REQUIRED PROPERTY email: std::str {
-          CREATE DELEGATED CONSTRAINT std::exclusive;
-      };
-      CREATE PROPERTY first_access: std::bool {
-          SET default := true;
-      };
-      CREATE REQUIRED PROPERTY name: std::str;
-      CREATE REQUIRED PROPERTY password: std::str;
-      CREATE PROPERTY refresh_token: std::uuid;
-      CREATE PROPERTY timestamp: std::datetime {
-          SET default := (std::datetime_of_statement());
-      };
-      CREATE PROPERTY use_token: std::bool {
-          SET default := false;
-      };
-  };
-  CREATE TYPE default::Account EXTENDING default::User;
+  CREATE GLOBAL default::current_user -> std::uuid;
   CREATE TYPE default::Address {
       CREATE PROPERTY city: std::str;
       CREATE PROPERTY complement: std::str;
@@ -35,7 +18,48 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
       CREATE PROPERTY number: std::str;
       CREATE PROPERTY type_tag: std::str;
   };
+  CREATE ABSTRACT TYPE default::User {
+      CREATE REQUIRED PROPERTY email: std::str {
+          CREATE DELEGATED CONSTRAINT std::exclusive;
+      };
+      CREATE PROPERTY first_access: std::bool {
+          SET default := true;
+      };
+      CREATE PROPERTY is_admin: std::bool {
+          SET default := (<std::bool>false);
+      };
+      CREATE REQUIRED PROPERTY name: std::str;
+      CREATE REQUIRED PROPERTY password: std::str;
+      CREATE PROPERTY refresh_token: std::uuid;
+      CREATE PROPERTY tag_type: std::str;
+      CREATE PROPERTY timestamp: std::datetime {
+          SET default := (std::datetime_of_statement());
+      };
+      CREATE PROPERTY use_token: std::bool {
+          SET default := false;
+      };
+  };
+  CREATE TYPE default::BankAccount {
+      CREATE REQUIRED LINK owner: default::User {
+          ON TARGET DELETE DELETE SOURCE;
+      };
+      CREATE PROPERTY balance: std::decimal {
+          SET default := 0;
+          CREATE CONSTRAINT std::min_value(0);
+      };
+      CREATE REQUIRED PROPERTY account_name: std::str;
+      CREATE REQUIRED PROPERTY bank_name: std::str;
+      CREATE PROPERTY category_tag: std::str;
+      CREATE PROPERTY ignore_on_totals: std::bool {
+          SET default := (<std::bool>false);
+      };
+      CREATE PROPERTY notes: std::json;
+      CREATE PROPERTY type_tag: std::str;
+  };
   CREATE TYPE default::Entity {
+      CREATE REQUIRED LINK owner: default::User {
+          ON TARGET DELETE DELETE SOURCE;
+      };
       CREATE MULTI LINK address: default::Address {
           ON SOURCE DELETE DELETE TARGET;
           ON TARGET DELETE ALLOW;
@@ -43,9 +67,6 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
       CREATE MULTI LINK phone: default::Contact {
           ON SOURCE DELETE DELETE TARGET;
           ON TARGET DELETE ALLOW;
-      };
-      CREATE LINK owner: default::User {
-          ON TARGET DELETE DELETE SOURCE;
       };
       CREATE PROPERTY birth: std::cal::local_date;
       CREATE PROPERTY document: std::str;
@@ -63,35 +84,31 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
       CREATE PROPERTY type_tag: std::str;
   };
   CREATE TYPE default::Scheduler {
+      CREATE REQUIRED LINK owner: default::User {
+          ON TARGET DELETE DELETE SOURCE;
+      };
       CREATE PROPERTY date: std::cal::local_date;
       CREATE PROPERTY name: std::str;
       CREATE PROPERTY status: std::bool {
           SET default := false;
-      };
-      CREATE LINK onwer: default::User {
-          ON TARGET DELETE DELETE SOURCE;
       };
       CREATE PROPERTY beginning_time: std::cal::local_time;
       CREATE OPTIONAL PROPERTY ending_time: std::cal::local_time;
       CREATE PROPERTY notes: std::json;
       CREATE PROPERTY type_tag: std::str;
   };
-  CREATE TYPE default::BankAccount {
-      CREATE LINK owner: default::User {
-          ON TARGET DELETE DELETE SOURCE;
-      };
-      CREATE REQUIRED PROPERTY account_name: std::str;
-      CREATE PROPERTY balance: std::decimal {
-          SET default := 0;
-          CREATE CONSTRAINT std::min_value(0);
-      };
-      CREATE REQUIRED PROPERTY bank_name: std::str;
-      CREATE PROPERTY category_tag: std::str;
-      CREATE PROPERTY ignore_on_totals: std::bool {
-          SET default := (<std::bool>false);
-      };
-      CREATE PROPERTY notes: std::json;
-      CREATE PROPERTY type_tag: std::str;
+  ALTER TYPE default::User {
+      CREATE MULTI LINK account := (SELECT
+          DETACHED default::BankAccount
+      FILTER
+          (.owner = __source__)
+      );
+      CREATE MULTI LINK entity := (.<owner[IS default::Entity]);
+      CREATE MULTI LINK event := (SELECT
+          DETACHED default::Scheduler
+      FILTER
+          (.owner = __source__)
+      );
   };
   CREATE TYPE default::UserSettings {
       CREATE LINK default_bank_account: default::BankAccount;
@@ -134,18 +151,88 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
           ON SOURCE DELETE DELETE TARGET;
       };
   };
-  CREATE TYPE default::Individual EXTENDING default::User;
-  ALTER TYPE default::Account {
-      CREATE MULTI LINK collaborator_pool: default::Individual;
+  CREATE GLOBAL default::current_user_obj := (std::assert_single((SELECT
+      default::User
+  FILTER
+      (.id = GLOBAL default::current_user)
+  )));
+  CREATE TYPE default::Account EXTENDING default::User {
+      CREATE ACCESS POLICY admin_only
+          ALLOW ALL USING (((GLOBAL default::current_user_obj).is_admin ?? false));
+      CREATE ACCESS POLICY user_access
+          ALLOW SELECT, UPDATE USING ((__subject__ ?= GLOBAL default::current_user_obj));
+      ALTER PROPERTY tag_type {
+          SET default := 'is_account';
+          SET OWNED;
+          SET TYPE std::str;
+      };
+  };
+  CREATE TYPE default::Auditable {
+      CREATE ACCESS POLICY admin_only
+          ALLOW SELECT, UPDATE, DELETE USING (((GLOBAL default::current_user_obj).is_admin ?? false));
+      CREATE PROPERTY action: std::str;
+      CREATE PROPERTY details: std::json;
+      CREATE PROPERTY object_id: std::uuid;
+      CREATE PROPERTY user: std::uuid;
+      CREATE ACCESS POLICY allow_all_inserts
+          ALLOW INSERT USING (true);
+      CREATE PROPERTY timestamp: std::datetime {
+          SET default := (std::datetime_of_statement());
+      };
+  };
+  CREATE TYPE default::Individual EXTENDING default::User {
+      CREATE ACCESS POLICY admin_only
+          ALLOW ALL USING (((GLOBAL default::current_user_obj).is_admin ?? false));
+      CREATE ACCESS POLICY user_access
+          ALLOW SELECT, UPDATE, DELETE USING ((__subject__ ?= GLOBAL default::current_user_obj));
+      ALTER PROPERTY tag_type {
+          SET default := 'is_individual';
+          SET OWNED;
+          SET TYPE std::str;
+      };
+  };
+  ALTER TYPE default::Entity {
+      CREATE ACCESS POLICY user_access
+          ALLOW ALL USING ((__subject__.owner ?= GLOBAL default::current_user_obj));
+  };
+  CREATE TYPE default::Movement {
+      CREATE REQUIRED LINK owner: default::User {
+          ON TARGET DELETE DELETE SOURCE;
+      };
+      CREATE ACCESS POLICY user_access
+          ALLOW ALL USING ((__subject__.owner ?= GLOBAL default::current_user_obj));
+      CREATE REQUIRED PROPERTY type_tag: std::str;
+      CREATE PROPERTY notes: std::json;
+  };
+  CREATE TYPE default::Record {
+      CREATE REQUIRED LINK owner: default::User {
+          ON TARGET DELETE DELETE SOURCE;
+      };
+      CREATE ACCESS POLICY user_access
+          ALLOW ALL USING ((__subject__.owner ?= GLOBAL default::current_user_obj));
+      CREATE MULTI LINK entity: default::Entity {
+          ON TARGET DELETE ALLOW;
+      };
+      CREATE MULTI LINK movement: default::Movement {
+          ON SOURCE DELETE DELETE TARGET;
+          ON TARGET DELETE ALLOW;
+      };
+      CREATE MULTI LINK event: default::Scheduler;
+      CREATE PROPERTY name: std::str;
+      CREATE PROPERTY notes: std::json;
+      CREATE PROPERTY optional_status: std::str;
+      CREATE PROPERTY service_id: std::str;
+      CREATE PROPERTY status: std::bool;
+      CREATE PROPERTY type_tag: std::str;
+      CREATE PROPERTY value: std::decimal;
   };
   CREATE TYPE default::Project {
-      CREATE LINK owner: default::Account {
+      CREATE REQUIRED LINK owner: default::Account {
           ON SOURCE DELETE ALLOW;
           ON TARGET DELETE DELETE SOURCE;
       };
-      CREATE MULTI LINK entity: default::Entity {
-          ON SOURCE DELETE ALLOW;
-      };
+      CREATE ACCESS POLICY user_access
+          ALLOW ALL USING ((__subject__.owner ?= GLOBAL default::current_user_obj));
       CREATE MULTI LINK people: default::Individual {
           CREATE PROPERTY role: std::str;
       };
@@ -153,57 +240,23 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
           ON SOURCE DELETE DELETE TARGET;
           ON TARGET DELETE ALLOW;
       };
+      CREATE MULTI LINK entity: default::Entity {
+          ON SOURCE DELETE ALLOW;
+      };
+      CREATE MULTI LINK movement: default::Movement {
+          ON SOURCE DELETE DELETE TARGET;
+          ON TARGET DELETE ALLOW;
+      };
+      CREATE SINGLE LINK record: default::Record {
+          ON SOURCE DELETE DELETE TARGET;
+          ON TARGET DELETE ALLOW;
+      };
       CREATE PROPERTY name: std::str;
       CREATE PROPERTY notes: std::json;
-  };
-  ALTER TYPE default::Account {
-      CREATE MULTI LINK grouping := (.<owner[IS default::Project]);
-  };
-  CREATE TYPE default::Auditable {
-      CREATE PROPERTY action: std::str;
-      CREATE PROPERTY details: std::json;
-      CREATE PROPERTY object_id: std::uuid;
-      CREATE PROPERTY user: std::uuid;
-      CREATE PROPERTY timestamp: std::datetime {
-          SET default := (std::datetime_of_statement());
-      };
-  };
-  ALTER TYPE default::User {
-      CREATE TRIGGER log_insert
-          AFTER INSERT 
-          FOR EACH DO (INSERT
-              default::Auditable
-              {
-                  user := __new__.id,
-                  object_id := __new__.id,
-                  action := 'insert',
-                  details := <std::json>__new__ {
-                      *
-                  }
-              });
-      CREATE TRIGGER log_update
-          AFTER UPDATE 
-          FOR EACH 
-              WHEN ((__old__.password != __new__.password))
-          DO (INSERT
-              default::Auditable
-              {
-                  user := __old__.id,
-                  object_id := __old__.id,
-                  action := 'update',
-                  details := std::to_json((('{' ++ '"Action": "Password Updated"') ++ '}'))
-              });
   };
   ALTER TYPE default::Individual {
       CREATE MULTI LINK projects := (.<people[IS default::Project]);
       CREATE MULTI LINK shared_schdeule := (__source__.projects.schedule);
-  };
-  CREATE TYPE default::Movement {
-      CREATE REQUIRED PROPERTY type_tag: std::str;
-      CREATE LINK owner: default::User {
-          ON TARGET DELETE DELETE SOURCE;
-      };
-      CREATE PROPERTY notes: std::json;
   };
   CREATE TYPE default::Payment {
       CREATE REQUIRED LINK account: default::BankAccount {
@@ -278,17 +331,6 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
           SELECT
               (update_old_account, update_new_account)
           );
-      CREATE TRIGGER update_balance_on_delete
-          AFTER DELETE 
-          FOR EACH 
-              WHEN (((__old__.status = true) AND (__old__.ignore_in_totals = false)))
-          DO (UPDATE
-              default::BankAccount
-          FILTER
-              (.id = __old__.account.id)
-          SET {
-              balance := (.balance - __old__.value)
-          });
       CREATE TRIGGER update_balance_on_insert
           AFTER INSERT 
           FOR EACH 
@@ -337,12 +379,23 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
                   balance := (.balance + net_impact)
               }) IF (net_impact != 0) ELSE <default::BankAccount>{})
           );
+      CREATE PROPERTY payment_date: std::cal::local_date;
+      CREATE TRIGGER update_balance_on_delete
+          AFTER DELETE 
+          FOR EACH 
+              WHEN (((__old__.status = true) AND (__old__.ignore_in_totals = false)))
+          DO (UPDATE
+              default::BankAccount
+          FILTER
+              (.id = __old__.account.id)
+          SET {
+              balance := (.balance - __old__.value)
+          });
       CREATE LINK event: default::Scheduler {
           ON SOURCE DELETE DELETE TARGET;
       };
       CREATE PROPERTY is_due: std::cal::local_date;
       CREATE PROPERTY name: std::str;
-      CREATE PROPERTY payment_date: std::cal::local_date;
       CREATE TRIGGER update_event
           AFTER UPDATE 
           FOR EACH 
@@ -371,48 +424,81 @@ CREATE MIGRATION m1zvf2nuq6jth6rlef65jt25732yywhfb4s4rnn6nl3khqc2l3wu2a
               status := __new__.status,
               date := new_date
           });
+      CREATE LINK owner: default::User;
       CREATE PROPERTY category_tag: std::str;
       CREATE PROPERTY interest: std::str;
       CREATE PROPERTY penalty: std::str;
       CREATE PROPERTY subcategory_tag: std::str;
+  };
+  ALTER TYPE default::User {
+      CREATE MULTI LINK record := (SELECT
+          DETACHED default::Record
+      FILTER
+          (.owner = __source__)
+      );
+      CREATE MULTI LINK movement := (.<owner[IS default::Movement]);
+  };
+  ALTER TYPE default::Account {
+      CREATE MULTI LINK collaborator_pool: default::Individual;
+      CREATE MULTI LINK grouping := (.<owner[IS default::Project]);
   };
   ALTER TYPE default::Movement {
       CREATE MULTI LINK payment := (.<movement[IS default::Payment]);
       CREATE LINK accounts := (DISTINCT (__source__.payment.account));
       CREATE PROPERTY installment := (std::count(__source__.payment));
       CREATE PROPERTY value := (std::sum(__source__.payment.value));
-  };
-  CREATE TYPE default::Record {
-      CREATE MULTI LINK entity: default::Entity {
-          ON TARGET DELETE ALLOW;
-      };
-      CREATE MULTI LINK movement: default::Movement {
-          ON SOURCE DELETE DELETE TARGET;
-          ON TARGET DELETE ALLOW;
-      };
-      CREATE MULTI LINK event: default::Scheduler;
-      CREATE LINK onwer: default::User {
-          ON TARGET DELETE DELETE SOURCE;
-      };
-      CREATE PROPERTY name: std::str;
-      CREATE PROPERTY notes: std::json;
-      CREATE PROPERTY optitional_status: std::str;
-      CREATE PROPERTY service_id: std::str;
-      CREATE PROPERTY status: std::bool;
-      CREATE PROPERTY type_tag: std::str;
-      CREATE PROPERTY value: std::decimal;
-  };
-  ALTER TYPE default::Movement {
       CREATE LINK record: default::Record;
   };
-  ALTER TYPE default::Project {
-      CREATE MULTI LINK movement: default::Movement {
-          ON SOURCE DELETE DELETE TARGET;
-          ON TARGET DELETE ALLOW;
+  ALTER TYPE default::User {
+      CREATE LINK payment_expense := (SELECT
+          __source__.movement.payment
+      FILTER
+          (.type_tag = 'expense')
+      ORDER BY
+          .payment_date DESC
+      );
+      CREATE LINK payment_income := (SELECT
+          __source__.movement.payment
+      FILTER
+          (.type_tag = 'income')
+      ORDER BY
+          .payment_date DESC
+      );
+      CREATE TRIGGER log_insert
+          AFTER INSERT 
+          FOR EACH DO (INSERT
+              default::Auditable
+              {
+                  user := __new__.id,
+                  object_id := __new__.id,
+                  action := 'insert',
+                  details := <std::json>__new__ {
+                      *
+                  }
+              });
+      CREATE TRIGGER log_update
+          AFTER UPDATE 
+          FOR EACH 
+              WHEN ((__old__.password != __new__.password))
+          DO (INSERT
+              default::Auditable
+              {
+                  user := __old__.id,
+                  object_id := __old__.id,
+                  action := 'update',
+                  details := std::to_json((('{' ++ '"Action": "Password Updated"') ++ '}'))
+              });
+  };
+  CREATE TYPE default::Administator EXTENDING default::User {
+      ALTER PROPERTY is_admin {
+          SET default := (<std::bool>true);
+          SET OWNED;
+          SET TYPE std::bool;
       };
-      CREATE SINGLE LINK record: default::Record {
-          ON SOURCE DELETE DELETE TARGET;
-          ON TARGET DELETE ALLOW;
+      ALTER PROPERTY tag_type {
+          SET default := 'is_admin';
+          SET OWNED;
+          SET TYPE std::str;
       };
   };
 };
