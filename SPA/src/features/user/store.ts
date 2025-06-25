@@ -15,7 +15,7 @@ interface Settings {
   movement_title: string;
   entity_title: string;
   entity_types: string[];
-  entity_id_types: string[];
+  entity_document_types: string[];
   contact_number_types: string[];
   record_types: string[];
   record_status: string[];
@@ -36,7 +36,7 @@ export const useUserStore = defineStore("user", {
   state: () => ({
     user: {} as User,
     bank_account: {} as Record<string, PartialBankAccount>,
-    total_balance: {} as string
+    total_balance: {} as string,
   }),
 
   getters: {
@@ -52,7 +52,7 @@ export const useUserStore = defineStore("user", {
       this.bank_account[entry.id] = entry;
     },
 
-    setUser({name, email, auth, settings}: User, balance: string) {
+    setUser({ name, email, auth, settings }: User, balance: string) {
       this.user.name = name;
       this.user.email = email;
       this.user.auth = auth;

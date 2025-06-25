@@ -2,15 +2,14 @@
 import { ref } from "vue";
 import Vue3Datatable from "@bhplugin/vue3-datatable";
 import "@bhplugin/vue3-datatable/dist/style.css";
-import { useEntityStore } from "@/stores/entity";
-import EntityForm from "@/components/entity/EntityForm.vue";}
+import { useEntityStore } from "@/features/entity/store";
+import Form from "@/features/entity/Form.vue";
 
 const entityStore = useEntityStore();
 
 const entities = computed(() => entityStore.getAllEntities);
 
 const loading = ref(true);
-const change = ref(false);
 
 const rows = ref(null);
 
@@ -70,5 +69,5 @@ onMounted(() => {
       </template>
     </vue3-datatable>
   </div>
-  <EntityForm >
+  <Form entity="id" mode="mode" @change="value"></Form>
 </template>
