@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import RootView from "@/views/RootView.vue";
-import { useUserStore } from "@/stores/user";
-user = useUserStore();
+import { useUserStore } from "@/features/user/store";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,12 +29,24 @@ const router = createRouter({
       component: RootView,
       meta: { guestOnly: true },
     },
-    // {
-    //   path: '/app/board',
-    //   name: 'board',
-    //   component: () => import('@/views/BoardView'),
-    //   meta: { requiresAuth: true },
-    // },
+    {
+      path: "/first-access",
+      name: "first-access",
+      component: () => import("@/views/FirstAccessView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/board",
+      name: "board",
+      component: () => import("@/views/BoardView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/entity",
+      name: "entity",
+      component: () => import("@/views/EntityView.vue"),
+      meta: { requiresAuth: true },
+    },
     // {
     //   path: '/app/user',
     //   name: 'user',
@@ -52,18 +63,23 @@ const router = createRouter({
       path: "/:pathMatch(.*)*",
       name: "root",
       component: RootView, //fallback page component
-      guestOnly: true,
+      meta: { guestOnly: true },
     },
   ],
 });
 
 router.beforeEach((to, from, next) => {
-  const token = user.auth;
+  const userStore = useUserStore();
+  const user = userStore.getUser;
+  const auth = user.auth;
+  console.log("Value of auth: ", auth);
 
-  if (to.meta.requiresAuth && !token) {
-    next("/login");
-  } else if (to.meta.guestOnly && token) {
+  if (to.meta.requiresAuth && !auth) {
+    next("/");
+    console.log("blocked route");
+  } else if (to.meta.guestOnly && auth) {
     next("/board");
+    console.log("already autheticated");
   } else {
     next();
   }

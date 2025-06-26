@@ -1,74 +1,61 @@
 import { defineStore } from "pinia";
-
-interface PartialBankAccount {
-  id: string;
-  bank_name: string;
-  account_name: string;
-  balance_str: string;
-}
-
-interface Settings {
-  id: string;
-  account_types: string[];
-  default_bank_account: PartialBankAccount["id"];
-  record_title: string;
-  movement_title: string;
-  entity_title: string;
-  entity_types: string[];
-  entity_document_types: string[];
-  contact_number_types: string[];
-  record_types: string[];
-  record_status: string[];
-  movement_income_types: string[];
-  movement_expense_types: string[];
-  scheduler_types: string[];
-  movement_cycle_types: string[];
-}
-
-interface User {
-  name: string;
-  email: string;
-  settings: Settings;
-  auth: boolean;
-}
+import {
+  type User,
+  type BankAccount,
+  UserSchema,
+  BankAccountSchema,
+  type Settings,
+  SettingsSchema,
+} from "./schema";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
     user: {} as User,
-    bank_account: {} as Record<string, PartialBankAccount>,
+    bank_account: {} as Record<string, BankAccount>,
     total_balance: {} as string,
+    setting: {} as Settings,
   }),
+  persist: {
+    storage: sessionStorage,
+  },
 
   getters: {
     getUser: (state) => state.user,
     getAccount: (state) => (id: string) => state.bank_account[id],
-    getSettings: (state) => state.user.settings,
+    getSettings: (state) => state.setting,
     getAllAccounts: (state) => state.bank_account,
     getBalance: (state) => state.total_balance,
   },
 
   actions: {
-    addAccount(entry: PartialBankAccount) {
+    addAccount(entry: BankAccount) {
       this.bank_account[entry.id] = entry;
     },
 
-    setUser({ name, email, auth, settings }: User, balance: string) {
-      this.user.name = name;
-      this.user.email = email;
+    setUser(raw: unknown, auth: boolean) {
+      const user: User = UserSchema.parse(raw);
+      this.user.name = user.name;
+      this.user.email = user.email;
       this.user.auth = auth;
-      this.user.settings = settings;
-      this.total_balance = balance;
+    },
+    setSettings(raw: unknown) {
+      const set: Settings = SettingsSchema.parse(raw);
+      this.setting = set;
     },
 
     removeAccount(entry: string) {
       delete this.bank_account[entry];
     },
 
-    setAccounts(entry: PartialBankAccount[]) {
-      this.bank_account = Object.fromEntries(entry.map((e) => [e.id, e]));
+    setAccounts(raw: unknown[]) {
+      this.bank_account = raw.reduce((acc: Record<string, BankAccount>, rawAccount: unknown) => {
+        const bankAccount = BankAccountSchema.parse(rawAccount);
+        acc[bankAccount.id] = bankAccount;
+        return acc;
+      }, {});
     },
 
-    update(entry: PartialBankAccount) {
+    update(entry: BankAccount) {
       this.bank_account[entry.id] = entry;
     },
   },

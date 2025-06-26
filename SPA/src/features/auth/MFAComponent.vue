@@ -1,19 +1,19 @@
 <script setup>
-import { ref } from 'vue'
-import FormButtons from './FormButtons.vue'
-import api from '@/util/api'
+import { ref } from "vue";
+import FormButtons from "@auth/FormButtonsComponent.vue";
+import api from "@/util/api";
 
-const sequence_code = ref('')
+const sequence_code = ref("");
 
 const onSubmit = async () => {
-  let sequence = sequence_code.value.toLowerCase()
+  const sequence = sequence_code.value.toLowerCase();
   try {
-    let response = await api.post('api/auth/register', sequence)
-    console.log('Success:', response.data)
+    const response = await api.post("api/auth/register", sequence);
+    console.log("Success:", response.data);
   } catch (err) {
-    console.error('Error on request:', err)
+    console.error("Error on request:", err);
   }
-}
+};
 </script>
 <template>
   <div class="container">

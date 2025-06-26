@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
 import Vue3Datatable from "@bhplugin/vue3-datatable";
 import "@bhplugin/vue3-datatable/dist/style.css";
-import { useEntityStore } from "@/features/entity/store";
-import Form from "@/features/entity/Form.vue";
+import { useEntityStore } from "@entity/store";
+import Form from "@entity/FormComponent.vue";
+import BareModal from "@/features/BareModal.vue";
 
 const entityStore = useEntityStore();
 
@@ -12,9 +13,12 @@ const entities = computed(() => entityStore.getAllEntities);
 const loading = ref(true);
 
 const rows = ref(null);
+const isModalOpen = ref(false);
 
 function viewEntity(id) {
-  router.push(`entity/${id}`);
+  entityId.value = id;
+  entityData.value = entityStore.getEntity(id);
+  isModalOpen.value = true; // Open the modal
 }
 
 const cols =
@@ -43,8 +47,12 @@ const loadEntities = () => {
 onMounted(() => {
   loadEntities();
 });
+const closeModal = () => {
+  isModalOpen.value = false;
+};
 </script>
 <template>
+  <p>Hello from Entity</p>
   <div>
     <div class="flex items-center justify-between mb-5">
       <h2 class="text-3xl">{{ setting.entity_title }}</h2>
@@ -69,5 +77,7 @@ onMounted(() => {
       </template>
     </vue3-datatable>
   </div>
-  <Form entity="id" mode="mode" @change="value"></Form>
+  <BareModal :isOpen="isModalOpen" :title="Entity" @close="closeModal">
+    <Form entity="id" mode="show" @change="value"></Form>
+  </BareModal>
 </template>

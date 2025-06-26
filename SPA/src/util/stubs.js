@@ -2,6 +2,7 @@ import faker from "@faker/faker.js";
 import getDateOffsetsISO from "./dateOffset";
 
 const fakeAddress = () => ({
+  id: faker.string.uuid(),
   state: faker.location.state(),
   city: faker.location.city(),
   district: "",
@@ -12,6 +13,7 @@ const fakeAddress = () => ({
 });
 
 const fakeContact = () => ({
+  id: faker.string.uuid(),
   type_tag: faker.helpers.arrayElement(baseSetting.account_types),
   number: faker.phone.number(),
   extra_email: "",
@@ -67,7 +69,7 @@ const fakePayment = (type_tag, value, is_due) => ({
   interest: "",
   penalty: "",
   category_tag: faker.helpers.arrayElement(baseSetting.movement_income_types),
-  event: [],
+  event: {},
   payment: [],
   account: "",
   is_due: is_due,

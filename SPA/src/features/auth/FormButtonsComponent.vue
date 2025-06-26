@@ -1,7 +1,7 @@
 <script setup>
 import { useRoute } from 'vue-router'
 const route = useRoute()
-let props = defineProps({
+const props = defineProps({
   isLoading: Boolean,
 })
 </script>

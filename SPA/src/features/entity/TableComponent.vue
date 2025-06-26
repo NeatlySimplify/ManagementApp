@@ -1,5 +1,5 @@
 <script setup>
-import { useUserStore } from "@/stores/user";
+import { useUserStore } from "@/features/user/stores";
 import { computed } from "vue";
 
 const userStore = useUserStore();

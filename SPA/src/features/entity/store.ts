@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { type Entity } from "./schema";
+import type { Entity } from "./schema";
 
 export const useEntityStore = defineStore("entity", {
   state: () => ({

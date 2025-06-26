@@ -1,27 +1,27 @@
 <script setup>
-import { ref } from 'vue'
-import FormButtons from './FormButtons.vue'
-import api from '@/util/api'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import FormButtons from "@auth/FormButtonsComponent.vue";
+import api from "@/util/api";
+import { useRouter } from "vue-router";
 
-const email = ref('')
-const router = useRouter()
-const isLoading = ref(false)
+const email = ref("");
+const router = useRouter();
+const isLoading = ref(false);
 
 const onSubmit = async () => {
   try {
-    await api.post('api/auth/reset-password', email.value)
-    isLoading.value = true
-    alert('Password reset email sent successfully! Verify your email to get your new password.')
-    router.push('/root')
+    await api.post("api/auth/reset-password", email.value);
+    isLoading.value = true;
+    alert("Password reset email sent successfully! Verify your email to get your new password.");
+    router.push("/root");
   } catch (err) {
-    console.error('Error on request:', err)
-    isLoading.value = false
+    console.error("Error on request:", err);
+    isLoading.value = false;
     alert(
-      'An error occurred while sending the password reset email. Update the page and try again.',
-    )
+      "An error occurred while sending the password reset email. Update the page and try again.",
+    );
   }
-}
+};
 </script>
 <template>
   <div class="container">

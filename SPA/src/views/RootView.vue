@@ -1,9 +1,9 @@
 <script setup>
 import { computed } from "vue";
-import LoginForm from "@/components/auth/LoginForm.vue";
-import RegisterForm from "@/components/auth/RegisterForm.vue";
-import ForgotPassword from "@/components/auth/ForgotPassword.vue";
-import MFAForm from "@/components/auth/MFAForm.vue";
+import LoginComponent from "@auth/LoginComponent.vue";
+import RegisterComponent from "@auth/RegisterComponent.vue";
+import ForgotPasswordComponent from "@auth/ForgotPasswordComponent.vue";
+import MFAComponent from "@auth/MFAComponent.vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
@@ -13,22 +13,22 @@ const formComponent = computed(() => {
     case "root":
       return {
         title: "Login Form",
-        component: LoginForm,
+        component: LoginComponent,
       };
     case "register":
       return {
         title: "Register Form",
-        component: RegisterForm,
+        component: RegisterComponent,
       };
     case "forgot_password":
       return {
         title: "Forgot your Password",
-        component: ForgotPassword,
+        component: ForgotPasswordComponent,
       };
     case "mfa":
       return {
         title: "Multi Factor Authentication",
-        component: MFAForm,
+        component: MFAComponent,
       };
     default:
       return {
@@ -42,15 +42,13 @@ const form = computed(() => formComponent.value.component);
 </script>
 
 <template>
-  <div class="container-fluid">
-    <div class="row position-relative fullscreen-image">
-      <div
-        class="col-12 col-md-8 mt-5 text-end text-sm-center position-absolute top-0 start-50 rounded-5 translate-middle-x"
-        style="background-color: #ffffff"
-      >
-        <h1 class="text-center fs-2">{{ title }}</h1>
-        <component :is="form"></component>
-      </div>
+  <div class="fullscreen-image d-flex align-items-center justify-content-center">
+    <div
+      class="col-12 col-md-8 mt-5 text-end text-sm-center position-absolute top-0 start-50 rounded-5 translate-middle-x"
+      style="background-color: #ffffff"
+    >
+      <h1 class="text-center fs-2">{{ title }}</h1>
+      <component :is="form"></component>
     </div>
   </div>
 </template>
