@@ -125,9 +125,8 @@ module default {
 
     type Contact{
         type_tag: str;
-        extra_email: str;
         number: str;
-        notes: json;
+        complement: str;
     }
 
     type Auditable {
@@ -189,6 +188,12 @@ module default {
         };
         movement_cycle_types: array<str>{
             default:= ["Diário", "Semanal", "Quinzenal", "Mensal", "Trimestral", "Semestral", "Anual", "Personalizado"];
+        };
+        relationship_status: array<str>{
+            default:=["Casado(a)", "Viúvo(a)", "Solteiro(a)", "Divorciádo(a)", "Em União Estável"]
+        };
+        sex: array<str>{
+            default:= ["Masculino", "Feminino", "Outro"]
         };
     }
 

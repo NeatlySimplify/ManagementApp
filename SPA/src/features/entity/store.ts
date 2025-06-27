@@ -5,7 +5,6 @@ export const useEntityStore = defineStore("entity", {
   state: () => ({
     entries: {} as Record<string, Entity>, // Cache of entities by ID
     isLoading: false, // For initial bundle loading
-    error: null as string | null, // For error handling during initial load
   }),
 
   getters: {

@@ -45,7 +45,6 @@ async def CreateContact(
     *,
     entity: uuid.UUID,
     type_tag: str,
-    extra_email: str | None = None,
     notes: str | None = None,
     number: str,
 ) -> CreateContactResult:
@@ -55,8 +54,7 @@ async def CreateContact(
         add_contact:= (
             insert Contact{
                 type_tag:= <str>$type_tag,
-                extra_email:= <optional str>$extra_email,
-                notes:=<optional json>$notes,
+                complement:=<optional str>$notes,
                 number:= <str>$number,
             }
         ) if exists entity else <Contact>{},
@@ -70,7 +68,6 @@ async def CreateContact(
         """,
         entity=entity,
         type_tag=type_tag,
-        extra_email=extra_email,
         notes=notes,
         number=number,
     )

@@ -33,7 +33,6 @@ async def UpdateContact(
     executor: gel.AsyncIOExecutor,
     *,
     type_tag: str | None = None,
-    extra_email: str | None = None,
     notes: str | None = None,
     number: str | None = None,
     contact: uuid.UUID,
@@ -42,13 +41,11 @@ async def UpdateContact(
         """\
         update Contact filter .id = <uuid>$contact set{
             type_tag:= <optional str>$type_tag ?? .type_tag,
-            extra_email:= <optional str>$extra_email ?? .extra_email,
-            notes:=<optional json>$notes ?? .notes,
+            complement:=<optional str>$notes ?? .complement,
             number:= <optional str>$number ?? .number,
         }\
         """,
         type_tag=type_tag,
-        extra_email=extra_email,
         notes=notes,
         number=number,
         contact=contact,

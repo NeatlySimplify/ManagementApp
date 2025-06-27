@@ -13,6 +13,7 @@ export default defineConfig({
       "@auth": fileURLToPath(new URL("./src/features/auth", import.meta.url)),
       "@user": fileURLToPath(new URL("./src/features/user", import.meta.url)),
       "@entity": fileURLToPath(new URL("./src/features/entity", import.meta.url)),
+      "@record": fileURLToPath(new URL("./src/features/entity", import.meta.url)),
       "@util": fileURLToPath(new URL("./src/util", import.meta.url)),
     },
   },
@@ -21,12 +22,5 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      "/api": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
   },
 });

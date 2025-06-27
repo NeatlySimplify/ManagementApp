@@ -42,10 +42,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/entity",
+      path: "/entity/:id",
       name: "entity",
       component: () => import("@/views/EntityView.vue"),
       meta: { requiresAuth: true },
+      prop: true,
+    },
+    {
+      path: "/record/:id",
+      name: "record",
+      component: () => import("@/views/RecordView.vue"),
+      meta: { requiresAuth: true },
+      prop: true,
     },
     // {
     //   path: '/app/user',

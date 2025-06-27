@@ -113,9 +113,6 @@ async def get_entity(
     result_dict = asdict(result)
     if result_dict["notes"] is not None:
         result_dict["notes"] = json.loads(result_dict["notes"])
-    for i in result_dict["phone"]:
-        if i["notes"] is not None:
-            i["notes"] = json.loads(i["notes"])
     return result_dict
 
 
@@ -194,16 +191,14 @@ async def create_contact(
     entity: UUID,
     number: str,
     type_tag: str,
-    email: str | None,
-    details: dict[str, str | int | float] | None,
+    details: str | None,
 ) -> dict | None:
     result = await CreateContact_async_edgeql.CreateContact(
         executor=db,
         type_tag=type_tag,
-        extra_email=email,
         number=number,
         entity=entity,
-        notes=json.dumps(details) if details is not None else None
+        notes=details
     )
     if result is not None:
         result = asdict(result)
@@ -217,16 +212,14 @@ async def update_contact(
     db,
     contact: UUID,
     number: str | None,
-    extra_email: str | None,
     type_tag: str | None,
-    details: dict[str, str | int | float] | None,
+    details: str | None,
 ) -> dict | None:
     result = await UpdateContact_async_edgeql.UpdateContact(
         executor=db,
         type_tag=type_tag,
-        extra_email=extra_email,
         contact=contact,
-        notes=json.dumps(details) if details is not None else None,
+        notes=details,
         number=number,
     )
     if result is not None:

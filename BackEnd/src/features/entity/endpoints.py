@@ -165,9 +165,8 @@ async def createContact(
         db,
         entity=contact.entity,
         number=contact.number,
-        email=contact.extra_email,
         type_tag=contact.type_tag,
-        details=contact.notes
+        details=contact.complement
     )
 
 
@@ -183,9 +182,8 @@ async def updateContact(
         db,
         contact=contact.id,
         number=contact.number,
-        extra_email=contact.extra_email,
         type_tag=contact.type_tag,
-        details=contact.notes
+        details=contact.complement
     )
 
 

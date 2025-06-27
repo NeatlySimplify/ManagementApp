@@ -58,13 +58,11 @@ class ContactUpdate(BaseModel):
     id: UUID
     number: str | None = None
     type_tag: str | None = None
-    extra_email: EmailStr | None = None
-    notes: dict[str, str | int | float] | None = None
+    complement: str | None = None
 
 
 class ContactCreate(BaseModel):
     entity: UUID
     number: str
     type_tag: str
-    extra_email: EmailStr | None
-    notes: dict[str, str | int | float] | None = None
+    notes: str | None = None

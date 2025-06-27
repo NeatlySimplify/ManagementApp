@@ -24,6 +24,8 @@ export const SettingsSchema = z.object({
   movement_expense_types: z.array(z.string()),
   scheduler_types: z.array(z.string()),
   movement_cycle_types: z.array(z.string()),
+  relationship_status: z.array(z.string()),
+  sex: z.array(z.string()),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 

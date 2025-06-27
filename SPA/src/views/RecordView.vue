@@ -1,91 +1,80 @@
 <script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
+import { ref, onMounted, computed } from "vue";
 import Vue3Datatable from "@bhplugin/vue3-datatable";
 import "@bhplugin/vue3-datatable/dist/style.css";
-import { useEntityStore } from "@entity/store";
+import { useRecordStore } from "@record/store";
 import { useUserStore } from "@user/store";
-import Form from "@entity/FormComponent.vue";
+import Form from "@record/FormComponent.vue";
 import BareModal from "@/features/BareModal.vue";
 
-const entityStore = useEntityStore();
+const recordStore = useRecordStore();
 const userStore = useUserStore();
 const settings = userStore.getSettings;
-const entities = computed(() => entityStore.getAllEntities);
+const records = computed(() => recordStore.getAllRecords);
 
 onMounted(() => {
-  loadEntities();
-  if (props.id !== null) {
-    viewEntity(props.id);
-  }
-});
-
-const props = defineProps({
-  id: {
-    type: [String, null],
-    required: false,
-    default: null,
-  },
+  loadRecords();
 });
 
 const rows = ref(null);
 const isModalOpen = ref(false);
 const loading = ref(true);
 const mode = ref("");
-const entity_id = ref("");
+const record_id = ref("");
 const name = ref("");
 
 const cols =
   ref([
     { field: "name", title: "Nome" },
-    { field: "email", title: "E-Mail" },
+    { field: "service_id", title: "ID" },
     { field: "type_tag", title: "Tipo" },
-    { field: "document", title: "Documento" },
     { field: "status", title: "Ativo" },
+    { field: "optional_status", title: "Status" },
     { field: "actions", title: "Actions" },
   ]) || [];
 
-function viewEntity(id) {
+function viewRecord(id) {
   entity_id.value = id;
-  name.value = entity.getEntity(id);
+  name.value = entity.getRecord(id);
   isModalOpen.value = true;
   mode.value = "show";
 }
-function createEntity() {
+function createRecord() {
   isModalOpen.value = true;
   mode.value = "create";
 }
 
-function loadEntities() {
+function loadRecords() {
   loading.value = true;
-  const entityArray = computed(() =>
-    Object.entries(entities).map(([id, entity]) => ({
+  const recordsArray = computed(() =>
+    Object.entries(records).map(([id, record]) => ({
       id,
-      ...entity,
+      ...record,
     })),
   );
-  rows.value = entityArray.value.entity;
+  rows.value = recordsArray.value.record;
 
   loading.value = false;
 }
 function closeModal() {
   isModalOpen.value = false;
 }
-async function deleteEntity(id) {
+async function deleteRecord(id) {
   try {
-    await api.delete(`${route}/${id}`);
-    entityStore.removeEntity(id);
+    await api.delete(`record/${id}`);
+    recordStore.removeRecord(id);
   } catch {
     alert(`Falha na tentativa de deletar`);
   }
 }
 </script>
 <template>
-  <p>Hello from Entity</p>
+  <p>Hello from Records</p>
   <div>
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-3xl">{{ setting.entity_title }}</h2>
-      <button class="btn btn-outline-secondary d-grid gap-2" @click="createEntity()">
-        <span>&#10133;</span> Adicionar nov(a) {{ settings.entity_title }}
+      <h2 class="text-3xl">{{ setting.record_title }}</h2>
+      <button class="btn btn-outline-secondary d-grid gap-2" @click="createRecord()">
+        <span>&#10133;</span> Adicionar nov(a) {{ settings.record_title }}
       </button>
     </div>
 
@@ -98,10 +87,10 @@ async function deleteEntity(id) {
     >
       <template #actions="data">
         <div class="flex gap-4">
-          <button type="button" class="btn btn-success !py-1" @click="viewEntity(data.id)">
+          <button type="button" class="btn btn-success !py-1" @click="viewRecord(data.id)">
             Ver Mais!
           </button>
-          <button type="button" class="btn btn-danger !py-1" @click="deleteEntity(data.id)">
+          <button type="button" class="btn btn-danger !py-1" @click="deleteRecord(data.id)">
             Excluir
           </button>
         </div>
@@ -109,6 +98,6 @@ async function deleteEntity(id) {
     </vue3-datatable>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
-    <Form :entity="entity_id" :mode="mode"></Form>
+    <Form :entity="record_id" :mode="mode"></Form>
   </BareModal>
 </template>
