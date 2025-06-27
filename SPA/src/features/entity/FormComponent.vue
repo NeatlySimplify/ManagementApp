@@ -6,7 +6,7 @@ import { defineProps } from "vue";
 import { defineEmits } from "vue";
 import AddressComponent from "@entity/AddressComponent.vue";
 import ContactComponent from "@entity/ContactComponent.vue";
-import NotesComponent from "@/features/NotesComponent.vue";
+import NotesComponent from "@/features/common/NotesComponent.vue";
 
 BeforeMounted(async () => {
   if (props.mode === "show") {

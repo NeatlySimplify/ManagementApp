@@ -5,7 +5,7 @@ import "@bhplugin/vue3-datatable/dist/style.css";
 import { useRecordStore } from "@record/store";
 import { useUserStore } from "@user/store";
 import Form from "@record/FormComponent.vue";
-import BareModal from "@/features/BareModal.vue";
+import BareModal from "@/features/common/BareModal.vue";
 
 const recordStore = useRecordStore();
 const userStore = useUserStore();

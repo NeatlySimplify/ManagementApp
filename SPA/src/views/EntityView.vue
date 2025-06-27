@@ -5,7 +5,7 @@ import "@bhplugin/vue3-datatable/dist/style.css";
 import { useEntityStore } from "@entity/store";
 import { useUserStore } from "@user/store";
 import Form from "@entity/FormComponent.vue";
-import BareModal from "@/features/BareModal.vue";
+import BareModal from "@/features/common/BareModal.vue";
 
 const entityStore = useEntityStore();
 const userStore = useUserStore();
