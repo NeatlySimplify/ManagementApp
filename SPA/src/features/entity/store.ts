@@ -12,6 +12,17 @@ export const useEntityStore = defineStore("entity", {
       (state) =>
       (id: string): Entity | undefined =>
         state.entries[id],
+
+    getEntitiesByStatus:
+      (state) =>
+      (status: boolean): Entity[] =>
+        Object.values(state.entries).filter((entity) => entity.status === status),
+
+    getEntitiesByType:
+      (state) =>
+      (type_tag: string): Entity[] =>
+        Object.values(state.entries).filter((entity) => entity.type_tag === type_tag),
+
     getAllEntities: (state) => Object.values(state.entries), // Get all entities as an array
     // Add other helpful getters, e.g., getActiveEntities
   },

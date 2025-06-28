@@ -20,6 +20,8 @@ BeforeMounted(async () => {
   }
 });
 
+const route = "/entity";
+
 defineEmits(["close"]);
 
 const props = defineProps({
@@ -36,8 +38,10 @@ const isReadOnly = ref(true);
 
 const setting = {
   title: settings.entity_title,
-  types: settings.type_tag.sort(),
-  documents: settings.document_types.sort(),
+  types: settings.entity_types.sort(),
+  documents: settings.entity_document_types.sort(),
+  relationship: settings.relationship_status.sort(),
+  sex: settings.sex.sort(),
 };
 
 function changeMode() {
@@ -179,11 +183,7 @@ async function submitForm() {
           <div class="col-sm-10">
             <select v-if="!isReadOnly" v-model="entity.relationship_status">
               <option selected></option>
-              <option
-                v-for="(option, index) in setting.relationship_status"
-                :key="index"
-                :value="option"
-              >
+              <option v-for="(option, index) in setting.relationship" :key="index" :value="option">
                 {{ option }}
               </option>
             </select>

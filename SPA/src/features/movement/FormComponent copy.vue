@@ -2,7 +2,6 @@
 import api from "@util/api";
 import { useUserStore } from "@user/store";
 import { useRecordStore } from "@record/store";
-import { useEntityStore } from "@entity/store";
 import { defineProps } from "vue";
 import { defineEmits } from "vue";
 import NotesComponent from "@/features/common/NotesComponent.vue";
@@ -27,7 +26,6 @@ const props = defineProps({
 });
 const userStore = useUserStore();
 const recordStore = useRecordStore();
-const entityStore = useEntityStore();
 const settings = userStore.getSettings;
 
 const record = ref({});
@@ -49,13 +47,13 @@ async function handlerUpdate() {
   changeMode();
 }
 
-async function deleteRecord() {
+async function deleteEntity() {
   try {
-    await api.delete(`${route}/${record.value.id}`);
-    recordStore.removeRecord(record.value.id);
+    await api.delete(`${route}/${entity.value.id}`);
+    entityStore.removeEntity(entity.value.id);
     closeModal();
   } catch {
-    alert(`Falha na tentativa de deletar ${setting.record_title}!`);
+    alert(`Falha na tentativa de deletar ${setting.entity_title}!`);
   }
 }
 async function submitForm() {
