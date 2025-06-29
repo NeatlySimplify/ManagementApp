@@ -31,10 +31,6 @@ class TestEntityEndpoints:
                 days=fake.random_int(min=7000, max=25000))
             ).isoformat(),
             "status": fake.boolean(),
-            "notes":{
-                "Occupation": fake.job(),
-                "Notes": fake.paragraph()
-            }
         }
 
         create_response = await client.post(
@@ -74,8 +70,6 @@ class TestEntityEndpoints:
         assert get_data["sex"] == entity_data["sex"]
         assert get_data["relationship_status"] == entity_data["relationship_status"]
         assert get_data["status"] == entity_data["status"]
-        # Verify all details match
-        assert len(get_data["notes"]) == len(entity_data["notes"])
 
         # Update entity
         update_data = {
@@ -91,10 +85,6 @@ class TestEntityEndpoints:
                 days=fake.random_int(min=5000, max=20000))
             ).isoformat(),
             "status": not entity_data["status"],
-            "notes": {
-                "Industry": fake.word(),
-                "Updated Notes": fake.paragraph()
-            }
         }
         update_response = await client.put(
             "/api/entity/",
@@ -230,12 +220,8 @@ class TestEntityEndpoints:
             "entity": entity_id,
             "type_tag": str(fake.random_element(["Mobile", "Work", "Home"])),
             "number": fake.phone_number(),
-            "extra_email": fake.email(),
             "name": fake.name(),
-            "notes": {
-                "Preferred": str(fake.boolean()),
-                "Notes": fake.sentence()
-            }
+            "complement": fake.paragraph()
         }
 
         create_response = await client.post(
@@ -363,7 +349,6 @@ class TestEntityEndpoints:
         contact_data = {
             "entity": random_id,
             "number": fake.phone_number(),
-            "extra_email": fake.email()
         }
 
         contact_response = await client.post("/api/entity/contact", json=contact_data)
@@ -539,7 +524,6 @@ class TestEntityEndpoints:
             "number": fake.phone_number(),
             "email": fake.email(),
             "name": fake.name(),
-            "notes": {"Notes": "Test contact"}
         }
 
         response = await client.post(
@@ -566,10 +550,6 @@ class TestEntityEndpoints:
             "relationship_status": "Single",
             "birth": (today - datetime.timedelta(days=10000)).isoformat(),
             "status": True,
-            "notes":{
-                "Occupation": "Software Engineer",
-                "Notes": "Special chars: áéíóú ñ üç @#$%"
-            }
         }
 
         create_response = await client.post(

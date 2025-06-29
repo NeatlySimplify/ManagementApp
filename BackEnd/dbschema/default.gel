@@ -81,6 +81,8 @@ module default {
 
         access policy user_access allow select, update using (__subject__ ?= global current_user_obj);
         access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
+        # admin access policy only on Production
+        # access policy allow_insert allow insert using(true)
     }
 
     type Project {
@@ -152,6 +154,8 @@ module default {
 
         access policy user_access allow select, update, delete using (__subject__ ?= global current_user_obj);
         access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
+        # admin access policy only on Production
+        # access policy allow_insert allow insert using(true)
     }
 
     type UserSettings {

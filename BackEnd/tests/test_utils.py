@@ -257,9 +257,6 @@ async def test_entity(client, authenticated_user):
             )
         ).isoformat(),
         "status": fake.boolean(),
-        "notes": {
-            "Ocupation":fake.job(),
-        }
     }
     entity_id_to_yield = str(uuid.uuid4())
     created_entity_id = None

@@ -40,6 +40,7 @@ const userStore = useUserStore();
 const recordStore = useRecordStore();
 const entityStore = useEntityStore();
 const settings = userStore.getSettings;
+const placeholder = userStore.getPlaceholder;
 
 const entity = entityStore.getAllEntities;
 const entity_custom = entity.map((item) => ({ id: item.id, name: item.name }));
@@ -82,7 +83,9 @@ function closeModalfunc() {
   closeModal.value = !closeModal.value;
 }
 
-function createEntity
+function createEntity(id) {
+  placeholder = id;
+}
 
 function getEntity(id) {
   router.push({
@@ -93,14 +96,17 @@ function getEntity(id) {
     },
   });
 }
-function deleteEntity(id){}
+function deleteEntity(id) {}
 
-function getSchedule(id){}
+function getSchedule(id) {}
 
-function deleteSchedule(){}
+function deleteSchedule() {}
 
-function getMovement(){}
+function createMovement(id) {
+  placeholder = id;
+}
 
+function getMovement() {}
 
 async function deleteRecord() {
   try {

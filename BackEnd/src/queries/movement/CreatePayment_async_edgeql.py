@@ -57,7 +57,7 @@ async def CreatePayment(
         }),
         insert Payment {
             name:= <str>$name,
-            value:=to_decimal(<str>$value, 'FM999999999999.99'),
+            value:=to_decimal(<str>$value, 'FM999999999999D99'),
             interest:= <optional str>$interest,
             penalty:= <optional str>$penalty,
             ignore_in_totals:= <optional bool>$ignore_in_totals,

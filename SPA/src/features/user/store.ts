@@ -26,6 +26,7 @@ export const useUserStore = defineStore("user", {
     getSettings: (state) => state.setting,
     getAllAccounts: (state) => Object.values(state.bank_account),
     getBalance: (state) => state.total_balance,
+    getPlaceholder: (state) => state.placeholder,
   },
 
   actions: {

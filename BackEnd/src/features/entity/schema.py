@@ -65,4 +65,4 @@ class ContactCreate(BaseModel):
     entity: UUID
     number: str
     type_tag: str
-    notes: str | None = None
+    complement: str | None = None
