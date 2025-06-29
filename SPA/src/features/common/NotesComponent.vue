@@ -1,10 +1,9 @@
 <script setup>
-import { ref, defineProps } from "vue";
+import { ref, defineProps, defineModel } from "vue";
 
-const props = defineProps({
-  isReadOnly,
-  notes,
-});
+defineProps({ isReadOnly });
+
+const notes = defineModel("notes");
 
 const notesPlaceholder = ref({});
 const editNoteFlag = ref(false);
@@ -44,15 +43,10 @@ function takeNote(text, key) {
 <template>
   <div class="border rounded">
     <h5>Notas:</h5>
-    <div v-if="props.isReadOnly">
+    <div v-if="isReadOnly">
       <div class="input-group mb-3">
         <span class="input-group-text">Título</span>
-        <input
-          type="text"
-          class="form-control"
-          v-model="notesPlaceholder.value.key"
-          maxlength="40"
-        />
+        <input type="text" class="form-control" v-model="notesPlaceholder.key" maxlength="40" />
       </div>
       <div class="input-group">
         <span class="input-group-text">Nota:</span>

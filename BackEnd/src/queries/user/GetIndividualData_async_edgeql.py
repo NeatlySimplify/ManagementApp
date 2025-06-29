@@ -48,6 +48,7 @@ class GetIndividualDataResultAccountItem(NoPydanticValidation):
     bank_name: str
     account_name: str
     balance_str: str | None
+    ignore_on_totals: bool | None
 
 
 @dataclasses.dataclass
@@ -243,6 +244,7 @@ async def GetIndividualData(
                 bank_name,
                 account_name,
                 balance_str:=to_str(.balance),
+                ignore_on_totals,
             }
         }\
         """,

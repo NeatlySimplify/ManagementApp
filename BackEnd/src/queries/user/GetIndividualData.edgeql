@@ -85,5 +85,6 @@ select converted{
         bank_name,
         account_name,
         balance_str:=to_str(.balance),
+        ignore_on_totals,
     }
 }

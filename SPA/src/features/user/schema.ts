@@ -4,7 +4,8 @@ export const BankAccountSchema = z.object({
   id: z.uuid(),
   bank_name: z.string(),
   account_name: z.string(),
-  balance: z.coerce.bigint(),
+  balance_str: z.coerce.bigint(),
+  ignore_on_totals: z.boolean(),
 });
 export type BankAccount = z.infer<typeof BankAccountSchema>;
 
@@ -32,7 +33,6 @@ export type Settings = z.infer<typeof SettingsSchema>;
 export const UserSchema = z.object({
   name: z.string(),
   email: z.string(),
-  auth: z.boolean().default(false), // For testing Purposes
-  //auth: z.boolean()
+  auth: z.boolean().default(false),
 });
 export type User = z.infer<typeof UserSchema>;

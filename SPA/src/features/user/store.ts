@@ -14,6 +14,7 @@ export const useUserStore = defineStore("user", {
     bank_account: {} as Record<string, BankAccount>,
     total_balance: {} as string,
     setting: {} as Settings,
+    placeholder: {} as string,
   }),
   persist: {
     storage: sessionStorage,
@@ -23,7 +24,7 @@ export const useUserStore = defineStore("user", {
     getUser: (state) => state.user,
     getAccount: (state) => (id: string) => state.bank_account[id],
     getSettings: (state) => state.setting,
-    getAllAccounts: (state) => state.bank_account,
+    getAllAccounts: (state) => Object.values(state.bank_account),
     getBalance: (state) => state.total_balance,
   },
 

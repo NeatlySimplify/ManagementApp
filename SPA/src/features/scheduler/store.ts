@@ -1,37 +1,45 @@
 import { defineStore } from "pinia";
-
-interface PartialScheduler {
-  id: string;
-  type_entry: string;
-  name: string;
-  status: boolean;
-  date: string;
-}
+import { SchedulerSchema, type Scheduler } from "./schema";
 
 export const useSchedulerStore = defineStore("scheduler", {
   state: () => ({
-    entries: {} as Record<string, PartialScheduler>,
+    entries: {} as Record<string, Scheduler>,
   }),
 
   getters: {
     getEvent: (state) => (id: string) => state.entries[id],
-    getAllEvents: (state) => state.entries,
+    getAllEvents: (state) => Object.values(state.entries),
+    getEventsByStatus:
+      (state) =>
+      (status: boolean): Scheduler[] =>
+        Object.values(state.entries).filter((entity) => entity.status === status),
+
+    getEventsByType:
+      (state) =>
+      (type_tag: string): Scheduler[] =>
+        Object.values(state.entries).filter((entity) => entity.type_tag === type_tag),
   },
 
   actions: {
-    add(entry: PartialScheduler) {
-      this.entries[entry.id] = entry;
+    add(entry: unknown) {
+      const temp = SchedulerSchema.parse(entry);
+      this.entries[temp.id] = temp;
     },
 
     remove(entry: string) {
       delete this.entries[entry];
     },
 
-    set(entry: PartialScheduler[]) {
-      this.entries = Object.fromEntries(entry.map((e) => [e.id, e]));
+    set(raw: unknown[]) {
+      this.entries = raw.reduce((acc: Record<string, Scheduler>, rawAcc: unknown) => {
+        const record = SchedulerSchema.parse(rawAcc);
+        acc[record.id] = record;
+        return acc;
+      }, {});
     },
-    update(entry: PartialScheduler) {
-      this.entries[entry.id] = entry;
+    update(raw: unknown) {
+      const temp = SchedulerSchema.parse(raw);
+      this.entries[temp.id] = temp;
     },
   },
 });

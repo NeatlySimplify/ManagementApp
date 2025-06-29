@@ -49,6 +49,26 @@ const router = createRouter({
       prop: true,
     },
     {
+      path: "/entity/:id",
+      name: "entity",
+      component: () => import("@/views/EntityView.vue"),
+      meta: { requiresAuth: true },
+      props: (route) => ({
+        id: route.params.id ?? null,
+        back: route.query.back ?? null,
+      }),
+    },
+    {
+      path: "/entity/filter/",
+      name: "entity",
+      component: () => import("@/views/EntityView.vue"),
+      meta: { requiresAuth: true },
+      props: (route) => ({
+        filter: route.query.filter ?? null,
+        term: route.query.term ?? null,
+      }),
+    },
+    {
       path: "/record/:id",
       name: "record",
       component: () => import("@/views/RecordView.vue"),

@@ -8,7 +8,16 @@ export const useRecordStore = defineStore("record", {
 
   getters: {
     getRecord: (state) => (id: string) => state.entries[id],
-    getAllRecords: (state) => state.entries,
+    getAllRecords: (state) => Object.values(state.entries),
+    getRecordsByStatus:
+      (state) =>
+      (status: boolean): RecordType[] =>
+        Object.values(state.entries).filter((entity) => entity.status === status),
+
+    getRecordsByType:
+      (state) =>
+      (type_tag: string): RecordType[] =>
+        Object.values(state.entries).filter((entity) => entity.type_tag === type_tag),
   },
 
   actions: {

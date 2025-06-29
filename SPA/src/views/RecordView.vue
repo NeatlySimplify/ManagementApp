@@ -9,11 +9,23 @@ import BareModal from "@/features/common/BareModal.vue";
 
 const recordStore = useRecordStore();
 const userStore = useUserStore();
+
 const settings = userStore.getSettings;
 const records = computed(() => recordStore.getAllRecords);
 
 onMounted(() => {
-  loadRecords();
+  loadEntities();
+  if (props.id !== null) {
+    viewEntity(props.id);
+  }
+});
+
+const props = defineProps({
+  id: {
+    type: [String, null],
+    required: false,
+    default: null,
+  },
 });
 
 const rows = ref(null);
@@ -98,6 +110,6 @@ async function deleteRecord(id) {
     </vue3-datatable>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
-    <Form :entity="record_id" :mode="mode"></Form>
+    <Form :id="record_id" :mode="mode"></Form>
   </BareModal>
 </template>

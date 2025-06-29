@@ -37,7 +37,6 @@
     "eslint": "^9.22.0",
     "eslint-plugin-vue": "~10.0.0",
     "jiti": "^2.4.2",
-    "json-server": "^1.0.0-beta.3",
     "npm-run-all2": "^7.0.2",
     "npm-watch": "^0.13.0",
     "typescript": "~5.8.0",

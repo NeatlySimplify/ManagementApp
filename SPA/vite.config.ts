@@ -15,6 +15,9 @@ export default defineConfig({
       "@entity": fileURLToPath(new URL("./src/features/entity", import.meta.url)),
       "@record": fileURLToPath(new URL("./src/features/entity", import.meta.url)),
       "@util": fileURLToPath(new URL("./src/util", import.meta.url)),
+      "@common": fileURLToPath(new URL("./src/common", import.meta.url)),
+      "@movement": fileURLToPath(new URL("./src/movement", import.meta.url)),
+      "@schedule": fileURLToPath(new URL("./src/schedule", import.meta.url)),
     },
   },
   build: {

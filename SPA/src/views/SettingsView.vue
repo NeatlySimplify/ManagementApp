@@ -1,56 +1,102 @@
 <script setup>
-import api from "@util/api";
+import { ref, defineProps, onMounted } from "vue";
 import { useUserStore } from "@user/store";
-import { useEntityStore } from "@entity/store";
-import { defineProps, defineEmits } from "vue";
-import AddressComponent from "@entity/AddressComponent.vue";
-import ContactComponent from "@entity/ContactComponent.vue";
-import NotesComponent from "@/features/common/NotesComponent.vue";
+import ListInputComponent form "@user/ListInputComponent.vue"
 
-BeforeMounted(async () => {
-  if (props.mode === "show" && props.id !== null) {
-    try {
-      request = await api.get(`${route}/${props.id}`);
-      entity.value = request.result;
-      changeMode();
-    } catch {
-      alert("Erro ao buscar os dados nos nossos serivdores.");
+const props = defineProps({
+  first_access: {
+    type: [Boolean, null],
+    required: false,
+    default: null,
+  },
+});
+
+
+onMounted(() => {
+  if (props.first_access !== null) {
+    if (props.first_access === false){
+      showLists.value = true
     }
+    if
   }
 });
 
-const route = "/entity";
-
-const emit = defineEmits(["close"]);
-function close() {
-  emit("close");
-}
-
-const props = defineProps({
-  id: {
-    type: [String, null],
-    required: false,
-  },
-  mode: {
-    type: String,
-    default: "show",
-  },
-});
-
+const showLists = ref(false)
 const userStore = useUserStore();
-const entityStore = useEntityStore();
 const settings = userStore.getSettings;
 
-const entity = ref({});
+const bank_accounts
+</script>
+<template>
+  <form @>
+  <div class="container">
+    <p class="fs-3">Personalização</p>
+    <div class="border rounded row my-3">
+      <p class="fs-4">Movement:</p>
+      <p class="fs-5">
+        Esta palavra "Movement" representa uma movimentação financeira genérica, você pode mudar o
+        nome para "Entrada", "Conta", ou qualquer outra coisa que faça sentido para seu uso diário.
+      </p>
+      <input class="form-control" v-model="custom.movement_title" type="text" />
+    </div>
+
+    <div class="border rounded row my-3">
+      <p class="fs-4">Record:</p>
+      <p class="fs-5">
+        Esta palavra "Record" representa uma "Ação" ou "Registro" ou "Serviço", você pode mudar o
+        nome para qualquer outra coisa que faça sentido para seu uso diário.
+      </p>
+      <input class="form-control" v-model="custom.record_title" type="text" />
+    </div>
+
+    <div class="border rounded row my-3">
+      <p class="fs-4">Entity:</p>
+      <p class="fs-5">
+        Esta palavra "Entity" representa uma "Entidade" genérica, podendo ser um "Cliente",
+        "Organização", "Sócio" você pode mudar o nome para qualquer outra coisa que faça sentido
+        para seu uso diário.
+      </p>
+      <input class="form-control" v-model="custom.entity_title" type="text" />
+    </div>
+    <div v-if="showLists" class="border rounded row my-3">
+      <ListImputComponent v-model:tags="settings.account_types" :title='Conta Bancaria'></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.entity_types" :title="`Tipos de ${settings.entity_title}`"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.entity_document_types" :title="`Tipos de Documentos de ${settings.entity_title}`"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.contact_number_types" :title="Tipos de " ></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.record_types"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.record_status"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.movement_income_types"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.movement_expense_types"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.scheduler_types"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.relationship_status"></ListImputComponent>
+      <ListImputComponent v-model:tags="settings.sex"></ListImputComponent>
+    </div>
+  </div>
+  <button type="submit" >
+  <form>
+    <div class="my-5">
+      <p class="fs-4">Conta Bancária:</p>
+    </div>
+  </form>
+</template>
+<script setup>
+import api from "@util/api";
+import { useUserStore } from "@user/store";
+import { useRecordStore } from "@record/store";
+import { defineProps } from "vue";
+
+const userStore = useUserStore();
+const recordStore = useRecordStore();
+const settings = userStore.getSettings;
+
+const record = ref({});
 
 const isReadOnly = ref(true);
 
 const setting = {
-  title: settings.entity_title,
-  types: settings.entity_types.sort(),
-  documents: settings.entity_document_types.sort(),
-  relationship: settings.relationship_status.sort(),
-  sex: settings.sex.sort(),
+  title: settings.record_title,
+  types: settings.record_types.sort(),
+  documents: settings.record_status.sort(),
 };
 
 function changeMode() {
@@ -62,23 +108,22 @@ async function handlerUpdate() {
   changeMode();
 }
 
-async function deleteEntity(entity_id_given = null) {
+async function deleteEntity() {
   try {
-    if (entity_id_given === null) {
-    }
     await api.delete(`${route}/${entity.value.id}`);
     entityStore.removeEntity(entity.value.id);
-    close();
+    closeModal();
   } catch {
     alert(`Falha na tentativa de deletar ${setting.entity_title}!`);
   }
 }
 async function submitForm() {
   if (props.mode === "create") {
-    entity.value.notes = notes.value;
+    zeroingVars();
+    entity_data.value.notes = notes.value;
     try {
-      const request = await api.post("/entity", entity.value);
-      const result = request.result.id;
+      request = await api.post("/entity", entity.value);
+      result = request.result.id;
       data = {
         id: result,
         name: entity.value.name,
@@ -88,16 +133,16 @@ async function submitForm() {
         document_type: entity.value.document_type,
         status: entity.value.status,
       };
-      entityStore.addEntity(data);
+      entityStore.addEntity(cleanEntity(data));
     } catch {
       alert(`Falha na tentativa de criar ${setting.entity_title}!`);
     }
   } else {
     entity.value.id = props.id;
     try {
-      const request = await api.put(route, entity.value);
+      request = await api.put(route, entity.value);
       entity.value.id = request.result.id;
-      entityStore.updateEntity(entity.value);
+      entityStore.updateEntity(cleanEntity(entity.value));
     } catch {
       alert("Falha na tentativa de atualizar!");
     }
@@ -108,18 +153,33 @@ async function submitForm() {
 <template>
   <div class="modal-header">
     <h5 class="modal-title">{{ entity.name }}</h5>
-    <button type="button" class="btn-close" @click="close">Sair</button>
+    <button type="button" class="btn-close" @click="$emit('close')">Sair</button>
   </div>
   <div class="modal-body">
     <div>
       <form @submit.prevent>
+        <div class="tag-input-container" @click="focusInput">
+          <span v-for="(tag, index) in tags" :key="index" class="tag">
+            {{ tag }}
+            <button class="remove-btn" @click.stop="removeTag(index)">×</button>
+          </span>
+          <input
+            ref="input"
+            v-model="inputValue"
+            @keydown.enter.prevent="addTag"
+            @keydown=","
+            @blur="addTag"
+            placeholder="Enter email and press Enter"
+          />
+        </div>
+
         <div class="mb-3 row">
           <label for="email" class="col-sm-2 col-form-label">Email</label>
           <div class="col-sm-10">
             <input
               type="text"
               :readonly="isReadOnly"
-              v-model="entity.email"
+              v-model="entity.value.email"
               class="form-control-plaintext"
               id="email"
             />
@@ -193,7 +253,11 @@ async function submitForm() {
           <div class="col-sm-10">
             <select v-if="!isReadOnly" v-model="entity.relationship_status">
               <option selected></option>
-              <option v-for="(option, index) in setting.relationship" :key="index" :value="option">
+              <option
+                v-for="(option, index) in setting.relationship_status"
+                :key="index"
+                :value="option"
+              >
                 {{ option }}
               </option>
             </select>
@@ -222,7 +286,7 @@ async function submitForm() {
         </div>
         <AddressComponent :entity="entity" :isReadOnly="isReadOnly" />
         <ContactComponent :entity="entity" :isReadOnly="isReadOnly" />
-        <NotesComponent v-model:notes="entity.notes" :isReadOnly="isReadOnly" />
+        <NotesComponent :notes="entity.notes" :isReadOnly="isReadOnly" />
 
         <button type="button" v-if="isReadOnly" @click="changeMode()" class="btn btn-secondary">
           Editar
@@ -235,6 +299,6 @@ async function submitForm() {
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-primary" @click="close">Sair</button>
+    <button type="button" class="btn btn-primary" @click="$emit('close')">Sair</button>
   </div>
 </template>

@@ -1,16 +1,18 @@
 <script setup>
 import { ref, onMounted, computed, defineProps } from "vue";
-import Vue3Datatable from "@bhplugin/vue3-datatable";
-import "@bhplugin/vue3-datatable/dist/style.css";
 import { useEntityStore } from "@entity/store";
+import { useRouter } from "vue-router";
 import { useUserStore } from "@user/store";
 import Form from "@entity/FormComponent.vue";
-import BareModal from "@/features/common/BareModal.vue";
+import BareModal from "@common/BareModal.vue";
+import TableComponent from "@common/TableComponent.vue";
 
+const router = useRouter();
 const entityStore = useEntityStore();
 const userStore = useUserStore();
 const settings = userStore.getSettings;
 const entities = computed(() => entityStore.getAllEntities);
+const route = ref("/entity");
 
 onMounted(() => {
   loadEntities();
@@ -25,14 +27,29 @@ const props = defineProps({
     required: false,
     default: null,
   },
+  back: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  filter: {
+    type: [String, null],
+    required: false,
+    default: null,
+  },
+  term: {
+    type: [Boolean, String, null],
+    required: false,
+    default: null,
+  },
 });
 
 const rows = ref(null);
 const isModalOpen = ref(false);
 const loading = ref(true);
 const mode = ref("");
-const entity_id = ref("");
 const name = ref("");
+const entity_id = ref("");
 
 const cols =
   ref([
@@ -57,22 +74,26 @@ function createEntity() {
 
 function loadEntities() {
   loading.value = true;
-  const entityArray = computed(() =>
-    Object.entries(entities).map(([id, entity]) => ({
-      id,
-      ...entity,
-    })),
-  );
+  let entityArray = null;
+  if (props.filter == "status") {
+    entityArray = entityStore.getEntitiesByStatus(props.term);
+  } else if (props.filter === "type_tag") {
+    entityArray = entityStore.getEntitiesByType(props.term);
+  } else {
+  }
   rows.value = entityArray.value.entity;
 
   loading.value = false;
 }
 function closeModal() {
   isModalOpen.value = false;
+  if (props.back) {
+    router.back();
+  }
 }
 async function deleteEntity(id) {
   try {
-    await api.delete(`${route}/${id}`);
+    await api.delete(`${route.value}/${id}`);
     entityStore.removeEntity(id);
   } catch {
     alert(`Falha na tentativa de deletar`);
@@ -80,35 +101,23 @@ async function deleteEntity(id) {
 }
 </script>
 <template>
-  <p>Hello from Entity</p>
   <div>
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-3xl">{{ setting.entity_title }}</h2>
+      <h2 class="text-3xl">{{ settings.entity_title }}</h2>
       <button class="btn btn-outline-secondary d-grid gap-2" @click="createEntity()">
-        <span>&#10133;</span> Adicionar nov(a) {{ settings.entity_title }}
+        <span>&#10133;</span> Adicionar novo(a) {{ settings.entity_title }}
       </button>
     </div>
-
-    <vue3-datatable
-      :rows="rows"
-      :columns="cols"
-      :loading="loading"
-      :sortable="true"
-      :columnFilter="true"
+    <TableComponent
+      v-model:rows="rows"
+      v-model:cols="cols"
+      v-model:loading="loading"
+      v-model:route="route"
+      @delete_="deleteEntity"
     >
-      <template #actions="data">
-        <div class="flex gap-4">
-          <button type="button" class="btn btn-success !py-1" @click="viewEntity(data.id)">
-            Ver Mais!
-          </button>
-          <button type="button" class="btn btn-danger !py-1" @click="deleteEntity(data.id)">
-            Excluir
-          </button>
-        </div>
-      </template>
-    </vue3-datatable>
+    </TableComponent>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
-    <Form :entity="entity_id" :mode="mode"></Form>
+    <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>
   </BareModal>
 </template>
