@@ -2,10 +2,10 @@
 import { ref, onMounted, computed } from "vue";
 import Vue3Datatable from "@bhplugin/vue3-datatable";
 import "@bhplugin/vue3-datatable/dist/style.css";
-import { useRecordStore } from "@record/store";
-import { useUserStore } from "@user/store";
-import Form from "@record/FormComponent.vue";
-import BareModal from "@/features/common/BareModal.vue";
+import { useRecordStore } from "@records/store";
+import { useUserStore } from "@/features/user/store";
+// import Form from "@record/FormComponent.vue";
+// import BareModal from "@/features/common/BareModal.vue";
 
 const recordStore = useRecordStore();
 const userStore = useUserStore();
@@ -14,9 +14,9 @@ const settings = userStore.getSettings;
 const records = computed(() => recordStore.getAllRecords);
 
 onMounted(() => {
-  loadEntities();
+  loadRecords();
   if (props.id !== null) {
-    viewEntity(props.id);
+    viewRecord(props.id);
   }
 });
 
@@ -109,7 +109,7 @@ async function deleteRecord(id) {
       </template>
     </vue3-datatable>
   </div>
-  <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
+  <!-- <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
     <Form :id="record_id" :mode="mode"></Form>
-  </BareModal>
+  </BareModal> -->
 </template>

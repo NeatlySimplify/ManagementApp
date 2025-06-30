@@ -2,10 +2,10 @@
 import { ref, onMounted, computed, defineProps } from "vue";
 import { useEntityStore } from "@entity/store";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@user/store";
-import Form from "@entity/FormComponent.vue";
-import BareModal from "@common/BareModal.vue";
-import TableComponent from "@common/TableComponent.vue";
+import { useUserStore } from "@/features/user/store";
+//import Form from "@entity/FormComponent.vue";
+//import BareModal from "@common/BareModal.vue";
+import TableComponent from "@/features/common/TableComponent.vue";
 
 const router = useRouter();
 const entityStore = useEntityStore();
@@ -80,6 +80,7 @@ function loadEntities() {
   } else if (props.filter === "type_tag") {
     entityArray = entityStore.getEntitiesByType(props.term);
   } else {
+    entityArray = entities.value;
   }
   rows.value = entityArray.value.entity;
 
@@ -117,7 +118,7 @@ async function deleteEntity(id) {
     >
     </TableComponent>
   </div>
-  <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
+  <!-- <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
     <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>
-  </BareModal>
+  </BareModal> -->
 </template>

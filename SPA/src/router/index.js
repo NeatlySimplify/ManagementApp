@@ -32,7 +32,7 @@ const router = createRouter({
     {
       path: "/first-access",
       name: "first-access",
-      component: () => import("@/views/FirstAccessView.vue"),
+      component: () => import("@/views/SettingsView.vue"),
       meta: { requiresAuth: true },
     },
     {
@@ -112,7 +112,7 @@ const router = createRouter({
     {
       path: "/scheduler/:id",
       name: "scheduler",
-      component: () => import("@/views/ScheduleView.vue"),
+      component: () => import("@/views/SchedulerView.vue"),
       meta: { requiresAuth: true },
       props: (route) => ({
         id: route.params.id ?? null,

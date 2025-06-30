@@ -74,7 +74,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content=jsonable_encoder({"detail": exc.errors()}),
     )
 
-app.mount('/assets', StaticFiles(directory='src/static/assets/', html=True), name='assets')
+app.mount('/assets', StaticFiles(directory=f'{current}/static/assets/', html=True), name='assets')
 
 
 @app.get("/{full_path:path}", response_class=HTMLResponse)
