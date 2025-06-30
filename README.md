@@ -9,19 +9,19 @@ Um app para gerenciamento de dados para pequenos empreendedores.
 ### Em breve - 01/07/2025
 #### Refatorando o frontend
 
-Para instalação local o camando de execução é...
+<p>Para instalação local o camando de execução é...</p>
 #### Geral:
-git clone https://github.com/NeatlySimplify/ManagementApp.git
-cd ManagementApp
+<p>git clone https://github.com/NeatlySimplify/ManagementApp.git </p>
+<p>cd ManagementApp </p>
 
 #### Com Pip
-python3 -m venv venv
-source venv/bin/activate   <!-- Linux/macOS -->
-.\venv\Scripts\activate     <!-- Windows -->
+<p>python3 -m venv venv</p>
+<p>source venv/bin/activate   <!-- Linux/macOS --></p>
+<p>.\venv\Scripts\activate     <!-- Windows --> </p>
 
 #### Com Poetry
-poetry install <!-- Recomendado -->
-<!-- Se não tiver instalado recomendo a instalação do Poetry usando Pipx -->
+<p>poetry install <!-- Recomendado --> </p>
+<p><!-- Se não tiver instalado recomendo a instalação do Poetry usando Pipx --> </p>
 
 ### Executar
-uvicorn src.main:app --reload
+<p>uvicorn src.main:app --reload </p>
