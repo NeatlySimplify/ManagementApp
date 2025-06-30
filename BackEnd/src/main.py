@@ -46,7 +46,7 @@ app.include_router(movementRoute)
 app.include_router(entityRoute)
 app.include_router(recordRoute)
 
-current = Path(__file__).parent
+current = Path(__file__).parent.parent
 index_path = Path(current, "static", "index.html")
 _cached_index_html: str = ''
 
