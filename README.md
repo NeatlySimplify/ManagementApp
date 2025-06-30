@@ -7,10 +7,11 @@ Um app para gerenciamento de dados para pequenos empreendedores.
 - ([x]) Gerenciamento fianceiro
 
 ### Em breve - 01/07/2025
-## <span style="color: red">Refatorando o frontend</span>
+## <span>Refatorando o frontend</span>
 
 <p>Para instalação local o camando de execução é...</p>
-#### Geral:
+
+### Geral:
 <p>git clone https://github.com/NeatlySimplify/ManagementApp.git </p>
 <p>cd ManagementApp </p>
 
