@@ -1,10 +1,29 @@
 import { defineStore } from "pinia";
-import { SchedulerSchema, type Scheduler } from "./schema";
+import api from "@/util/api";
+import z from "zod/v4";
+
+const SchedulerSchema = z.object({
+  id: z.uuid(),
+  type_tag: z.string(),
+  name: z.string(),
+  status: z.boolean(),
+  date: z.date(),
+});
+const CreateSchedulerSchema = z.object({
+  type_tag: z.string(),
+  name: z.string(),
+  status: z.boolean(),
+  date: z.date(),
+});
+type Scheduler = z.infer<typeof SchedulerSchema>;
 
 export const useSchedulerStore = defineStore("scheduler", {
   state: () => ({
     entries: {} as Record<string, Scheduler>,
   }),
+  persist: {
+    storage: sessionStorage,
+  },
 
   getters: {
     getEvent: (state) => (id: string) => state.entries[id],
@@ -21,15 +40,6 @@ export const useSchedulerStore = defineStore("scheduler", {
   },
 
   actions: {
-    add(entry: unknown) {
-      const temp = SchedulerSchema.parse(entry);
-      this.entries[temp.id] = temp;
-    },
-
-    remove(entry: string) {
-      delete this.entries[entry];
-    },
-
     set(raw: unknown[]) {
       this.entries = raw.reduce((acc: Record<string, Scheduler>, rawAcc: unknown) => {
         const record = SchedulerSchema.parse(rawAcc);
@@ -37,9 +47,73 @@ export const useSchedulerStore = defineStore("scheduler", {
         return acc;
       }, {});
     },
-    update(raw: unknown) {
-      const temp = SchedulerSchema.parse(raw);
-      this.entries[temp.id] = temp;
+    async getScheduler(id: string): Promise<string | null> {
+      try {
+        const response = await api.get(`/api/scheduler/${id}`);
+        const { status, result } = response.data;
+        if (status !== "success") {
+          console.error("Server rejected creation:", result);
+          return null;
+        }
+        return result;
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        return null;
+      }
+    },
+
+    async updateScheduler(raw: unknown): Promise<null> {
+      try {
+        const response = await api.put("/api/scheduler", raw);
+        const { status, result } = response.data;
+        if (status !== "success") {
+          console.error("Server rejected creation:", result);
+          return null;
+        }
+        const partial = SchedulerSchema.parse(raw);
+        this.entries[partial.id] = partial;
+        return null;
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        return null;
+      }
+    },
+
+    async createRecord(raw: unknown): Promise<null> {
+      try {
+        const response = await api.post("/api/scheduler", raw);
+        const { status, result } = response.data;
+        if (status !== "success") {
+          console.error("Server rejected creation:", result);
+          return null;
+        }
+        const parsed = CreateSchedulerSchema.parse(raw);
+        // We already have raw + now the id → build the full & safe partial
+        const full = { ...parsed, id: result.id };
+        const partial = SchedulerSchema.parse(full);
+        this.entries[partial.id] = partial;
+        return null;
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        return null;
+      }
+    },
+
+    async removeScheduler(id: string): Promise<null> {
+      try {
+        const response = await api.delete(`/api/scheduler/${id}`);
+        const { status, result } = response.data;
+        if (status !== "success") {
+          console.error("Server rejected creation:", result);
+          return null;
+        }
+        // We already have raw + now the id → build the full & safe partial
+        delete this.entries[id];
+        return null;
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        return null;
+      }
     },
   },
 });

@@ -17,18 +17,18 @@ const router = createRouter({
       component: RootView,
       meta: { guestOnly: true },
     },
-    {
-      path: "/mfa",
-      name: "mfa",
-      component: RootView,
-      meta: { guestOnly: true },
-    },
-    {
-      path: "/forgot_password",
-      name: "forgot_password",
-      component: RootView,
-      meta: { guestOnly: true },
-    },
+    // {
+    //   path: "/mfa",
+    //   name: "mfa",
+    //   component: RootView,
+    //   meta: { guestOnly: true },
+    // },
+    // {
+    //   path: "/forgot_password",
+    //   name: "forgot_password",
+    //   component: RootView,
+    //   meta: { guestOnly: true },
+    // },
     {
       path: "/first-access",
       name: "first-access",
@@ -89,6 +89,7 @@ const router = createRouter({
       props: (route) => ({
         id: route.params.id ?? null,
         back: route.query.back ?? null,
+        record: route.query.record ?? null,
       }),
     },
     {
@@ -117,6 +118,7 @@ const router = createRouter({
       props: (route) => ({
         id: route.params.id ?? null,
         back: route.query.back ?? null,
+        record: route.query.record ?? null,
       }),
     },
     {

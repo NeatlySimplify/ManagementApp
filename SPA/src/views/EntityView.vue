@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, defineProps } from "vue";
-import { useEntityStore } from "@entity/store";
+import { useEntityStore } from "@/features/entity/store";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/features/user/store";
-//import Form from "@entity/FormComponent.vue";
-//import BareModal from "@common/BareModal.vue";
+import { useUserStore } from "@/features/features/user/store";
+import Form from "@/features/entity/FormComponent.vue";
+import BareModal from "@/features/common/BareModal.vue";
 import TableComponent from "@/features/common/TableComponent.vue";
 
 const router = useRouter();
@@ -118,7 +118,7 @@ async function deleteEntity(id) {
     >
     </TableComponent>
   </div>
-  <!-- <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
+  <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
     <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>
-  </BareModal> -->
+  </BareModal>
 </template>

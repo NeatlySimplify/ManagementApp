@@ -51,7 +51,6 @@ lint.select = [
     "UP", # pyupgrade (modern syntax)
     "A",  # flake8-builtins
     "ASYNC",  # async-specific checks
-    "ERA",  # flake8-eradicate (commented out code)
     "PIE",  # flake8-pie (prevent silent bugs, e.g. wrong default args)
     "RET",  # flake8-return
     "SIM",  # flake8-simplify

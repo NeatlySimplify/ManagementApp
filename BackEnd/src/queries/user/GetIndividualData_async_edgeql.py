@@ -35,8 +35,7 @@ class GetIndividualDataResult(NoPydanticValidation):
     settings: GetIndividualDataResultSettings | None
     movement: list[GetIndividualDataResultMovementItem]
     entity: list[GetIndividualDataResultEntityItem]
-    payment_income: list[GetIndividualDataResultPaymentIncomeItem]
-    payment_expense: list[GetIndividualDataResultPaymentIncomeItem]
+    payment: list[GetIndividualDataResultPaymentItem]
     record: list[GetIndividualDataResultRecordItem]
     event: list[GetIndividualDataResultEventItem]
     account: list[GetIndividualDataResultAccountItem]
@@ -103,18 +102,18 @@ class GetIndividualDataResultMovementItemPaymentItem(NoPydanticValidation):
 
 
 @dataclasses.dataclass
-class GetIndividualDataResultPaymentIncomeItem(NoPydanticValidation):
+class GetIndividualDataResultPaymentItem(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
     type_tag: str
     value_str: str | None
     payment_date: datetime.date | None
     status: bool | None
-    movement: GetIndividualDataResultPaymentIncomeItemMovement
+    movement: GetIndividualDataResultPaymentItemMovement
 
 
 @dataclasses.dataclass
-class GetIndividualDataResultPaymentIncomeItemMovement(NoPydanticValidation):
+class GetIndividualDataResultPaymentItemMovement(NoPydanticValidation):
     id: uuid.UUID
 
 
@@ -206,16 +205,7 @@ async def GetIndividualData(
                 },
                 phone: {number}
             },
-            payment_income:{
-                id,
-                name,
-                type_tag,
-                value_str:=to_str(.value),
-                payment_date,
-                status,
-                movement:{id}
-            },
-            payment_expense:{
+            payment:{
                 id,
                 name,
                 type_tag,

@@ -39,8 +39,7 @@ module default {
 
 
         # Computed Properties:
-        payment_income:=(select __source__.movement.payment filter .type_tag = "income" order by .payment_date desc);
-        payment_expense:=(select __source__.movement.payment filter .type_tag = "expense" order by .payment_date desc);
+        payment:=(select __source__.movement.payment order by .payment_date desc);
 
         trigger log_update after update for each when (
             __old__.password != __new__.password
@@ -70,7 +69,8 @@ module default {
         overloaded is_admin:bool{
             default:= <bool>true;
         };
-        access policy admin_only allow all using (__subject__ ?= global current_user_obj)
+        access policy admin_only allow all using (select global current_user_obj.is_admin ?? false);
+        access policy bootstrap_admin allow insert using (count(detached User filter .is_admin) = 0);
     };
 
     type Account extending User{

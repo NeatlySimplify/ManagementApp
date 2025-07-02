@@ -47,16 +47,7 @@ select converted{
         },
         phone: {number}
     },
-    payment_income:{
-        id,
-        name,
-        type_tag,
-        value_str:=to_str(.value),
-        payment_date,
-        status,
-        movement:{id}
-    },
-    payment_expense:{
+    payment:{
         id,
         name,
         type_tag,

@@ -1,15 +1,12 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
-import api from "@util/api";
-import { useUserStore } from "@user/store";
-import { useEntityStore } from "@entity/store";
-//import { useMovementStore } from "@/stores/movement";
-//import { useRecordStore } from "@/stores/record";
-//import { useSchedulerStore } from "@/stores/scheduler";
-//
-//
-//For testing
+import api from "@/util/api";
+import { useUserStore } from "@/features/user/store";
+import { useEntityStore } from "@/features/entity/store";
+import { useMovementStore } from "@/features/movement/store";
+import { useRecordStore } from "@/features/record/store";
+import { useSchedulerStore } from "@/features/scheduler/store";
 
 const router = useRouter();
 const data = ref({
@@ -21,18 +18,16 @@ const user = useUserStore();
 
 const onSubmit = async () => {
   try {
-    //const request = await api.post(`${route}/login`, data.value);
-    // const first_access = request.result.first_access;
-    // if (first_access === false) {
-    //   router.push("first-access");
-    // }
-    const request = await api.get("/user", {
+    const request = await api.get("/api/auth/login", {
       params: {
         email: data.value.email,
         password: data.value.password,
       },
     });
-    const dataRequest = request.data[0];
+    if (status !== "success"){
+      result = 
+    }
+    const dataRequest = request.data;
 
     if (dataRequest.first_access === true) {
       user.setUser(dataRequest, true);
@@ -42,18 +37,18 @@ const onSubmit = async () => {
       try {
         const request = await api.get("/db");
 
-        //schedule = useSchedulerStore();
+        schedule = useSchedulerStore();
         const entity = useEntityStore();
-        //record = useRecordStore();
-        //movement = useMovementStore();
+        record = useRecordStore();
+        movement = useMovementStore();
 
         result = request.result;
         entity.set(result.entity);
-        //schedule.set(result.event);
-        //record.set(result.record);
-        //movement.setMovement(result.movement);
-        //movement.setIncome(result.payment_income);
-        //movement.setExpense(result.payment_expense);
+        schedule.set(result.event);
+        record.set(result.record);
+        movement.setMovement(result.movement);
+        movement.setIncome(result.payment_income);
+        movement.setExpense(result.payment_expense);
         user.setAccounts(result.account);
         userData = result.user[1];
         userData.settings = result.settings[1];

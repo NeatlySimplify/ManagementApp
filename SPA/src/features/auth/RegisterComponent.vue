@@ -32,24 +32,21 @@ const onSubmit = async () => {
     alert("Passwords do not match.");
     return;
   }
-  console.log("Raw form value:", form.value);
   const formData = {
     name: form.value.name,
     tag_type: form.value.tag_type,
     email: form.value.email,
     document: form.value.identification,
     password: form.value.password,
-    first_access: true,
   };
-  console.log("Form data before request:", JSON.stringify(formData, null, 2));
   try {
-    //const response = await api.post("api/auth/register", formData);
     isLoading.value = true;
-    await api.post("/user", formData); // For testing using JSON-Server
-    console.log("Success");
-    isLoading.value = false;
-    alert(`Usuário ${form.value.name} registrado com sucesso!`);
-    router.push("root");
+    const response = await api.post("api/auth/register", formData);
+    if (response.status === "success") {
+      alert(`Usuário ${form.value.name} registrado com sucesso!`);
+      isLoading.value = false;
+      router.push("root");
+    }
   } catch (err) {
     console.error("Error on request:", err);
   }

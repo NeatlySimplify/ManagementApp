@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from src.dependencies.auth import create_token, decode_token, extract_token, get_current_user
 from src.dependencies.db import get_gel_client
-from src.features.auth.crud import createUser, getToken, loginUser, loginWithToken
+from src.features.auth.crud import createUser, loginUser
 from src.features.auth.schema import Email, Login, LoginOnToken, Register
 
 authRoute = APIRouter(
@@ -62,50 +62,50 @@ async def register(
     }
 
 
-@authRoute.post("/forgot_password", response_class=JSONResponse)
-async def forgot_password(
-    request: Request,
-    data: Email,
-    db=Depends(get_gel_client)
-):
-    result = await getToken(db, data.email)
-    if result is None:
-        raise HTTPException(
-            status_code=401,
-            detail=f"There is no user {data.email} registered"
-        )
-    return {
-        "status": "success"
-    }
+# @authRoute.post("/forgot_password", response_class=JSONResponse)
+# async def forgot_password(
+#     request: Request,
+#     data: Email,
+#     db=Depends(get_gel_client)
+# ):
+#     result = await getToken(db, data.email)
+#     if result is None:
+#         raise HTTPException(
+#             status_code=401,
+#             detail=f"There is no user {data.email} registered"
+#         )
+#     return {
+#         "status": "success"
+#     }
 
 
-@authRoute.post("/login_token", response_class=JSONResponse)
-async def loginOnToken(
-    request: Request,
-    login: LoginOnToken,
-    response: Response,
-    db=Depends(get_gel_client)
-):
-    comparisson, result = await loginWithToken(db, login.email, login.token)
-    if result is None or not comparisson:
-        raise HTTPException(
-            status_code=404,
-            detail="User doesn't exist or token doesn't match."
-        )
-    a_token = create_token(result["id"], result["tag_type"], "access")
-    r_token = create_token(result["id"], result["tag_type"], "refresh")
-    user_data = {
-        "name": result["name"],
-        "email": result["email"],
-        "first_access": result["first_access"]
-    }
+# @authRoute.post("/login_token", response_class=JSONResponse)
+# async def loginOnToken(
+#     request: Request,
+#     login: LoginOnToken,
+#     response: Response,
+#     db=Depends(get_gel_client)
+# ):
+#     comparisson, result = await loginWithToken(db, login.email, login.token)
+#     if result is None or not comparisson:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="User doesn't exist or token doesn't match."
+#         )
+#     a_token = create_token(result["id"], result["tag_type"], "access")
+#     r_token = create_token(result["id"], result["tag_type"], "refresh")
+#     user_data = {
+#         "name": result["name"],
+#         "email": result["email"],
+#         "first_access": result["first_access"]
+#     }
 
-    response = JSONResponse(content={"status": "success", "response": user_data})
-    response.set_cookie("access_token", a_token)
-    response.set_cookie("refresh_token", r_token)
-    return {
-        "status": "success"
-    }
+#     response = JSONResponse(content={"status": "success", "response": user_data})
+#     response.set_cookie("access_token", a_token)
+#     response.set_cookie("refresh_token", r_token)
+#     return {
+#         "status": "success"
+#     }
 
 
 @authRoute.get("/refresh", response_class=JSONResponse)

@@ -14,9 +14,7 @@ class Settings(BaseModel):
     httponly: bool = True
     secure: bool = True
     samesite: Literal["lax", "strict", "none"] = "strict"
-    mailgun: str
     secret: str
-    session_secret: str
     algorithm: str
     jwt_expire_base: float
     admin_id: str
@@ -50,9 +48,7 @@ def instance() -> Settings:
             'use_rich_traceback': True,
             'secure': False,
             'samesite': "lax",
-            "mailgun": os.getenv('MAILGUN_API'),
             "secret": os.getenv('SECRET'),
-            "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
             "jwt_expire_base": 30,
             "admin_id": os.getenv('ADMIN_ID')
@@ -62,9 +58,7 @@ def instance() -> Settings:
             'use_rich_traceback': False,
             'secure': True,
             'samesite': "strict",
-            "mailgun": os.getenv('MAILGUN_API'),
             "secret": os.getenv('SECRET'),
-            "session_secret": os.getenv('SESSION_SECRET'),
             "algorithm": "HS256",
             "jwt_expire_base": 30,
             "admin_id": os.getenv('ADMIN_ID')

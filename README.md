@@ -6,7 +6,7 @@ Um app para gerenciamento de dados para pequenos empreendedores.
 - ([x]) Agenda
 - ([x]) Gerenciamento fianceiro
 
-### Em breve - 01/07/2025
+### Em breve - 02/07/2025 às 23:59
 ## <span>Refatorando o frontend</span>
 
 <p>Para instalação local o camando de execução é...</p>
@@ -24,5 +24,25 @@ Um app para gerenciamento de dados para pequenos empreendedores.
 <p>poetry install <!-- Recomendado --> </p>
 <p><!-- Se não tiver instalado recomendo a instalação do Poetry usando Pipx --> </p>
 
+
+### A Database Gel
+#### Instale a cli da database:
+<p>https://docs.geldata.com/learn/installation</p>
+
+#### Após instalação, na pasta BAckEnd digite:
+<p>gel project init</p>
+<p>gel</p>
+
+#### Insira a query:
+<p>insert Administrator{name:= "Seu nome de usuário", email:="Qualquer email", password:="Alguma senha"}</p>
+
+<p>Copie e cole a resposta da query no seu arquivo .env dentro de BackEnd, o nome da variável é "ADMIN_ID"</p>
+<p>No momento eu não fiz um UI para administradores como controle de usuários então este email e senha não precisão ser válidos, sómente precisão existir. O tipo administrador é uma base para fazeer outras queries.</p>
+
+#### Crie um texto aleátorio para usar na criação do JWT Token, pode ser usando openssl ou um criador de hex online:
+<p>openssl rand -hex 64</p>
+<p>Copie e cole o hex no arqivo .env com o nome "SECRET"</p>
+
 ### Executar
 <p>uvicorn src.main:app --reload </p>
+
