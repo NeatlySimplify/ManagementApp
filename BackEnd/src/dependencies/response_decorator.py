@@ -11,6 +11,6 @@ def handle_result():
             result = await func(*args, **kwargs)
             if result is None:
                 raise HTTPException(status_code=404, detail="Not existent")
-            return {'status': 'success', 'result': jsonable_encoder(result)}
+            return {jsonable_encoder(result)}
         return wrapper
     return decorator

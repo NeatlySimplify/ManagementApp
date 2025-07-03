@@ -75,6 +75,35 @@ export const useMovementStore = defineStore("movement", {
           .map((id) => state.movement[id])
           .filter((m): m is Movement => !!m);
       },
+    getExpectedCashFlow: (state) => (referenceDate: Date) => {
+      const start = new Date(referenceDate);
+      start.setDate(1);
+      const end = new Date(referenceDate);
+      end.setMonth(end.getMonth() + 1);
+      end.setDate(0); // last day of the month
+
+      const relevantPayments = Object.values(state.payment).filter((pay) => {
+        return pay.status === false && pay.payment_date >= start && pay.payment_date <= end;
+      });
+
+      let income = 0n;
+      let expense = 0n;
+
+      for (const payment of relevantPayments) {
+        const val = BigInt(payment.value_str);
+        if (payment.type_tag.startsWith("income")) {
+          income += val;
+        } else if (payment.type_tag.startsWith("expense")) {
+          expense += val;
+        }
+      }
+
+      return {
+        income: income.toString(), // or keep as bigint
+        expense: expense.toString(),
+        net: (income - expense).toString(),
+      };
+    },
   },
 
   actions: {

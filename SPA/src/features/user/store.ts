@@ -61,13 +61,39 @@ export const useUserStore = defineStore("user", {
     getAccount: (state) => (id: string) => state.bank_account[id],
     getSettings: (state) => state.setting,
     getAllAccounts: (state) => Object.values(state.bank_account),
+    getTotalBalance: (state) => {
+      return Object.values(state.bank_account)
+        .filter((account) => !account.ignore_on_totals)
+        .reduce((total, account) => total + BigInt(account.balance_str), 0n)
+        .toString(); // Pode retornar como bigint ou string
+    },
+    getGroupedAccounts: (state) => {
+      const included: { account_name: string; balance: string }[] = [];
+      const ignored: { account_name: string; balance: string }[] = [];
+      for (const account of Object.values(state.bank_account)) {
+        const item = {
+          account_name: account.account_name,
+          balance: BigInt(account.balance_str).toString(),
+        };
+
+        if (account.ignore_on_totals) {
+          ignored.push(item);
+        } else {
+          included.push(item);
+        }
+      }
+
+      return {
+        included,
+        ignored,
+      };
+    },
   },
 
   actions: {
-    setUser(raw: unknown, auth: boolean) {
+    setUser(raw: unknown) {
       const user: User = UserSchema.parse(raw);
       this.user = { ...user };
-      this.user.auth = auth;
     },
 
     setSettings(raw: unknown) {
@@ -91,7 +117,7 @@ export const useUserStore = defineStore("user", {
           console.error("Server rejected creation:", result);
           return null;
         }
-        return result;
+        return result.data;
       } catch (err) {
         console.error("Unexpected error:", err);
         return null;

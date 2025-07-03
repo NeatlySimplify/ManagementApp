@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from "vue";
-import FormButtons from "@auth/FormButtonsComponent.vue";
 import api from "@/util/api";
 import { useRouter } from "vue-router";
 
@@ -40,7 +39,16 @@ const onSubmit = async () => {
             required
           />
           <div class="offset-sm-4 col-sm-8 mt-3 mx-auto">
-            <FormButtons :isLoading="isLoading"></FormButtons>
+            <RouterLink
+              class="btn btn-outline-danger btn-lg flex-grow-1"
+              :to="{ name: 'root' }"
+              :class="{ disabled: isLoading }"
+            >
+              Registrar
+            </RouterLink>
+            <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1">
+              Login <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
+            </button>
           </div>
         </div>
       </div>

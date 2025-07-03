@@ -5,7 +5,7 @@ import SidebarComponent from "@/features/common/SidebarComponent.vue";
 const route = useRoute();
 const excludedRoutes = ["root", "register"];
 
-const shouldLoadComponent = !excludedRoutes.includes(route.name);
+const shouldLoadComponent = !excludedRoutes.includes(String(route.name));
 </script>
 
 <template>

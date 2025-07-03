@@ -1,6 +1,7 @@
 <script setup>
 import { ref, defineProps, onMounted } from "vue";
 import { useUserStore } from "@/features/user/store";
+import ListInputComponent from "@/features/common/ListInputComponent.vue";
 
 const props = defineProps({
   first_access: {
@@ -20,7 +21,7 @@ onMounted(() => {
 
 const showLists = ref(false);
 const userStore = useUserStore();
-const settings = userStore.getSettings;
+const custom = userStore.getSettings;
 </script>
 <template>
   <form>
@@ -55,10 +56,10 @@ const settings = userStore.getSettings;
         <input class="form-control" v-model="custom.entity_title" type="text" />
       </div>
       <div v-if="showLists" class="border rounded row my-3">
-        <!-- <ListInputComponent v-model:tags="settings.account_types"></ListInputComponent>
+        <ListInputComponent v-model:tags="custom.account_types" title:></ListInputComponent>
         <ListInputComponent
-          v-model:tags="settings.entity_types"
-          :title="`Tipos de ${settings.entity_title}`"
+          v-model:tags="custom.entity_types"
+          :title="`Tipos de ${custom.entity_title}`"
         ></ListInputComponent>
         <ListInputComponent
           v-model:tags="settings.entity_document_types"
@@ -71,7 +72,7 @@ const settings = userStore.getSettings;
         <ListInputComponent v-model:tags="settings.movement_expense_types"></ListInputComponent>
         <ListInputComponent v-model:tags="settings.scheduler_types"></ListInputComponent>
         <ListInputComponent v-model:tags="settings.relationship_status"></ListInputComponent>
-        <ListInputComponent v-model:tags="settings.sex"></ListInputComponent> -->
+        <ListInputComponent v-model:tags="settings.sex"></ListInputComponent>
       </div>
     </div>
     <button type="submit"></button>

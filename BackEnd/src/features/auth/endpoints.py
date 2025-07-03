@@ -15,10 +15,11 @@ async def signup(
     email: str,
     password: str,
     name: str,
+    is_type: str,
     response: Response,
     request: Request,
     db=Depends(get_gel_client)):
-    result = await register_user(email, password, name, request, db)
+    result = await register_user(is_type, email, password, name, request, db)
     if "auth_token" in result:
         response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)
     if "verifier" in result:
@@ -26,7 +27,7 @@ async def signup(
     return {"status": "ok"}
 
 @authRoute.post("/signin")
-async def signin(email: str, password: str, response: Response, db=Depends(get_gel_client)):
+async def signin(email: str, password: str, is_type:str, response: Response, db=Depends(get_gel_client)):
     result = await login_user(email, password, db)
     if result["auth_token"]:
         response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)

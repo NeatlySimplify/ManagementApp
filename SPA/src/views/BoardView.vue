@@ -1,15 +1,27 @@
 <script setup>
-// import { onMounted } from "vue";
-// import api from "@/api";
-// import { useUserStore } from "@/stores/user";
-// import ErrorComponent from "@/components/ErrorComponent.vue";
+import { useUserStore } from "@/features/user/store";
+import { useMovementStore } from "@/features/movement/store";
+import { useSchedulerStore } from "@/features/scheduler/store";
+import { ScheduleXCalendar } from "@schedule-x/vue";
+import { createCalendar, createViewMonthAgenda, createViewMonthGrid } from "@schedule-x/calendar";
+import "@schedule-x/theme-default/dist/index.css";
 
-// const compt = ref();
-// onMounted(() => {
-//   getData();
-// });
+const date = new Date().now();
+
+const userStore = useUserStore();
+const movementStore = useMovementStore();
+const schedulerStore = useSchedulerStore();
+
+const events = schedulerStore.getMonthlyEvents(date);
+const calendarApp = createCalendar({
+  selectedDate: date,
+  views: [createViewMonthGrid(), createViewMonthAgenda()],
+  events: events,
+});
 </script>
 
 <template>
-  <p>Hello from the board</p>
+  <div>
+    <ScheduleXCalendar :calendar-app="calendarApp" />
+  </div>
 </template>

@@ -13,7 +13,7 @@ GEL_AUTH_BASE_URL = setting.gel_url
 PROVIDER = "builtin::local_emailpassword"
 REFRESH_EXPIRATION_DAYS = setting.token_expiration
 
-async def register_user(email: str, password: str, name: str, request: Request, db):
+async def register_user(is_type: str, email: str, password: str, name: str, request: Request, db):
     verifier, challenge = generate_pkce()
     server_url = str(request.base_url).rstrip("/")
 
@@ -38,7 +38,7 @@ async def register_user(email: str, password: str, name: str, request: Request, 
 
     if "identity_id" in data:
         new_token = uuid4()
-        await create_user(new_token, data["identity_id"], name, db)
+        await create_user(is_type, new_token, data["identity_id"], name, db)
         response["identity_id"] = data["identity_id"]
 
     return response
@@ -77,11 +77,11 @@ async def get_auth_token(code: str, verifier: str):
         r.raise_for_status()
         return r.json()["auth_token"]
 
-async def create_user(refresh_token: UUID, identity_id: UUID, name: str, db):
+async def create_user(is_type, refresh_token: UUID, identity_id: UUID, name: str, db):
     await CreateUser_async_edgeql.CreateUser(
         db,
         identity_id=identity_id,
-        type_insert="is_individual",
+        type_insert=is_type,
         name=name,
         refreshe_token=refresh_token
     )

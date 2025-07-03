@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "../BackEnd/static", // change this to your desired output directory
+    outDir: "../BackEnd/src/static", // change this to your desired output directory
   },
   server: {
     port: 5173,

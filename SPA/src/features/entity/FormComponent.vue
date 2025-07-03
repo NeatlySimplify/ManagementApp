@@ -1,11 +1,11 @@
 <script setup>
-import api from "@util/api";
-import { useUserStore } from "@user/store";
-import { useEntityStore } from "@entity/store";
+import { useUserStore } from "@/features/user/store";
+import { useEntityStore } from "@/features/entity/store";
 import { defineProps, defineEmits } from "vue";
-import AddressComponent from "@entity/AddressComponent.vue";
-import ContactComponent from "@entity/ContactComponent.vue";
+import AddressComponent from "@/features/entity/AddressComponent.vue";
+import ContactComponent from "@/features/entity/ContactComponent.vue";
 import NotesComponent from "@/features/common/NotesComponent.vue";
+import { useRecordStore } from "@/features/records/store";
 
 BeforeMounted(async () => {
   if (props.mode === "show" && props.id !== null) {

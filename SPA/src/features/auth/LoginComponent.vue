@@ -14,52 +14,37 @@ const data = ref({
   password: "",
 });
 const isLoading = ref(false);
-const user = useUserStore();
+const first_access = ref(false);
 
 const onSubmit = async () => {
   try {
-    const request = await api.get("/api/auth/login", {
+    const request = await api.get("/api/auth/signin", {
       params: {
         email: data.value.email,
         password: data.value.password,
       },
     });
-    if (status !== "success"){
-      result = 
-    }
-    const dataRequest = request.data;
-
-    if (dataRequest.first_access === true) {
-      user.setUser(dataRequest, true);
-      console.log(user.getUser);
-      router.push("first-access");
-    } else {
-      try {
-        const request = await api.get("/db");
-
-        schedule = useSchedulerStore();
-        const entity = useEntityStore();
-        record = useRecordStore();
-        movement = useMovementStore();
-
-        result = request.result;
-        entity.set(result.entity);
-        schedule.set(result.event);
-        record.set(result.record);
-        movement.setMovement(result.movement);
-        movement.setIncome(result.payment_income);
-        movement.setExpense(result.payment_expense);
-        user.setAccounts(result.account);
-        userData = result.user[1];
-        userData.settings = result.settings[1];
-        accounts = result.bankAccount;
-        user.setUser(userData);
-        user.setAccounts(accounts);
-      } catch {
-        user = useUserStore();
-      } finally {
-        router.push("board");
+    if (request.status === "ok") {
+      const userStore = useUserStore();
+      const scheduleStore = useSchedulerStore();
+      const entityStore = useEntityStore();
+      const recordStore = useRecordStore();
+      const movementStore = useMovementStore();
+      const data = userStore.getData();
+      if (data.settings.record_title === "" || data.settings.record_title === null) {
+        first_access.value = true;
+        router.push({ name: user, params: { first_access: first_access } });
+      } else {
+        userStore.setSettings(data.settings);
+        userStore.setAccounts(data.account);
+        userStore.setUser(data);
+        entityStore.set(data.entity);
+        scheduleStore.set(data.event);
+        recordStore.set(data.record);
+        movementStore.setMovement(data.movement);
+        movementStore.setPayment(data.payment);
       }
+      router.push({ name: board });
     }
   } catch (err) {
     console.error("Error on request:", err);

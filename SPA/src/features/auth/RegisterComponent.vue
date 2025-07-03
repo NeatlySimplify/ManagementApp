@@ -34,15 +34,14 @@ const onSubmit = async () => {
   }
   const formData = {
     name: form.value.name,
-    tag_type: form.value.tag_type,
+    is_type: form.value.tag_type,
     email: form.value.email,
-    document: form.value.identification,
     password: form.value.password,
   };
   try {
     isLoading.value = true;
-    const response = await api.post("api/auth/register", formData);
-    if (response.status === "success") {
+    const response = await api.post("api/auth/signup", formData);
+    if (response.status === "ok") {
       alert(`Usuário ${form.value.name} registrado com sucesso!`);
       isLoading.value = false;
       router.push("root");

@@ -7,13 +7,15 @@ const SchedulerSchema = z.object({
   type_tag: z.string(),
   name: z.string(),
   status: z.boolean(),
-  date: z.date(),
+  date_beginning: z.date(),
+  date_ending: z.date(),
 });
 const CreateSchedulerSchema = z.object({
   type_tag: z.string(),
   name: z.string(),
   status: z.boolean(),
-  date: z.date(),
+  date_beginning: z.date(),
+  date_ending: z.optional(z.date()),
 });
 type Scheduler = z.infer<typeof SchedulerSchema>;
 
@@ -37,6 +39,21 @@ export const useSchedulerStore = defineStore("scheduler", {
       (state) =>
       (type_tag: string): Scheduler[] =>
         Object.values(state.entries).filter((entity) => entity.type_tag === type_tag),
+
+    getMonthlyEvents:
+      (state) =>
+      (referenceDate: Date): Scheduler[] => {
+        const start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+        const end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
+
+        const events = Object.values(state.entries).filter((event) => {
+          return (
+            event.status === false && event.date_beginning >= start && event.date_beginning <= end
+          );
+        });
+
+        return events.sort((a, b) => a.date_beginning.getTime() - b.date_beginning.getTime());
+      },
   },
 
   actions: {

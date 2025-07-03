@@ -4,7 +4,7 @@ import { ref, defineProps, defineModel } from "vue";
 // defineModel sem tipo — só JavaScript
 const tags = defineModel("tags");
 const props = defineProps({
-  title,
+  title: String,
 });
 
 const inputValue = ref("");

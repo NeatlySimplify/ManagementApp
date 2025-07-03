@@ -2,8 +2,6 @@
 import { computed } from "vue";
 import LoginComponent from "@/features/auth/LoginComponent.vue";
 import RegisterComponent from "@/features/auth/RegisterComponent.vue";
-//import ForgotPasswordComponent from "@/features/auth/ForgotPasswordComponent.vue";
-//import MFAComponent from "@/features/auth/MFAComponent.vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
@@ -20,16 +18,6 @@ const formComponent = computed(() => {
         title: "Register Form",
         component: RegisterComponent,
       };
-    // case "forgot_password":
-    //   return {
-    //     title: "Forgot your Password",
-    //     component: ForgotPasswordComponent,
-    //   };
-    // case "mfa":
-    //   return {
-    //     title: "Multi Factor Authentication",
-    //     component: MFAComponent,
-    //   };
     default:
       return {
         title: "Unknown Page",
