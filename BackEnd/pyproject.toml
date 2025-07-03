@@ -18,6 +18,7 @@ dependencies = [
     "bcrypt (>=4.3.0,<5.0.0)",
     "python-dateutil (>=2.9.0.post0,<3.0.0)",
     "requests (>=2.32.4,<3.0.0)",
+    "cryptography (>=45.0.5,<46.0.0)",
 ]
 
 [tool.poetry]
@@ -56,7 +57,6 @@ lint.select = [
     "SIM",  # flake8-simplify
     "TID",  # flake8-tidy-imports
     "PTH",  # flake8-use-pathlib
-    "TRY",  # flake8-trio for try/except/else best practices
 ]
 include = ["src/**/*.py", "tests/**/*.py"]
 exclude = [

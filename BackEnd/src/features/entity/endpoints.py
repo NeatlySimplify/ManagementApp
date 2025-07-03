@@ -37,7 +37,7 @@ async def getEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await get_entity(db, entity=entity)
 
 
@@ -48,7 +48,7 @@ async def createEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await create_entity(
         db,
         email=entity.email,
@@ -71,7 +71,7 @@ async def updateEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await update_entity(
         db,
         email=entity.email,
@@ -95,7 +95,7 @@ async def deleteEntity(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await delete_entity(db, entity)
 
 
@@ -106,7 +106,7 @@ async def createAddress(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await create_address(
         db,
         address.entity,
@@ -127,7 +127,7 @@ async def updateAddress(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await update_address(
         db,
         address.id,
@@ -149,7 +149,7 @@ async def deleteAddress(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await delete_address(db, entity, address)
 
 
@@ -160,7 +160,7 @@ async def createContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await create_contact(
         db,
         entity=contact.entity,
@@ -177,7 +177,7 @@ async def updateContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await update_contact(
         db,
         contact=contact.id,
@@ -195,5 +195,5 @@ async def deleteContact(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await delete_contact(db, entity, contact)

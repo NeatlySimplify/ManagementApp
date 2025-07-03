@@ -1,5 +1,5 @@
 with selected_user:= (select global current_user),
-converted := (select Account filter .id = selected_user),
+converted := (select Account filter .id = selected_user.id),
 select converted{
     name,
     email,

@@ -1,10 +1,30 @@
 using extension edgeql_http;
+using extension auth;
 module default {
+    global current_user := (
+        assert_single((
+            select User
+            filter .identity = global ext::auth::ClientTokenIdentity
+        ))
+    );
 
-    global current_user: uuid;
-    global current_user_obj := assert_single((
-        select User filter .id = global current_user
-    ));
+    abstract type Derived{
+        owner: User {
+            on target delete delete source;
+            on source delete allow;
+            default:= global current_user;
+        };
+        type_tag: str;
+        access policy allow_user allow all using(global current_user ?= __subject__.owner)
+    };
+
+    type RefreshToken {
+        required token: str;
+        required email: str;
+        required encrypted_password: str;
+        required identity: ext::auth::Identity;
+        required expires_at: datetime;
+    }
 
     abstract type User{
         required name: str;
@@ -15,7 +35,9 @@ module default {
         required email: str {
             delegated constraint exclusive;
         };
-        required password: str;
+        required identity: ext::auth::Identity {
+            constraint exclusive;
+        };
         refresh_token: uuid;
         use_token: bool {
             default := false;
@@ -37,20 +59,12 @@ module default {
         multi record := (select detached Record filter .owner = __source__);
         multi event := (select detached Scheduler filter .owner = __source__);
 
-
         # Computed Properties:
         payment:=(select __source__.movement.payment order by .payment_date desc);
 
-        trigger log_update after update for each when (
-            __old__.password != __new__.password
-        ) do (
-            insert Auditable {
-                user := __old__.id,
-                object_id := __old__.id,
-                action := "update",
-                details := to_json('{' ++ '"Action": "Password Updated"'++'}')
-            }
-        );
+        access policy allow_insert allow insert using (true);
+        access policy allow_user allow select, update, delete using (global current_user ?= __subject__);
+
 
         trigger log_insert after insert for each do (
             insert Auditable {
@@ -62,76 +76,6 @@ module default {
         );
     }
 
-    type Administator extending User {
-        overloaded tag_type: str {
-            default:= "is_admin";
-        };
-        overloaded is_admin:bool{
-            default:= <bool>true;
-        };
-        access policy admin_only allow all using (select global current_user_obj.is_admin ?? false);
-        access policy bootstrap_admin allow insert using (count(detached User filter .is_admin) = 0);
-    };
-
-    type Account extending User{
-        overloaded tag_type: str {
-            default:= "is_account";
-        };
-        multi grouping:= .<owner[is Project];
-        multi collaborator_pool: Individual;
-
-        access policy user_access allow select, update using (__subject__ ?= global current_user_obj);
-        access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
-        # admin access policy only on Production
-        # access policy allow_insert allow insert using(true)
-    }
-
-    type Project {
-        name: str;
-        required owner: Account {
-            on target delete delete source;
-            on source delete allow;
-        };
-        notes: json;
-        multi people: Individual {
-            role: str;
-        };
-        single record: Record {
-            on source delete delete target;
-            on target delete allow;
-        };
-        multi schedule: Scheduler {
-            on source delete delete target;
-            on target delete allow;
-        };
-        multi movement: Movement {
-            on source delete delete target;
-            on target delete allow;
-        }
-        multi entity: Entity {
-            on source delete allow;
-        }
-
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
-    }
-
-    type Address {
-        state: str;
-        city: str;
-        district: str;
-        street: str;
-        number: int64;
-        complement: str;
-        postal: str;
-
-    }
-
-    type Contact{
-        type_tag: str;
-        number: str;
-        complement: str;
-    }
-
     type Auditable {
         timestamp: datetime {
             default := datetime_of_statement();
@@ -141,22 +85,8 @@ module default {
         action: str;
         details: json;
 
-        access policy admin_only allow select, update, delete using (global current_user_obj.is_admin ?? false);
+        access policy admin_only allow update, delete using (global current_user.is_admin ?? false);
         access policy allow_all_inserts allow insert using (true);
-    }
-
-    type Individual extending User{
-        overloaded tag_type: str {
-            default:= "is_individual";
-        };
-        # Shared Resources
-        multi projects:= .<people[is Project];
-        multi shared_schdeule := (__source__.projects.schedule);
-
-        access policy user_access allow select, update, delete using (__subject__ ?= global current_user_obj);
-        access policy admin_only allow all using (global current_user_obj.is_admin ?? false)
-        # admin access policy only on Production
-        # access policy allow_insert allow insert using(true)
     }
 
     type UserSettings {
@@ -202,13 +132,82 @@ module default {
         };
     }
 
+    type Administator extending User {
+        overloaded tag_type: str {
+            default:= "is_admin";
+        };
+        overloaded is_admin:bool{
+            default:= <bool>true;
+        };
+
+    };
+
+    type Account extending User{
+        overloaded tag_type: str {
+            default:= "is_account";
+        };
+        multi grouping:= .<owner[is Project];
+        multi collaborator_pool: Individual;
+
+        access policy allow_admin allow select, update, delete using (global current_user.is_admin ?? false);
+    }
+
+    type Project extending Derived{
+        name: str;
+        notes: json;
+        multi people: Individual {
+            role: str;
+        };
+        single record: Record {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi schedule: Scheduler {
+            on source delete delete target;
+            on target delete allow;
+        };
+        multi movement: Movement {
+            on source delete delete target;
+            on target delete allow;
+        }
+        multi entity: Entity {
+            on source delete allow;
+        }
+    }
+
+    type Address {
+        state: str;
+        city: str;
+        district: str;
+        street: str;
+        number: int64;
+        complement: str;
+        postal: str;
+    }
+
+    type Contact{
+        type_tag: str;
+        number: str;
+        complement: str;
+    }
+
+    type Individual extending User{
+        overloaded tag_type: str {
+            default:= "is_individual";
+        };
+        # Shared Resources
+        multi projects:= .<people[is Project];
+        multi shared_schdeule := (__source__.projects.schedule);
+
+        access policy allow_admin allow select, update, delete using (global current_user.is_admin ?? false);
+    }
+
     # Client, Person or Organization
-    type Entity{
+    type Entity extending Derived{
         name: str;
         required email: str {
             constraint exclusive;
         };
-        type_tag: str;
         document_type: str;
         document: str;
         status: bool {
@@ -218,10 +217,6 @@ module default {
         relationship_status: str;
         birth: cal::local_date;
         notes: json;
-
-        required owner: User {
-            on target delete delete source;
-        };
         multi phone : Contact{
             on source delete delete target;
             on target delete allow;
@@ -230,22 +225,16 @@ module default {
             on source delete delete target;
             on target delete allow;
         };
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
     # Service or Action
-    type Record{
+    type Record extending Derived{
         name: str;
         service_id: str;
         status: bool;
         optional_status: str;
-        type_tag: str;
         value: decimal;
         notes: json;
-
-        required owner: User {
-            on target delete delete source;
-        };
         multi entity: Entity {
             on target delete allow;
         };
@@ -254,11 +243,9 @@ module default {
             on source delete delete target;
             on target delete allow;
         };
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
    }
 
-    type Scheduler{
-        type_tag: str;
+    type Scheduler extending Derived{
         name: str;
         status: bool {
             default:= false;
@@ -267,14 +254,9 @@ module default {
         beginning_time: cal::local_time;
         optional ending_time: cal::local_time;
         notes: json;
-
-        required owner: User {
-            on target delete delete source;
-        };
-        #access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
-    type BankAccount{
+    type BankAccount extending Derived{
         required bank_name: str;
         required account_name: str;
         balance: decimal {
@@ -286,32 +268,21 @@ module default {
             default:= <bool>false;
         };
         category_tag:str;
-        type_tag: str;
-        required owner: User {
-            on target delete delete source;
-        };
-        # access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
 
-    type Movement{
-        required type_tag: str;
+    type Movement extending Derived{
         value:= (sum(__source__.payment.value));
         installment:= (count(__source__.payment));
         notes: json;
-        required owner: User {
-            on target delete delete source;
-        };
         record: Record;
         accounts:= (distinct(__source__.payment.account));
         multi payment:= .<movement[is Payment];
-        access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
     }
 
 
-    type Payment{
+    type Payment extending Derived{
         name: str;
-        type_tag:= (__source__.movement.type_tag);
         value: decimal;
         interest: str;
         penalty: str;
@@ -334,8 +305,6 @@ module default {
         event: Scheduler {
             on source delete delete target;
         };
-        owner: User;
-        #access policy user_access allow all using (__subject__.owner ?= global current_user_obj);
 
         trigger update_balance_on_insert after insert for each when (
             __new__.status = true and __new__.ignore_in_totals = false
@@ -434,6 +403,5 @@ module default {
                 date:= new_date,
             }
         );
-
     }
 }

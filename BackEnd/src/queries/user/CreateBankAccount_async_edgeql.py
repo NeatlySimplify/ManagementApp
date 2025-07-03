@@ -42,8 +42,7 @@ async def CreateBankAccount(
 ) -> CreateBankAccountResult:
     return await executor.query_single(
         """\
-        with user:= (select global current_user_obj),
-        add_bank:=(
+        with add_bank:=(
             insert BankAccount {
                 bank_name:= <str>$bank_name,
                 account_name:= <str>$account_name,
@@ -52,7 +51,6 @@ async def CreateBankAccount(
                 ignore_on_totals:= <bool>$ignore_on_totals,
                 type_tag:= <optional str>$type,
                 notes:= <optional json>$notes,
-                owner:= user
             }
         ),
         select (add_bank){id};\

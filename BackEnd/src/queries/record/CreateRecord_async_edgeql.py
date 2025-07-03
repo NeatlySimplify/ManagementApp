@@ -43,9 +43,7 @@ async def CreateRecord(
 ) -> CreateRecordResult:
     return await executor.query_single(
         """\
-        with user:= (select global current_user_obj),
         insert Record{
-            owner:= user,
             name:= <str>$name,
             service_id := <optional str>$id_service,
             status:= <optional bool>$status ?? <bool>true,

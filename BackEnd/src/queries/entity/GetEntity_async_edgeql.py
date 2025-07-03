@@ -57,9 +57,9 @@ class GetEntityResultAddressItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetEntityResultPhoneItem(NoPydanticValidation):
     id: uuid.UUID
+    complement: str | None
     number: str | None
     type_tag: str | None
-    complement: str | None
 
 
 async def GetEntity(

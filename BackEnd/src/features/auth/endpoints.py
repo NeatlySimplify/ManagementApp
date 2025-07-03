@@ -1,122 +1,66 @@
 # pyright: reportArgumentType=false
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
-from src.dependencies.auth import create_token, decode_token, extract_token, get_current_user
 from src.dependencies.db import get_gel_client
-from src.features.auth.crud import createUser, loginUser
-from src.features.auth.schema import Email, Login, LoginOnToken, Register
+from src.dependencies.auth import get_current_user
+from src.features.auth.crud import register_user, login_user, send_password_reset, reset_password, refresh_auth_token
 
 authRoute = APIRouter(
     prefix="/api/auth"
 )
 
-@authRoute.post("/login", response_class=JSONResponse)
-async def login(
-    request: Request,
-    login: Login,
+@authRoute.post("/signup")
+async def signup(
+    email: str,
+    password: str,
+    name: str,
     response: Response,
-    db=Depends(get_gel_client)
-):
-    result, comparisson = await loginUser(db, login.email, login.password)
-    if result is None or not comparisson:
-        raise HTTPException(
-            status_code=404,
-            detail="User doesn't exist or password doesn't match."
-        )
-    a_token = create_token(result["id"], result["tag_type"], "access")
-    r_token = create_token(result["id"], result["tag_type"], "refresh")
-
-    response = JSONResponse(content={"status": "success"})
-    response.set_cookie("access_token", a_token)
-    response.set_cookie("refresh_token", r_token)
-    return response
-
-
-@authRoute.get("/logout", response_class=JSONResponse)
-async def logout(
     request: Request,
-    user=Depends(get_current_user)
-):
-    response = JSONResponse(content={"status": "success"})
-    response.delete_cookie("access_token")
+    db=Depends(get_gel_client)):
+    result = await register_user(email, password, name, request, db)
+    if "auth_token" in result:
+        response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)
+    if "verifier" in result:
+        response.set_cookie("gel-pkce-verifier", result["verifier"], httponly=True)
+    return {"status": "ok"}
+
+@authRoute.post("/signin")
+async def signin(email: str, password: str, response: Response, db=Depends(get_gel_client)):
+    result = await login_user(email, password, db)
+    if result["auth_token"]:
+        response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)
+    if result["verifier"]:
+        response.set_cookie("gel-pkce-verifier", result["verifier"], httponly=True)
+    return {"status": "ok" if result["auth_token"] else "verify_email"}
+
+@authRoute.post("/send-reset")
+async def send_reset(email: str, response: Response, request: Request):
+    result = await send_password_reset(email, request)
+    response.set_cookie("gel-pkce-verifier", result["verifier"], httponly=True)
+    return {"status": "email_sent"}
+
+@authRoute.post("/reset")
+async def reset(reset_token: str, password: str, request: Request, response: Response):
+    verifier = request.cookies.get("gel-pkce-verifier")
+    result = await reset_password(reset_token, password, verifier)
+    response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)
+    return {"status": "password_reset"}
+
+
+@authRoute.post("/auth/refresh")
+async def refresh(request: Request, response: Response, db=Depends(get_gel_client)):
+    refresh_token = request.cookies.get("refresh_token")
+    result = await refresh_auth_token(refresh_token, db)
+    if result["auth_token"]:
+        response.set_cookie("gel-auth-token", result["auth_token"], httponly=True)
+    if result["refresh_token"] != refresh_token:
+        response.set_cookie("refresh_token", result["refresh_token"], httponly=True)
+    return {"status": "refreshed" if result["auth_token"] else "failed"}
+
+@authRoute.get("/logout")
+async def logout(request: Request, response: Response, user=Depends(get_current_user)):
+    response.delete_cookie("gel-pkce-verifier")
+    response.delete_cookie("gel-auth-token")
     response.delete_cookie("refresh_token")
-    return response
-
-
-@authRoute.post("/register", response_class=JSONResponse)
-async def register(
-    request: Request,
-    register: Register,
-    db=Depends(get_gel_client)
-):
-    await createUser(
-        db,
-        register.email,
-        register.type_user,
-        register.hash,
-        register.name,
-        register.token)
-    return {
-        "status": "success"
-    }
-
-
-# @authRoute.post("/forgot_password", response_class=JSONResponse)
-# async def forgot_password(
-#     request: Request,
-#     data: Email,
-#     db=Depends(get_gel_client)
-# ):
-#     result = await getToken(db, data.email)
-#     if result is None:
-#         raise HTTPException(
-#             status_code=401,
-#             detail=f"There is no user {data.email} registered"
-#         )
-#     return {
-#         "status": "success"
-#     }
-
-
-# @authRoute.post("/login_token", response_class=JSONResponse)
-# async def loginOnToken(
-#     request: Request,
-#     login: LoginOnToken,
-#     response: Response,
-#     db=Depends(get_gel_client)
-# ):
-#     comparisson, result = await loginWithToken(db, login.email, login.token)
-#     if result is None or not comparisson:
-#         raise HTTPException(
-#             status_code=404,
-#             detail="User doesn't exist or token doesn't match."
-#         )
-#     a_token = create_token(result["id"], result["tag_type"], "access")
-#     r_token = create_token(result["id"], result["tag_type"], "refresh")
-#     user_data = {
-#         "name": result["name"],
-#         "email": result["email"],
-#         "first_access": result["first_access"]
-#     }
-
-#     response = JSONResponse(content={"status": "success", "response": user_data})
-#     response.set_cookie("access_token", a_token)
-#     response.set_cookie("refresh_token", r_token)
-#     return {
-#         "status": "success"
-#     }
-
-
-@authRoute.get("/refresh", response_class=JSONResponse)
-async def refresh_jwt(
-    request: Request,
-    response: Response
-):
-    refresh_token = extract_token(request, "refresh_token")
-    user_id, role = decode_token(refresh_token, expected_type="refresh")
-    new_access_token = create_token(user_id, role)
-    response.set_cookie("access_token", new_access_token)
-    return {
-        "status": "success"
-    }
+    return JSONResponse(content={"status": "logout"})

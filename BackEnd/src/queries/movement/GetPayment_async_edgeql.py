@@ -30,7 +30,7 @@ class NoPydanticValidation:
 class GetPaymentResult(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type_tag: str
+    type_tag: str | None
     value: decimal.Decimal | None
     ignore_in_totals: bool | None
     interest: str | None

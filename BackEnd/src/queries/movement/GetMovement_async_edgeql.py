@@ -29,7 +29,7 @@ class NoPydanticValidation:
 @dataclasses.dataclass
 class GetMovementResult(NoPydanticValidation):
     id: uuid.UUID
-    type_tag: str
+    type_tag: str | None
     value: decimal.Decimal
     installment: int
     notes: str | None

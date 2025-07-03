@@ -31,7 +31,7 @@ async def get_movement(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await getMovement(db, movement)
 
 
@@ -42,7 +42,7 @@ async def delete_movement(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await deleteMovement(db, movement)
 
 
@@ -53,7 +53,7 @@ async def update_movement(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await updateMovement(
         db,
         movement_id=data.id,
@@ -68,7 +68,7 @@ async def create_movement(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await createMovement(
         db,
         type_tag=movement.type_tag,
@@ -99,7 +99,7 @@ async def get_payment(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await getPayment(db, payment)
 
 
@@ -110,7 +110,7 @@ async def delete_payment(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await deletePayment(db, payment)
 
 
@@ -121,7 +121,7 @@ async def update_payment(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await updatePayment(
         db,
         payment=data.id,

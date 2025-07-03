@@ -102,7 +102,7 @@ class GetAccountDataResultGroupingItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetAccountDataResultMovementItem(NoPydanticValidation):
     id: uuid.UUID
-    type_tag: str
+    type_tag: str | None
     value_str: str
     installment: int
     payment: list[GetAccountDataResultMovementItemPaymentItem]
@@ -119,7 +119,7 @@ class GetAccountDataResultMovementItemPaymentItem(NoPydanticValidation):
 class GetAccountDataResultPaymentItem(NoPydanticValidation):
     id: uuid.UUID
     name: str | None
-    type_tag: str
+    type_tag: str | None
     value_str: str | None
     payment_date: datetime.date | None
     status: bool | None
@@ -171,7 +171,7 @@ async def GetAccountData(
     return await executor.query_single(
         """\
         with selected_user:= (select global current_user),
-        converted := (select Account filter .id = selected_user),
+        converted := (select Account filter .id = selected_user.id),
         select converted{
             name,
             email,

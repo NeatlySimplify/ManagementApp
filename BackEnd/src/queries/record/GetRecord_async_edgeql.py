@@ -58,7 +58,7 @@ class GetRecordResultEventItem(NoPydanticValidation):
 @dataclasses.dataclass
 class GetRecordResultMovementItem(NoPydanticValidation):
     id: uuid.UUID
-    type_tag: str
+    type_tag: str | None
     str_value: str
     installment: int
     payment: list[GetRecordResultMovementItemPaymentItem]

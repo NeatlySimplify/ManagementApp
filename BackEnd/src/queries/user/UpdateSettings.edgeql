@@ -1,4 +1,4 @@
-with user:= (select global current_user_obj).settings,
+with user:= global current_user.settings,
 bank_account:= <optional uuid>$bank_account,
 account := assert_single((select BankAccount filter .id = bank_account)) if exists bank_account else <BankAccount>{},
 update user set {

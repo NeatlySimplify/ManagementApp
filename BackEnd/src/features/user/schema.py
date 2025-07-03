@@ -4,7 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, computed_field, model_validator
 
-from src.dependencies.pwHash import hash_password
 
 
 class BankAccountUpdate(BaseModel):
@@ -40,12 +39,6 @@ class UserUpdate(BaseModel):
     password: str
     comfirm_password:str
     old_password: str
-
-
-    @computed_field
-    @property
-    def hash(self) -> str:
-        return hash_password(self.password)
 
 
     @model_validator(mode='after')

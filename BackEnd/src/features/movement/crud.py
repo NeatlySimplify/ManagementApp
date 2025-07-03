@@ -83,6 +83,7 @@ async def _create_payment(
     is_due: datetime.date,
     payment_date: datetime.date | None,
     status: bool,
+    type_tag:str
 ) -> None:
     await CreatePayment_async_edgeql.CreatePayment(
         db,
@@ -97,7 +98,8 @@ async def _create_payment(
         is_due=is_due,
         status=status,
         account=account,
-        movement=movement
+        movement=movement,
+        type_tag=type_tag
     )
 
 @db.handle_database_errors
@@ -211,7 +213,8 @@ async def createMovement(
                 subcategory=subcategory,
                 payment_date=payment_date if status else i,
                 is_due=i,
-                status=status
+                status=status,
+                type_tag=type_tag
             )
     return result
 

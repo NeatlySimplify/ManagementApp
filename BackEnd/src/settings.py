@@ -17,7 +17,9 @@ class Settings(BaseModel):
     secret: str
     algorithm: str
     jwt_expire_base: float
-    admin_id: str
+    gel_url: str = "https://test--neatlysimplified.c-05.i.aws.edgedb.cloud:5656/branch/main/ext/auth/"
+    fernet: str
+    token_expiration: int = 30 # in days
 
 
     @computed_field
@@ -51,7 +53,7 @@ def instance() -> Settings:
             "secret": os.getenv('SECRET'),
             "algorithm": "HS256",
             "jwt_expire_base": 30,
-            "admin_id": os.getenv('ADMIN_ID')
+            "fernet": os.getenv('FERNET')
         },
         'prod': {
             'debug': False,
@@ -61,7 +63,7 @@ def instance() -> Settings:
             "secret": os.getenv('SECRET'),
             "algorithm": "HS256",
             "jwt_expire_base": 30,
-            "admin_id": os.getenv('ADMIN_ID')
+            "fernet": os.getenv('FERNET')
         },
     }
 

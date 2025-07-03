@@ -33,7 +33,7 @@ async def get_record(
         user = Depends(get_current_user),
         db=Depends(get_gel_client)
     ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await getRecord(db, record)
 
 
@@ -44,7 +44,7 @@ async def create_record(
         user = Depends(get_current_user),
         db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await createRecord(
         db,
         name=data.name,
@@ -64,7 +64,7 @@ async def update_record(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await updateRecord(
         db,
         record=data.id,
@@ -85,7 +85,7 @@ async def delete_record(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await deleteRecord(db, record)
 
 
@@ -97,7 +97,7 @@ async def link_event(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await linkEvent(db, schedule=event, record=record)
 
 
@@ -109,7 +109,7 @@ async def unlink_event(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await unlinkEvent(db, schedule=event, record=record)
 
 
@@ -121,7 +121,7 @@ async def link_entity(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await linkEntity(db, entity=entity, record=record)
 
 
@@ -133,7 +133,7 @@ async def unlink_entity(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await unlinkEntity(db, entity=entity, record=record)
 
 
@@ -145,7 +145,7 @@ async def link_movement(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await linkMovement(db, movement=movement, record=record)
 
 @recordRoute.put('/{record}/del-movement/', response_class=JSONResponse)
@@ -156,5 +156,5 @@ async def unlink_movement(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await unlinkMovement(db ,movement=movement, record=record)

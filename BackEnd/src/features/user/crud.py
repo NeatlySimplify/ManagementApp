@@ -2,10 +2,7 @@ import json
 from dataclasses import asdict
 from uuid import UUID
 
-from fastapi import HTTPException
-
 from src.dependencies import db
-from src.dependencies.pwHash import verify_password
 from src.queries.user import (
     CreateBankAccount_async_edgeql,
     CreateSettings_async_edgeql,
@@ -13,36 +10,9 @@ from src.queries.user import (
     GetAccountData_async_edgeql,
     GetBankAccount_async_edgeql,
     GetIndividualData_async_edgeql,
-    GetUserAuth_async_edgeql,
     UpdateBankAccount_async_edgeql,
     UpdateSettings_async_edgeql,
-    UpdateUserAuth_async_edgeql,
 )
-
-
-@db.handle_database_errors
-async def updateUser(
-        db,
-        email: str,
-        hash_password: str,
-        old_password: str,
-    ) -> UpdateUserAuth_async_edgeql.UpdateUserAuthResult | None:
-    result : GetUserAuth_async_edgeql.GetUserAuthResult | None = (
-        await GetUserAuth_async_edgeql.GetUserAuth(
-            db,
-            email=email
-        )
-    )
-    if result is not None and verify_password(old_password, result.password):
-        return await UpdateUserAuth_async_edgeql.UpdateUserAuth(
-            db,
-            password=hash_password,
-            email=email,
-        )
-    raise HTTPException(
-        status_code=403,
-        detail="Incorrect old password"
-    )
 
 
 @db.handle_database_errors

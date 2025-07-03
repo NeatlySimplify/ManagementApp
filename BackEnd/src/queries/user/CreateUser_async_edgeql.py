@@ -32,34 +32,36 @@ class CreateUserResult(NoPydanticValidation):
 async def CreateUser(
     executor: gel.AsyncIOExecutor,
     *,
+    identity_id: uuid.UUID,
     type_insert: str,
     name: str,
-    email: str,
-    password: str,
     refreshe_token: uuid.UUID,
 ) -> CreateUserResult:
     return await executor.query_single(
         """\
-        with query_todo:= (
+        with identity := <ext::auth::Identity><uuid>$identity_id,
+        emailFactor := (
+            SELECT ext::auth::EmailFactor FILTER .identity = identity
+        ),
+        query_todo:= (
         insert Account {
             name := <str>$name,
-            email:= <str>$email,
-            password:= <str>$password,
-            refresh_token:= <uuid>$refreshe_token
+            email:= emailFactor.email,
+            refresh_token:= <uuid>$refreshe_token,
+            identity := identity
         }
         ) if <str>$type_insert = "organization" else (
         insert Individual {
             name := <str>$name,
-            email:= <str>$email,
-            password:= <str>$password,
-            refresh_token:= <uuid>$refreshe_token
+            email:= emailFactor.email,
+            refresh_token:= <uuid>$refreshe_token,
+            identity := identity
         }
         )
         select query_todo\
         """,
+        identity_id=identity_id,
         type_insert=type_insert,
         name=name,
-        email=email,
-        password=password,
         refreshe_token=refreshe_token,
     )

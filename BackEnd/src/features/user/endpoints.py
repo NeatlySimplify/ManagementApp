@@ -14,7 +14,6 @@ from src.features.user.crud import (
     getData,
     updateBankAccount,
     updateSettings,
-    updateUser,
 )
 from src.features.user.schema import (
     BankAccountCreate,
@@ -30,24 +29,8 @@ userRoute = APIRouter(prefix='/api/user')
 @userRoute.get('/', response_class=JSONResponse)
 @handle_result()
 async def getUserData(user = Depends(get_current_user), db=Depends(get_gel_client)):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await getData(db, user.get("role"))
-
-
-@userRoute.put('/', response_class=JSONResponse)
-@handle_result()
-async def updateUserData(
-    data: UserUpdate,
-    user = Depends(get_current_user),
-    db=Depends(get_gel_client)
-):
-    db = db.with_globals({"current_user": user.get('user')})
-    return await updateUser(
-        db,
-        email=data.email,
-        hash_password=data.hash,
-        old_password=data.old_password
-    )
 
 
 @userRoute.post('/bank-account', response_class=JSONResponse)
@@ -57,7 +40,7 @@ async def createAccount(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await createBankAccount(
         db,
         bank_name=data.bank_name,
@@ -77,7 +60,7 @@ async def deleteAccount(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await deleteBankAccount(
         db,
         user=user,
@@ -92,7 +75,7 @@ async def getAccount(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await getBankAccount(
         db,
         bank_id=account
@@ -106,7 +89,7 @@ async def updateAccount(
     user = Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await updateBankAccount(
         db,
         bank_account=bank_account.id,
@@ -126,7 +109,7 @@ async def createConfig(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await createSettings(
         db,
         user=user,
@@ -144,7 +127,7 @@ async def updateConfig(
     user=Depends(get_current_user),
     db=Depends(get_gel_client)
 ):
-    db = db.with_globals({"current_user": user.get('user')})
+    db = db.with_globals({"ext::auth::client_token": user})
     return await updateSettings(
         db,
         record_title=data.record_title,

@@ -36,6 +36,7 @@ async def CreatePayment(
     name: str,
     is_due: datetime.date,
     status: bool,
+    type_tag: str,
     value: str,
     interest: str | None = None,
     penalty: str | None = None,
@@ -48,15 +49,14 @@ async def CreatePayment(
 ) -> CreatePaymentResult:
     return await executor.query_single(
         """\
-        with user:=(select global current_user_obj),
-        event_:=(insert Scheduler{
+        with event_:=(insert Scheduler{
             name:=<str>$name,
             date:=<cal::local_date>$is_due,
-            owner:=user,
             status:=<bool>$status,
         }),
         insert Payment {
             name:= <str>$name,
+            type_tag:=<str>$type_tag,
             value:=to_decimal(<str>$value, 'FM999999999999D99'),
             interest:= <optional str>$interest,
             penalty:= <optional str>$penalty,
@@ -68,13 +68,13 @@ async def CreatePayment(
             status:= <bool>$status,
             account:= assert_single((select BankAccount filter .id = <uuid>$account)),
             movement:= assert_single((select Movement filter .id = <uuid>$movement)),
-            owner:=user,
             event:=event_,
         }\
         """,
         name=name,
         is_due=is_due,
         status=status,
+        type_tag=type_tag,
         value=value,
         interest=interest,
         penalty=penalty,

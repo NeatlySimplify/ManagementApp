@@ -1,12 +1,11 @@
-with user:=(select global current_user_obj),
-event_:=(insert Scheduler{
+with event_:=(insert Scheduler{
     name:=<str>$name,
     date:=<cal::local_date>$is_due,
-    owner:=user,
     status:=<bool>$status,
 }),
 insert Payment {
     name:= <str>$name,
+    type_tag:=<str>$type_tag,
     value:=to_decimal(<str>$value, 'FM999999999999D99'),
     interest:= <optional str>$interest,
     penalty:= <optional str>$penalty,
@@ -18,6 +17,5 @@ insert Payment {
     status:= <bool>$status,
     account:= assert_single((select BankAccount filter .id = <uuid>$account)),
     movement:= assert_single((select Movement filter .id = <uuid>$movement)),
-    owner:=user,
     event:=event_,
 }

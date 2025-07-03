@@ -43,10 +43,8 @@ async def CreateSchedule(
 ) -> CreateScheduleResult:
     return await executor.query_single(
         """\
-        with user:= (select global current_user_obj)
         insert Scheduler {
             type_tag:= <str>$type_tag,
-            owner:= user,
             name:= <str>$name,
             status:= <optional bool>$status,
             date:= <cal::local_date>$date,
