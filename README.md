@@ -6,8 +6,8 @@ Um app para gerenciamento de dados para pequenos empreendedores.
 - ([x]) Agenda
 - ([x]) Gerenciamento fianceiro
 
-### Em breve - 02/07/2025 às 23:59
-## <span>Refatorando o frontend</span>
+## Em breve - 03/07/2025 às 23:59
+# <span>Movendo a authenticação do backend para uma solução integrada ao banco de dados</span>
 
 <p>Para instalação local o camando de execução é...</p>
 

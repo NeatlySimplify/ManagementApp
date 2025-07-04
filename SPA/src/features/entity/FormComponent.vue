@@ -2,24 +2,23 @@
 import { useUserStore } from "@/features/user/store";
 import { useEntityStore } from "@/features/entity/store";
 import { defineProps, defineEmits } from "vue";
+import { useRecordStore } from "@/features/records/store";
 import AddressComponent from "@/features/entity/AddressComponent.vue";
 import ContactComponent from "@/features/entity/ContactComponent.vue";
 import NotesComponent from "@/features/common/NotesComponent.vue";
-import { useRecordStore } from "@/features/records/store";
+import FormInputComponent from "@/features/common/FormInputComponent.vue";
+import FormSelectComponent from "@/features/common/FormSelectComponent.vue";
+import FormRadioComponent from "@/features/common/FormRadioComponent.vue";
 
 BeforeMounted(async () => {
   if (props.mode === "show" && props.id !== null) {
-    try {
-      request = await api.get(`${route}/${props.id}`);
-      entity.value = request.result;
-      changeMode();
-    } catch {
-      alert("Erro ao buscar os dados nos nossos serivdores.");
-    }
+    entity.value = { ...entityStore.fetchEntity(props.id) };
+    changeMode();
   }
 });
 
-const route = "/entity";
+const recordStore = useRecordStore();
+const record_placeholder = ref("");
 
 const emit = defineEmits(["close"]);
 function close() {
@@ -57,50 +56,25 @@ function changeMode() {
   isReadOnly.value = !isReadOnly.value;
 }
 
-async function handlerUpdate() {
-  await submitForm();
+function handlerUpdate() {
+  submitForm();
   changeMode();
 }
 
-async function deleteEntity(entity_id_given = null) {
-  try {
-    if (entity_id_given === null) {
-    }
-    await api.delete(`${route}/${entity.value.id}`);
-    entityStore.removeEntity(entity.value.id);
-    close();
-  } catch {
-    alert(`Falha na tentativa de deletar ${setting.entity_title}!`);
-  }
+function deleteEntity() {
+  entityStore.removeEntity(entity.value.id);
+  close();
 }
-async function submitForm() {
+
+function submitForm() {
   if (props.mode === "create") {
-    entity.value.notes = notes.value;
-    try {
-      const request = await api.post("/entity", entity.value);
-      const result = request.result.id;
-      data = {
-        id: result,
-        name: entity.value.name,
-        email: entity.value.email,
-        document: entity.value.document,
-        type_tag: entity.value.type_tag,
-        document_type: entity.value.document_type,
-        status: entity.value.status,
-      };
-      entityStore.addEntity(data);
-    } catch {
-      alert(`Falha na tentativa de criar ${setting.entity_title}!`);
+    if (recordStore.placeholder !== "") {
+      record_placeholder.value = recordStore.placeholder;
+      recordStore.placeholder = "";
     }
+    entityStore.createEntity(entity.value);
   } else {
-    entity.value.id = props.id;
-    try {
-      const request = await api.put(route, entity.value);
-      entity.value.id = request.result.id;
-      entityStore.updateEntity(entity.value);
-    } catch {
-      alert("Falha na tentativa de atualizar!");
-    }
+    entityStore.updateEntity(entity.value);
   }
 }
 </script>
@@ -113,113 +87,70 @@ async function submitForm() {
   <div class="modal-body">
     <div>
       <form @submit.prevent>
-        <div class="mb-3 row">
-          <label for="email" class="col-sm-2 col-form-label">Email</label>
-          <div class="col-sm-10">
-            <input
-              type="text"
-              :readonly="isReadOnly"
-              v-model="entity.email"
-              class="form-control-plaintext"
-              id="email"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Email"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="entity.email"
+        ></FormInputComponent>
 
-        <div class="mb-3 row">
-          <label for="type_tag" class="col-sm-2 col-form-label">Tipo de {{ setting.title }}</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.type_tag">
-              <option selected></option>
-              <option v-for="(option, index) in setting.types" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              v-model="entity.type_tag"
-              class="form-control-plaintext"
-              id="type_tag"
-            />
-          </div>
-        </div>
+        <FormSelectComponent
+          :title="'Tipos de ' + setting.title"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="entity.type_tag"
+          :types="setting.types"
+        ></FormSelectComponent>
 
-        <div class="mb-3 row">
-          <label for="document_type" class="col-sm-2 col-form-label"
-            >Tipo de {{ setting.title }}</label
-          >
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.document_type">
-              <option select></option>
-              <option v-for="(option, index) in setting.documents" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              v-model="entity.document_type"
-              class="form-control-plaintext"
-              id="document_type"
-            />
-          </div>
-        </div>
+        <FormSelectComponent
+          :title="'Tipos de ' + setting.title"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="entity.document_type"
+          :types="setting.documents"
+        ></FormSelectComponent>
 
-        <div class="mb-3 row">
-          <label for="sex" class="col-sm-2 col-form-label">Sexo</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.sex">
-              <option selected></option>
-              <option v-for="(option, index) in setting.sex" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              readonly
-              v-else
-              :value="entity.sex"
-              class="form-control-plaintext"
-              id="sex"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Documento"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="entity.document"
+        ></FormInputComponent>
 
-        <div class="mb-3 row">
-          <label for="relatioship_status" class="col-sm-2 col-form-label">Estado Cívil</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.relationship_status">
-              <option selected></option>
-              <option v-for="(option, index) in setting.relationship" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              :value="entity.relationship_status"
-              class="form-control-plaintext"
-              id="relationship_status"
-            />
-          </div>
-        </div>
+        <FormRadioComponent
+          title="Status"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="entity.status"
+        ></FormRadioComponent>
 
-        <div class="mb-3 row">
-          <label for="birth" class="col-sm-2 col-form-label">Data de Nascimento</label>
-          <div class="col-sm-10">
-            <input
-              type="date"
-              :readonly="isReadOnly"
-              v-model="entity.birth"
-              class="form-control-plaintext"
-              id="birth"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Nome"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="entity.name"
+        ></FormInputComponent>
+
+        <FormSelectComponent
+          title="Sexo"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="entity.sex"
+          :types="setting.sex"
+        ></FormSelectComponent>
+
+        <FormSelectComponent
+          title="Estado Cívil"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="entity.relationship_status"
+          :types="setting.relationship"
+        ></FormSelectComponent>
+
+        <FormInputComponent
+          title="Data de Nascimento"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="entity.birth"
+          type="date"
+        ></FormInputComponent>
+
         <AddressComponent :entity="entity" :isReadOnly="isReadOnly" />
         <ContactComponent :entity="entity" :isReadOnly="isReadOnly" />
         <NotesComponent v-model:notes="entity.notes" :isReadOnly="isReadOnly" />

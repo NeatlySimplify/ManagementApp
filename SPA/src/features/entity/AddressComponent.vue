@@ -1,6 +1,8 @@
 <script setup>
 import { defineProps, ref, onMounted } from "vue";
-import api from "@util/api";
+import { useEntityStore } from "@/features/entity/store";
+
+const entityStore = useEntityStore();
 
 const props = defineProps({
   entity: Object,
@@ -16,38 +18,30 @@ function cleanAddressPlaceholder() {
   addressIndex.value = null;
   updateFlag.value = false;
 }
+
 function takeAddress(index) {
   addressIndex.value = index;
   addressPlaceholder.value = { ...localAddress[index] };
 
   updateFlag.value = true;
 }
-async function updateAddress() {
-  try {
-    await api.put("/entity/address", addressPlaceholder.value);
-    localAddress[addressIndex.value] = { ...addressPlaceholder.value };
-    cleanAddressPlaceholder();
-  } catch {
-    alert("Falha na tentativa de Atalizar os dados de endereço");
-  }
+
+function updateAddress() {
+  entityStore.updateAddress(addressPlaceholder.value);
+  localAddress[addressIndex.value] = { ...addressPlaceholder.value };
+  cleanAddressPlaceholder();
 }
-async function deleteAddress(uuid) {
-  try {
-    await api.delete(`/${props.entity.value.id}/address/`, { params: { address: uuid } });
-    localAddress.value = localAddress.value.filter((address) => address.id !== uuid);
-  } catch {
-    alert("Falha na tentativa de Atualizar os dados de endereço");
-  }
+
+function deleteAddress(uuid) {
+  entityStore.deleteAddress(props.entity.value.id, uuid);
+  localAddress.value = localAddress.value.filter((address) => address.id !== uuid);
 }
-async function insertAddress() {
-  try {
-    const request = await api.post("/entity/address", addressPlaceholder.value);
-    addressPlaceholder.value.id = request.result.id;
-    localAddress.value.push({ ...addressPlaceholder.value });
-  } catch {
-    alert("Erro ao inserir os dados nos nossos serivdores.");
-  }
+
+function insertAddress() {
+  addressPlaceholder.value.id = entityStore(addressPlaceholder.value);
+  localAddress.value.push({ ...addressPlaceholder.value });
 }
+
 onMounted(() => {
   if (props.entity?.value?.address) {
     localAddress.value = props.entity.value.address.map((addr) => ({ ...addr }));

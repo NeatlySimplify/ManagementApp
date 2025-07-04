@@ -90,7 +90,8 @@ class GetAccountDataResultEventItem(NoPydanticValidation):
     type_tag: str | None
     name: str | None
     status: bool | None
-    date: datetime.date | None
+    date_beginning: datetime.datetime | None
+    date_ending: datetime.datetime | None
 
 
 @dataclasses.dataclass
@@ -241,7 +242,8 @@ async def GetAccountData(
                 type_tag,
                 name,
                 status,
-                date,
+                date_beginning,
+                date_ending
             },
             account: {
                 id,

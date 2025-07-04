@@ -112,6 +112,9 @@ module default {
         record_status: array<str>{
             default := ["Em Andamento", "Concluído"];
         };
+        movement_types: array<str>{
+            default := ["Entrada", "Saída"];
+        };
         movement_income_types: array<str>{
             default := ["Benefícios", "Comissão", "Pagamentos", "Rendimentos", "Serviços", "Outros"];
         };
@@ -211,7 +214,7 @@ module default {
         document_type: str;
         document: str;
         status: bool {
-            default := true;
+            default := false;
         };
         sex: str;
         relationship_status: str;
@@ -250,9 +253,10 @@ module default {
         status: bool {
             default:= false;
         };
-        date: cal::local_date;
-        beginning_time: cal::local_time;
-        optional ending_time: cal::local_time;
+        date_beginning: cal::local_datetime;
+        date_ending: cal::local_datetime {
+            default:= __source__.date_beginning + <duration>"12 hours";
+        };
         notes: json;
     }
 
@@ -284,13 +288,10 @@ module default {
     type Payment extending Derived{
         name: str;
         value: decimal;
-        interest: str;
-        penalty: str;
         ignore_in_totals: bool{
             default := false;
         };
         category_tag: str;
-        subcategory_tag: str;
         payment_date: cal::local_date;
         is_due: cal::local_date;
         status: bool{
@@ -400,7 +401,7 @@ module default {
             update __old__.event set {
                 name:= __new__.name,
                 status:= __new__.status,
-                date:= new_date,
+                date_beginning:= <cal::local_datetime>new_date,
             }
         );
     }

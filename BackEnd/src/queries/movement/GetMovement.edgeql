@@ -19,5 +19,13 @@ select Movement{
         value,
         payment_date,
         is_due,
+        event:{
+            id,
+            type_tag,
+            name,
+            status,
+            date_beginning,
+            date_ending
+        }
     }
 } filter .id = <uuid>$movement

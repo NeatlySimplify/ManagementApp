@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from datetime import date, time
+from datetime import datetime
 from uuid import UUID
 
 from src.dependencies import db
@@ -18,9 +18,8 @@ async def createEvent(
         type_tag: str,
         name: str,
         status: bool | None,
-        date: date,
-        beginning_time: time | None,
-        ending_time: time | None,
+        date: datetime,
+        ending_time: datetime | None,
         details: dict[str, str | int | float] | None
 ) -> dict | None:
     result = await CreateSchedule_async_edgeql.CreateSchedule(
@@ -29,7 +28,6 @@ async def createEvent(
         name=name,
         status=status,
         date=date,
-        beginning_time=beginning_time,
         ending_time=ending_time,
         notes=json.dumps(details) if details is not None else None
     )
@@ -45,9 +43,8 @@ async def updateEvent(
         name: str | None,
         status: bool | None,
         type_tag: str | None,
-        date: date | None,
-        beginning_time: time | None,
-        ending_time: time | None,
+        date: datetime | None,
+        ending_time: datetime | None,
         details: dict[str, str | int | float] | None,
     ) -> dict | None:
     result = await UpdateSchdeule_async_edgeql.UpdateSchdeule(
@@ -57,7 +54,6 @@ async def updateEvent(
         id=event_id,
         status=status,
         date=date,
-        beginning_time=beginning_time,
         ending_time=ending_time,
         notes=json.dumps(details) if details is not None else None,
     )

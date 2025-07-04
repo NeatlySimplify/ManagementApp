@@ -39,8 +39,7 @@ async def createScheduler(
         type_tag=data.type_tag,
         name=data.name,
         status=data.status,
-        date=data.date,
-        beginning_time=data.beginning_time,
+        date=data.date_beginning,
         ending_time=data.ending_time,
         details=data.notes
     )
@@ -60,9 +59,8 @@ async def updateScheduler(
         type_tag=data.type_tag,
         event_id=data.id,
         status=data.status,
-        beginning_time=data.beginning_time,
         ending_time=data.ending_time,
-        date=data.date,
+        date=data.date_beginning,
         details=data.notes
     )
 

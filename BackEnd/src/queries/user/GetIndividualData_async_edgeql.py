@@ -82,7 +82,8 @@ class GetIndividualDataResultEventItem(NoPydanticValidation):
     type_tag: str | None
     name: str | None
     status: bool | None
-    date: datetime.date | None
+    date_beginning: datetime.datetime | None
+    date_ending: datetime.datetime | None
 
 
 @dataclasses.dataclass
@@ -227,7 +228,8 @@ async def GetIndividualData(
                 type_tag,
                 name,
                 status,
-                date,
+                date_beginning,
+                date_ending
             },
             account: {
                 id,

@@ -36,9 +36,8 @@ async def CreateSchedule(
     type_tag: str,
     name: str,
     status: bool | None = None,
-    date: datetime.date,
-    beginning_time: datetime.time | None = None,
-    ending_time: datetime.time | None = None,
+    date: datetime.datetime,
+    ending_time: datetime.datetime | None = None,
     notes: str | None = None,
 ) -> CreateScheduleResult:
     return await executor.query_single(
@@ -47,9 +46,8 @@ async def CreateSchedule(
             type_tag:= <str>$type_tag,
             name:= <str>$name,
             status:= <optional bool>$status,
-            date:= <cal::local_date>$date,
-            beginning_time:= <optional cal::local_time>$beginning_time,
-            ending_time:= <optional cal::local_time>$ending_time,
+            date_beginning:= <cal::local_datetime>$date,
+            date_ending:= <optional cal::local_datetime>$ending_time,
             notes:=<optional json>$notes,
         }\
         """,
@@ -57,7 +55,6 @@ async def CreateSchedule(
         name=name,
         status=status,
         date=date,
-        beginning_time=beginning_time,
         ending_time=ending_time,
         notes=notes,
     )

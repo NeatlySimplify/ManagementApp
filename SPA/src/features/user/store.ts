@@ -29,6 +29,7 @@ const SettingsSchema = z.object({
   contact_number_types: z.array(z.string()),
   record_types: z.array(z.string()),
   record_status: z.array(z.string()),
+  movement_types: z.array(z.string()),
   movement_income_types: z.array(z.string()),
   movement_expense_types: z.array(z.string()),
   scheduler_types: z.array(z.string()),
@@ -127,8 +128,8 @@ export const useUserStore = defineStore("user", {
     async getBankAccount(): Promise<string | null> {
       try {
         const response = await api.get(`/api/user/bank-account`);
-        const { status, result } = response.data;
-        if (status !== "success") {
+        const result = response.data;
+        if (response.status !== 200) {
           console.error("Server rejected creation:", result);
           return null;
         }

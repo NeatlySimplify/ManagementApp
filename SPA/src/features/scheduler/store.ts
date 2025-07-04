@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import api from "@/util/api";
 import z from "zod/v4";
 
-const SchedulerSchema = z.object({
+export const SchedulerSchema = z.object({
   id: z.uuid(),
   type_tag: z.string(),
   name: z.string(),
@@ -17,7 +17,7 @@ const CreateSchedulerSchema = z.object({
   date_beginning: z.date(),
   date_ending: z.optional(z.date()),
 });
-type Scheduler = z.infer<typeof SchedulerSchema>;
+export type Scheduler = z.infer<typeof SchedulerSchema>;
 
 export const useSchedulerStore = defineStore("scheduler", {
   state: () => ({
@@ -63,6 +63,9 @@ export const useSchedulerStore = defineStore("scheduler", {
         acc[record.id] = record;
         return acc;
       }, {});
+    },
+    directDelete(id: string) {
+      delete this.entries[id];
     },
     async getScheduler(id: string): Promise<string | null> {
       try {

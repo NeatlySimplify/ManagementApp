@@ -1,8 +1,10 @@
 <script setup>
 import { defineProps } from "vue";
-import { useUserStore } from "../user/store";
+import { useUserStore } from "@/features/user/store";
+import { useEntityStore } from "@/features/entity/store";
 
 const userStore = useUserStore();
+const entityStore = useEntityStore();
 const settings = userStore.getSettings;
 const contactTypes = settings.contact_number_types.sort();
 
@@ -28,32 +30,22 @@ function takeContact(index) {
 
   updateFlag.value = true;
 }
-async function updateContact() {
-  try {
-    await api.put("/entity/contact", contactPlaceholder.value);
-    localContact[contactIndex.value] = { ...contactPlaceholder.value };
-    cleanAddressPlaceholder();
-  } catch {
-    alert("Falha na tentativa de Atalizar os dados de endereço");
-  }
+function updateContact() {
+  entityStore.updateContact(contactPlaceholder.value);
+  localContact[contactIndex.value] = { ...contactPlaceholder.value };
+  cleanAddressPlaceholder();
 }
-async function deleteContact(uuid) {
-  try {
-    await api.delete(`/${props.entity.value.id}/address/`, { params: { contact: uuid } });
-    localContact.value = localContact.value.filter((contact) => contact.id !== uuid);
-  } catch {
-    alert("Falha na tentativa de Atalizar os dados de endereço");
-  }
+
+function deleteContact(uuid) {
+  entityStore.deleteContact(props.entity.value.id, uuid);
+  localContact.value = localContact.value.filter((contact) => contact.id !== uuid);
 }
-async function insertContact() {
-  try {
-    const request = await api.post("/entity/contact", contactPlaceholder.value);
-    contactPlaceholder.value.id = request.result.id;
-    localContact.value.push({ ...contactPlaceholder.value });
-  } catch {
-    alert("Erro ao inserir os dados nos nossos serivdores.");
-  }
+
+function insertContact() {
+  contactPlaceholder.value.id = entityStore.createContact(contactPlaceholder.value);
+  localContact.value.push({ ...contactPlaceholder.value });
 }
+
 onMounted(() => {
   if (props.entity?.value?.phone) {
     localContact.value = props.entity.value.phone.map((ph) => ({ ...ph }));

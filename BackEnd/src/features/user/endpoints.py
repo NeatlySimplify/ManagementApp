@@ -20,7 +20,6 @@ from src.features.user.schema import (
     BankAccountUpdate,
     SettingsCreate,
     SettingsUpdate,
-    UserUpdate,
 )
 
 userRoute = APIRouter(prefix='/api/user')

@@ -15,17 +15,13 @@ select Record {
         name,
         type_tag,
         status,
-        date
+        date_beginning,
+        date_ending
     },
     movement: {
         id,
         type_tag,
-        str_value:=to_str(.value),
+        value,
         installment,
-        payment: {
-            id,
-            status,
-            payment_date
-        }
     }
 } filter .id = <uuid>$id

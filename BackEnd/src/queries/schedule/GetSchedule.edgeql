@@ -2,8 +2,7 @@ select Scheduler{
     type_tag,
     name,
     status,
-    date,
-    beginning_time,
-    ending_time,
+    date_beginning,
+    date_ending,
     notes,
 }filter .id = <uuid>$id

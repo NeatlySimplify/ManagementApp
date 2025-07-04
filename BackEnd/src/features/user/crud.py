@@ -112,6 +112,7 @@ async def getData(
     return result
 
 
+
 @db.handle_database_errors
 async def createSettings(
         db,

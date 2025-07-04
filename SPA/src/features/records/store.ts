@@ -51,11 +51,11 @@ export const useRecordStore = defineStore("record", {
         return acc;
       }, {});
     },
-    async getRecord(id: string): Promise<string | null> {
+    async fetchRecord(id: string): Promise<string | null> {
       try {
         const response = await api.get(`/api/record/${id}`);
-        const { status, result } = response.data;
-        if (status !== "success") {
+        const result = response.data;
+        if (response.status !== 200) {
           console.error("Server rejected creation:", result);
           return null;
         }

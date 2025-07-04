@@ -33,10 +33,7 @@ class GetPaymentResult(NoPydanticValidation):
     type_tag: str | None
     value: decimal.Decimal | None
     ignore_in_totals: bool | None
-    interest: str | None
-    penalty: str | None
     category_tag: str | None
-    subcategory_tag: str | None
     payment_date: datetime.date | None
     is_due: datetime.date | None
     status: bool | None
@@ -54,7 +51,7 @@ class GetPaymentResultAccount(NoPydanticValidation):
 @dataclasses.dataclass
 class GetPaymentResultEvent(NoPydanticValidation):
     id: uuid.UUID
-    date: datetime.date | None
+    date_beginning: datetime.datetime | None
 
 
 @dataclasses.dataclass
@@ -74,10 +71,7 @@ async def GetPayment(
             type_tag,
             value,
             ignore_in_totals,
-            interest,
-            penalty,
             category_tag,
-            subcategory_tag,
             payment_date,
             is_due,
             status,
@@ -87,7 +81,7 @@ async def GetPayment(
             },
             event: {
                 id,
-                date,
+                date_beginning,
             },
             movement:{id}
         } filter .id = <uuid>$payment\

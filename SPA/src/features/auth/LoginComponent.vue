@@ -7,6 +7,8 @@ import { useEntityStore } from "@/features/entity/store";
 import { useMovementStore } from "@/features/movement/store";
 import { useRecordStore } from "@/features/record/store";
 import { useSchedulerStore } from "@/features/scheduler/store";
+import FormInputComponent from "@/features/common/FormInputComponent.vue";
+import PasswordComponent from "@/features/common/PasswordComponent.vue";
 
 const router = useRouter();
 const data = ref({
@@ -55,29 +57,13 @@ const onSubmit = async () => {
 <template>
   <div class="container-fluid border rounded border-top-0">
     <form @submit.prevent="onSubmit">
-      <div class="input-group input-group-lg my-3">
-        <span class="input-group-text">E-Mail:</span>
-        <input
-          type="email"
-          class="form-control"
-          v-model="data.email"
-          required
-          placeholder="fulano@mail.com"
-          minlength="6"
-          maxlength="40"
-        />
-      </div>
-      <div class="input-group input-group-lg my-3">
-        <span class="input-group-text">Password:</span>
-        <input
-          type="password"
-          class="form-control"
-          v-model="data.password"
-          required
-          minlength="6"
-          maxlength="30"
-        />
-      </div>
+      <FormInputComponent
+        title="email"
+        :required="true"
+        :isReadOnly="false"
+        v-movel:placeholder="data.email"
+      ></FormInputComponent>
+      <PasswordComponent label="Senha" v-model:passwordModel="data.password"></PasswordComponent>
       <div class="mb-3 row">
         <div class="btn-group d-flex">
           <RouterLink

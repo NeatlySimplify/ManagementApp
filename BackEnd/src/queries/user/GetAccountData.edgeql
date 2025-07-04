@@ -69,7 +69,8 @@ select converted{
         type_tag,
         name,
         status,
-        date,
+        date_beginning,
+        date_ending
     },
     account: {
         id,

@@ -1,7 +1,9 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import api from "@/util/api";
 import { RouterLink, useRouter } from "vue-router";
+import FormInputComponent from "@/features/common/FormInputComponent.vue";
+import PasswordComponent from "@/features/common/PasswordComponent.vue";
 
 const router = useRouter();
 const form = ref({
@@ -15,10 +17,6 @@ const form = ref({
 const isLoading = ref(false);
 const showYourself = ref(false);
 
-const passwordValid = computed(() =>
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,20}$/.test(form.value.password),
-);
-
 watch(showYourself, (newValue) => {
   if (newValue === true) {
     form.value.tag_type = "individual";
@@ -29,7 +27,7 @@ watch(showYourself, (newValue) => {
 
 const onSubmit = async () => {
   if (form.value.password !== form.value.confirm_pw) {
-    alert("Passwords do not match.");
+    alert("Senhas não coincidem.");
     return;
   }
   const formData = {
@@ -54,29 +52,19 @@ const onSubmit = async () => {
 <template>
   <div class="container">
     <form @submit.prevent="onSubmit">
-      <div class="input-group input-group-lg my-3">
-        <span class="input-group-text">Nome:</span>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Nome do Usuário..."
-          v-model="form.name"
-          required
-          minlength="4"
-          maxlength="100"
-        />
-      </div>
-      <div class="input-group input-group-lg my-3">
-        <span class="input-group-text">Email:</span>
-        <input
-          type="text"
-          class="form-control"
-          v-model="form.email"
-          required
-          minlength="4"
-          maxlength="100"
-        />
-      </div>
+      <FormInputComponent
+        title="Nome:"
+        :required="true"
+        :isReadOnly="false"
+        v-model:placeholder="form.name"
+      ></FormInputComponent>
+
+      <FormInputComponent
+        title="E-mail:"
+        :required="true"
+        :isReadOnly="false"
+        v-model:placeholder="form.email"
+      ></FormInputComponent>
 
       <div class="border rounded border-start-0 border-end-0 my-3">
         <p class="form-label fs-4">Tipo de Usuário</p>
@@ -133,37 +121,12 @@ const onSubmit = async () => {
         </div>
       </div>
 
-      <div class="mb-3 row">
-        <div class="col-12 col-md-6">
-          <div class="input-group input-group-lg my-3">
-            <span class="input-group-text">Senha:</span>
-            <input
-              type="password"
-              class="form-control"
-              v-model="form.password"
-              required
-              minlength="6"
-              maxlength="30"
-            />
-            <p v-if="form.password && !passwordValid">
-              A senha deve incluir pelo menos uma letra maiúscula, uma letra minúscula, e um número.
-            </p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6">
-          <div class="input-group input-group-lg my-3">
-            <span class="input-group-text">Confirme:</span>
-            <input
-              type="password"
-              class="form-control"
-              v-model="form.confirm_pw"
-              required
-              minlength="6"
-              maxlength="30"
-            />
-          </div>
-        </div>
-      </div>
+      <PasswordComponent label="Senha" v-model:passwordModel="form.password"></PasswordComponent>
+
+      <PasswordComponent
+        label="Confirme sua Senha"
+        v-model:passwordModel="form.confirm_pw"
+      ></PasswordComponent>
 
       <div class="mb-3 row">
         <div class="btn-group d-flex">

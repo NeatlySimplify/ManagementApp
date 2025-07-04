@@ -59,7 +59,7 @@ export const useEntityStore = defineStore("entity", {
       }, {});
     },
 
-    async getEntity(id: string): Promise<string | null> {
+    async fetchEntity(id: string): Promise<string | null> {
       try {
         const response = await api.get(`/api/entity/${id}`);
         const { status, result } = response.data;
@@ -127,15 +127,15 @@ export const useEntityStore = defineStore("entity", {
         return null;
       }
     },
-    async createAddress(raw: unknown): Promise<null> {
+    async createAddress(raw: unknown): Promise<string | null> {
       try {
         const response = await api.post("/api/entity/address", raw);
-        const { status, result } = response.data;
-        if (status !== "success") {
+        const result = response.data;
+        if (response.status !== 200) {
           console.error("Server rejected creation:", result);
           return null;
         }
-        return null;
+        return result.id;
       } catch (err) {
         console.error("Unexpected error:", err);
         return null;
@@ -171,15 +171,15 @@ export const useEntityStore = defineStore("entity", {
         return null;
       }
     },
-    async createContact(raw: unknown): Promise<null> {
+    async createContact(raw: unknown): Promise<string | null> {
       try {
         const response = await api.post("/api/entity/contact", raw);
-        const { status, result } = response.data;
-        if (status !== "success") {
+        const { result } = response.data;
+        if (response.status !== 200) {
           console.error("Server rejected creation:", result);
           return null;
         }
-        return null;
+        return result.id;
       } catch (err) {
         console.error("Unexpected error:", err);
         return null;

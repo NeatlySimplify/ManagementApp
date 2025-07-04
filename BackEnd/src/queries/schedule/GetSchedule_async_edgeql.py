@@ -31,9 +31,8 @@ class GetScheduleResult(NoPydanticValidation):
     type_tag: str | None
     name: str | None
     status: bool | None
-    date: datetime.date | None
-    beginning_time: datetime.time | None
-    ending_time: datetime.time | None
+    date_beginning: datetime.datetime | None
+    date_ending: datetime.datetime | None
     notes: str | None
 
 
@@ -48,9 +47,8 @@ async def GetSchedule(
             type_tag,
             name,
             status,
-            date,
-            beginning_time,
-            ending_time,
+            date_beginning,
+            date_ending,
             notes,
         }filter .id = <uuid>$id\
         """,

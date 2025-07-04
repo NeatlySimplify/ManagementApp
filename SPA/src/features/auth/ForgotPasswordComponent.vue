@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import api from "@/util/api";
+import FormInputComponent from "@/features/common/FormInputComponent.vue";
 import { useRouter } from "vue-router";
 
 const email = ref("");
@@ -25,32 +26,23 @@ const onSubmit = async () => {
 <template>
   <div class="container">
     <form @submit.prevent="onSubmit">
-      <div class="mb-3 row">
-        <div class="col-12 col-md-6 mx-auto">
-          <label for="sequence" class="col-form-label"
-            >Type your email to reset your password:</label
-          >
-          <input
-            type="text"
-            class="form-control"
-            id="sequence"
-            v-model="email"
-            placeholder="amilcarlos@hotmail.com"
-            required
-          />
-          <div class="offset-sm-4 col-sm-8 mt-3 mx-auto">
-            <RouterLink
-              class="btn btn-outline-danger btn-lg flex-grow-1"
-              :to="{ name: 'root' }"
-              :class="{ disabled: isLoading }"
-            >
-              Registrar
-            </RouterLink>
-            <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1">
-              Login <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
-            </button>
-          </div>
-        </div>
+      <FormInputComponent
+        title="Type your email to reset your password:"
+        :required="true"
+        :isReadOnly="false"
+        v-model:placeholder="email"
+      ></FormInputComponent>
+      <div class="offset-sm-4 col-sm-8 mt-3 mx-auto">
+        <RouterLink
+          class="btn btn-outline-danger btn-lg flex-grow-1"
+          :to="{ name: 'root' }"
+          :class="{ disabled: isLoading }"
+        >
+          Registrar
+        </RouterLink>
+        <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1">
+          Login <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
+        </button>
       </div>
     </form>
   </div>

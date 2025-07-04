@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import z from "zod/v4";
 import api from "@/util/api";
+import { useSchedulerStore, SchedulerSchema } from "@/features/scheduler/store";
+
+const schedulerStore = useSchedulerStore();
 
 const PaymentSchema = z.object({
   id: z.uuid(),
@@ -8,10 +11,27 @@ const PaymentSchema = z.object({
   type_tag: z.string(),
   value_str: z.coerce.bigint(),
   payment_date: z.coerce.date(),
+  is_due: z.coerce.date(),
   status: z.boolean(),
   movement: z.string(), // Movement.id
 });
 type Payment = z.infer<typeof PaymentSchema>;
+
+const PaymentResponseSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  type_tag: z.string(),
+  value_str: z.coerce.bigint(),
+  payment_date: z.coerce.date(),
+  is_due: z.coerce.date(),
+  status: z.boolean(),
+  movement: z.string(),
+  event: SchedulerSchema,
+});
+
+const MovementResponseSchema = z.object({
+  payment: z.array(PaymentResponseSchema),
+});
 
 const CreateMovementSchema = z.object({
   type_tag: z.string(),
@@ -45,10 +65,10 @@ export const useMovementStore = defineStore("movement", {
       (referenceDate: Date, tag: string): Payment[] => {
         const start = new Date(referenceDate);
         start.setDate(1);
-        const end = new Date(referenceDate);
-        end.setDate(0);
+        const end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1);
+        end.setDate(1);
         const relevantPayments = Object.values(state.payment).filter(
-          (pay) => pay.type_tag === tag && pay.payment_date >= start && pay.payment_date <= end,
+          (pay) => pay.type_tag === tag && pay.payment_date >= start && pay.payment_date < end,
         );
         return relevantPayments;
       },
@@ -91,9 +111,9 @@ export const useMovementStore = defineStore("movement", {
 
       for (const payment of relevantPayments) {
         const val = BigInt(payment.value_str);
-        if (payment.type_tag.startsWith("income")) {
+        if (payment.type_tag.startsWith("Entrada")) {
           income += val;
-        } else if (payment.type_tag.startsWith("expense")) {
+        } else if (payment.type_tag.startsWith("Saída")) {
           expense += val;
         }
       }
@@ -121,11 +141,11 @@ export const useMovementStore = defineStore("movement", {
         return acc;
       }, {});
     },
-    async getMovement(id: string): Promise<string | null> {
+    async fetchMovement(id: string): Promise<string | null> {
       try {
         const response = await api.get(`/api/movement/${id}`);
-        const { status, result } = response.data;
-        if (status !== "success") {
+        const result = response.data;
+        if (response.status !== 200) {
           console.error("Server rejected creation:", result);
           return null;
         }
@@ -155,8 +175,8 @@ export const useMovementStore = defineStore("movement", {
 
     async createMovement(raw: unknown): Promise<null> {
       try {
-        const response = await api.post("/api/movement", raw);
-        const { status, result } = response.data;
+        const request = await api.post("/api/movement", raw);
+        const { status, result } = request.data;
         if (status !== "success") {
           console.error("Server rejected creation:", result);
           return null;
@@ -166,6 +186,28 @@ export const useMovementStore = defineStore("movement", {
         const full = { ...parsed, id: result.id };
         const partial = MovementSchema.parse(full);
         this.movement[partial.id] = partial;
+        const response = await this.fetchMovement(partial.id);
+
+        if (response) {
+          try {
+            // Parse the response using the Zod schema
+            const parsedResponse = MovementResponseSchema.parse(response);
+
+            // Access the payment array from the parsed response
+
+            this.setPayment(parsedResponse.payment);
+            const event_list = [];
+            for (let i = 0; i < parsedResponse.payment.length; i++) {
+              const eventObj = parsedResponse.payment[i].event;
+              event_list.push(eventObj);
+            }
+            schedulerStore.set(event_list);
+          } catch (error) {
+            console.error("Error parsing fetchMovement response:", error);
+            return null; // Or handle the error as needed
+          }
+        }
+
         return null;
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -175,6 +217,7 @@ export const useMovementStore = defineStore("movement", {
 
     async removeMovement(id: string): Promise<null> {
       try {
+        const bag = this.fetchMovement(id);
         const response = await api.delete(`/api/movement/${id}`);
         const { status, result } = response.data;
         if (status !== "success") {
@@ -183,13 +226,28 @@ export const useMovementStore = defineStore("movement", {
         }
         // We already have raw + now the id → build the full & safe partial
         delete this.movement[id];
+        if (bag) {
+          try {
+            // Parse the response using the Zod schema
+            const parsedResponse = MovementResponseSchema.parse(bag);
+            const payments = parsedResponse.payment;
+            for (let i = 0; i < payments.length; i++) {
+              schedulerStore.directDelete(payments[i].event.id);
+              delete this.payment[id];
+            }
+          } catch (error) {
+            console.error("Error parsing fetchMovement response:", error);
+            return null; // Or handle the error as needed
+          }
+        }
+
         return null;
       } catch (err) {
         console.error("Unexpected error:", err);
         return null;
       }
     },
-    async getPayment(id: string): Promise<string | null> {
+    async fetchPayment(id: string): Promise<string | null> {
       try {
         const response = await api.get(`/api/movement/payment/${id}`);
         const { status, result } = response.data;

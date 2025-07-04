@@ -52,6 +52,17 @@ class GetMovementResultPaymentItem(NoPydanticValidation):
     value: decimal.Decimal | None
     payment_date: datetime.date | None
     is_due: datetime.date | None
+    event: GetMovementResultPaymentItemEvent | None
+
+
+@dataclasses.dataclass
+class GetMovementResultPaymentItemEvent(NoPydanticValidation):
+    id: uuid.UUID
+    type_tag: str | None
+    name: str | None
+    status: bool | None
+    date_beginning: datetime.datetime | None
+    date_ending: datetime.datetime | None
 
 
 @dataclasses.dataclass
@@ -89,6 +100,14 @@ async def GetMovement(
                 value,
                 payment_date,
                 is_due,
+                event:{
+                    id,
+                    type_tag,
+                    name,
+                    status,
+                    date_beginning,
+                    date_ending
+                }
             }
         } filter .id = <uuid>$movement\
         """,

@@ -52,7 +52,8 @@ class GetRecordResultEventItem(NoPydanticValidation):
     name: str | None
     type_tag: str | None
     status: bool | None
-    date: datetime.date | None
+    date_beginning: datetime.datetime | None
+    date_ending: datetime.datetime | None
 
 
 @dataclasses.dataclass
@@ -95,7 +96,8 @@ async def GetRecord(
                 name,
                 type_tag,
                 status,
-                date
+                date_beginning,
+                date_ending
             },
             movement: {
                 id,

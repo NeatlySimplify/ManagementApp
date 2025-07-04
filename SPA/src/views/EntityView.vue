@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/features/features/user/store";
 import Form from "@/features/entity/FormComponent.vue";
 import BareModal from "@/features/common/BareModal.vue";
-import TableComponent from "@/features/common/TableComponent.vue";
+import DataTableComponent from "@/features/common/DataTableComponent.vue";
 
 const router = useRouter();
 const entityStore = useEntityStore();
@@ -109,14 +109,14 @@ async function deleteEntity(id) {
         <span>&#10133;</span> Adicionar novo(a) {{ settings.entity_title }}
       </button>
     </div>
-    <TableComponent
+    <DataTableComponent
       v-model:rows="rows"
       v-model:cols="cols"
       v-model:loading="loading"
       v-model:route="route"
       @delete_="deleteEntity"
     >
-    </TableComponent>
+    </DataTableComponent>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
     <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>

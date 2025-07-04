@@ -3,10 +3,7 @@ select Payment {
     type_tag,
     value,
     ignore_in_totals,
-    interest,
-    penalty,
     category_tag,
-    subcategory_tag,
     payment_date,
     is_due,
     status,
@@ -16,7 +13,7 @@ select Payment {
     },
     event: {
         id,
-        date,
+        date_beginning,
     },
     movement:{id}
 } filter .id = <uuid>$payment
