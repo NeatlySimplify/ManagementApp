@@ -30,12 +30,6 @@ const router = createRouter({
     //   meta: { guestOnly: true },
     // },
     {
-      path: "/first-access",
-      name: "first-access",
-      component: () => import("@/views/SettingsView.vue"),
-      meta: { requiresAuth: true },
-    },
-    {
       path: "/board",
       name: "board",
       component: () => import("@/views/BoardView.vue"),
@@ -79,6 +73,7 @@ const router = createRouter({
       props: (route) => ({
         filter: route.query.filter ?? null,
         term: route.query.term ?? null,
+        status: route.query.status ?? null,
       }),
     },
     {
@@ -89,7 +84,6 @@ const router = createRouter({
       props: (route) => ({
         id: route.params.id ?? null,
         back: route.query.back ?? null,
-        record: route.query.record ?? null,
       }),
     },
     {
@@ -108,6 +102,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
       props: (route) => ({
         id: route.params.id ?? null,
+        back: route.query.back ?? null,
       }),
     },
     {
@@ -118,17 +113,6 @@ const router = createRouter({
       props: (route) => ({
         id: route.params.id ?? null,
         back: route.query.back ?? null,
-        record: route.query.record ?? null,
-      }),
-    },
-    {
-      path: "/scheduler/filter",
-      name: "schedulerFiltered",
-      component: () => import("@/views/SchedulerView.vue"),
-      meta: { requiresAuth: true },
-      props: (route) => ({
-        filter: route.query.filter ?? null,
-        term: route.query.term ?? null,
       }),
     },
     {
@@ -136,12 +120,9 @@ const router = createRouter({
       name: "user",
       component: () => import("@/views/UserView.vue"),
       meta: { requiresAuth: true },
-    },
-    {
-      path: "/user/settings",
-      name: "settings",
-      component: () => import("@/views/SettingsView.vue"),
-      meta: { requiresAuth: true },
+      props: (route) => ({
+        first_access: route.query.first_access ?? null,
+      }),
     },
     {
       path: "/:pathMatch(.*)*",

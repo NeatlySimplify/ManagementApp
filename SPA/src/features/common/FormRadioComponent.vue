@@ -10,16 +10,6 @@ const prop = defineProps({
 });
 
 const placeholder = defineModel("placeholder", { type: Boolean, default: false });
-function active() {
-  if (!prop.isReadOnly) {
-    placeholder.value = true;
-  }
-}
-function inactive() {
-  if (!prop.isReadOnly) {
-    placeholder.value = false;
-  }
-}
 </script>
 <template>
   <p class="form-label">{{ prop.title }}</p>
@@ -29,9 +19,9 @@ function inactive() {
       class="btn-check"
       name="btnradio"
       id="btnradio1"
+      value="true"
+      v-model="placeholder"
       autocomplete="off"
-      @click="active"
-      :checked="placeholder"
     />
     <label class="btn btn-outline-primary" for="btnradio1">Efetivo</label>
 
@@ -40,9 +30,9 @@ function inactive() {
       class="btn-check"
       name="btnradio"
       id="btnradio2"
+      value="false"
       autocomplete="off"
-      @click="inactive"
-      :checked="!placeholder"
+      v-model="placeholder"
     />
     <label class="btn btn-outline-secondary" for="btnradio2">Não Efetivado</label>
   </div>

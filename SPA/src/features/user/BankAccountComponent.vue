@@ -1,95 +1,88 @@
 <script setup>
-import api from "@util/api";
-import { useUserStore } from "@user/store";
-import { useRecordStore } from "@record/store";
-import { defineProps } from "vue";
-import { defineEmits } from "vue";
-import NotesComponent from "@/features/common/NotesComponent.vue";
+// import { useUserStore } from "@/features/user/store";
+// import { defineProps } from "vue";
+// import { defineEmits } from "vue";
+// import NotesComponent from "@/features/common/NotesComponent.vue";
+// import FormInputComponent from "@/features/common/FormInputComponent";
+// import FormNumberComponent from "@/features/common/FormNumberComponent";
+// import FormSelectComponent from "@/features/common/FormSelectComponent";
+// import FormRadioComponent from "@/features/common/FormRadioComponent";
 
-BeforeMounted(async () => {
-  if (props.mode === "show") {
-    try {
-      request = await api.get(`${route}/${props.id}`);
-      record.value = request.result;
-      changeMode();
-    } catch {
-      alert("Erro ao buscar os dados nos nossos serivdores.");
-    }
-  }
-});
+// BeforeMounted(async () => {
+//   if (props.mode === "show") {
+//     try {
+//       request = await api.get(`${route}/${props.id}`);
+//       record.value = request.result;
+//       changeMode();
+//     } catch {
+//       alert("Erro ao buscar os dados nos nossos serivdores.");
+//     }
+//   }
+// });
 
-defineEmits(["close"]);
+// defineEmits(["close"]);
 
-const props = defineProps({
-  id,
-  mode,
-});
-const userStore = useUserStore();
-const recordStore = useRecordStore();
-const settings = userStore.getSettings;
+// const props = defineProps({
+//   id,
+//   mode,
+// });
+// const userStore = useUserStore();
+// const settings = userStore.getSettings;
 
-const record = ref({});
+// const account = ref({});
 
-const isReadOnly = ref(true);
+// const isReadOnly = ref(true);
 
-const setting = {
-  title: settings.record_title,
-  types: settings.record_types.sort(),
-  documents: settings.record_status.sort(),
-};
+// const setting = {
+//   types: settings.bank_account_types.sort(),
+// };
 
-function changeMode() {
-  isReadOnly.value = !isReadOnly.value;
-}
+// function changeMode() {
+//   isReadOnly.value = !isReadOnly.value;
+// }
 
-async function handlerUpdate() {
-  await submitForm();
-  changeMode();
-}
+// async function handlerUpdate() {
+//   await submitForm();
+//   changeMode();
+// }
 
-async function deleteEntity() {
-  try {
-    await api.delete(`${route}/${entity.value.id}`);
-    entityStore.removeEntity(entity.value.id);
-    closeModal();
-  } catch {
-    alert(`Falha na tentativa de deletar ${setting.entity_title}!`);
-  }
-}
-async function submitForm() {
-  if (props.mode === "create") {
-    zeroingVars();
-    entity_data.value.notes = notes.value;
-    try {
-      request = await api.post("/entity", entity.value);
-      result = request.result.id;
-      data = {
-        id: result,
-        name: entity.value.name,
-        email: entity.value.email,
-        document: entity.value.document,
-        type_tag: entity.value.type_tag,
-        document_type: entity.value.document_type,
-        status: entity.value.status,
-      };
-      entityStore.addEntity(cleanEntity(data));
-    } catch {
-      alert(`Falha na tentativa de criar ${setting.entity_title}!`);
-    }
-  } else {
-    entity.value.id = props.id;
-    try {
-      request = await api.put(route, entity.value);
-      entity.value.id = request.result.id;
-      entityStore.updateEntity(cleanEntity(entity.value));
-    } catch {
-      alert("Falha na tentativa de atualizar!");
-    }
-  }
-}
+// async function deleteAccount(id) {
+//   userStore.removeBankAccount()
+// }
+// async function submitForm() {
+//   if (props.mode === "create") {
+//     zeroingVars();
+//     entity_data.value.notes = notes.value;
+//     try {
+//       request = await api.post("/entity", entity.value);
+//       result = request.result.id;
+//       data = {
+//         id: result,
+//         name: entity.value.name,
+//         email: entity.value.email,
+//         document: entity.value.document,
+//         type_tag: entity.value.type_tag,
+//         document_type: entity.value.document_type,
+//         status: entity.value.status,
+//       };
+//       entityStore.addEntity(cleanEntity(data));
+//     } catch {
+//       alert(`Falha na tentativa de criar ${setting.entity_title}!`);
+//     }
+//   } else {
+//     entity.value.id = props.id;
+//     try {
+//       request = await api.put(route, entity.value);
+//       entity.value.id = request.result.id;
+//       entityStore.updateEntity(cleanEntity(entity.value));
+//     } catch {
+//       alert("Falha na tentativa de atualizar!");
+//     }
+//   }
+// }
 </script>
 
-<template>
+<!-- <template>
   <div class="modal-header">
     <h5 class="modal-title">{{ entity.name }}</h5>
     <button type="button" class="btn-close" @click="$emit('close')">Sair</button>
@@ -225,4 +218,4 @@ async function submitForm() {
   <div class="modal-footer">
     <button type="button" class="btn btn-primary" @click="$emit('close')">Sair</button>
   </div>
-</template>
+</template> -->

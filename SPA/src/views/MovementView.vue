@@ -1,23 +1,23 @@
 <script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
-import { useEntityStore } from "@/features/entity/store";
+import { ref, onMounted, computed, defineProps, watch } from "vue";
+import { useMovementStore } from "@/features/movement/store";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/features/features/user/store";
-import Form from "@/features/entity/FormComponent.vue";
+import { useUserStore } from "@/features/user/store";
+import MovementFormComponent from "@/features/movement/MovementFormComponent.vue";
 import BareModal from "@/features/common/BareModal.vue";
 import DataTableComponent from "@/features/common/DataTableComponent.vue";
+import DatePickerComponent from "@/features/common/DatePickerComponent.vue";
 
 const router = useRouter();
-const entityStore = useEntityStore();
+const movementStore = useMovementStore();
 const userStore = useUserStore();
 const settings = userStore.getSettings;
-const entities = computed(() => entityStore.getAllEntities);
-const route = ref("/entity");
+const movement = ref({});
 
 onMounted(() => {
-  loadEntities();
+  loadMovement();
   if (props.id !== null) {
-    viewEntity(props.id);
+    viewMovement(props.id);
   }
 });
 
@@ -32,93 +32,118 @@ const props = defineProps({
     required: false,
     default: false,
   },
-  filter: {
-    type: [String, null],
-    required: false,
-    default: null,
-  },
   term: {
-    type: [Boolean, String, null],
+    type: [String],
     required: false,
-    default: null,
+    default: "all",
   },
 });
+
+const filter_term = ref("");
+const currentDate = ref(new Date());
+filter_term.value = props.term;
 
 const rows = ref(null);
 const isModalOpen = ref(false);
 const loading = ref(true);
 const mode = ref("");
 const name = ref("");
-const entity_id = ref("");
+const movement_id = ref("");
 
 const cols =
   ref([
-    { field: "name", title: "Nome" },
-    { field: "email", title: "E-Mail" },
     { field: "type_tag", title: "Tipo" },
-    { field: "document", title: "Documento" },
-    { field: "status", title: "Ativo" },
+    { field: "value", title: "Valor" },
+    { field: "installment", title: "Parcelas" },
     { field: "actions", title: "Actions" },
   ]) || [];
 
-function viewEntity(id) {
-  entity_id.value = id;
-  name.value = entity.getEntity(id);
+function viewMovement(id) {
+  movement_id.value = id;
+  name.value = movementStore.getMovement(id).name;
   isModalOpen.value = true;
   mode.value = "show";
 }
-function createEntity() {
+function createMovement() {
   isModalOpen.value = true;
   mode.value = "create";
 }
 
-function loadEntities() {
+function loadMovement() {
   loading.value = true;
-  let entityArray = null;
-  if (props.filter == "status") {
-    entityArray = entityStore.getEntitiesByStatus(props.term);
-  } else if (props.filter === "type_tag") {
-    entityArray = entityStore.getEntitiesByType(props.term);
+  if (filter_term.value === "all" || filter_term.value === null) {
+    movement.value = computed(() => movementStore.getAllMovement);
   } else {
-    entityArray = entities.value;
+    movement.value = computed(() => movementStore.getActiveMovement(currentDate));
   }
-  rows.value = entityArray.value.entity;
-
+  rows.value = movement.value;
   loading.value = false;
 }
+
 function closeModal() {
   isModalOpen.value = false;
   if (props.back) {
     router.back();
   }
 }
-async function deleteEntity(id) {
-  try {
-    await api.delete(`${route.value}/${id}`);
-    entityStore.removeEntity(id);
-  } catch {
-    alert(`Falha na tentativa de deletar`);
-  }
+function deleteMovement(id) {
+  movementStore.removeMovement(id);
 }
+
+watch(filter_term, loadMovement, { immediate: true });
 </script>
 <template>
-  <div>
+  <div class="row">
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-3xl">{{ settings.entity_title }}</h2>
-      <button class="btn btn-outline-secondary d-grid gap-2" @click="createEntity()">
-        <span>&#10133;</span> Adicionar novo(a) {{ settings.entity_title }}
+      <h2 class="text-3xl">{{ settings.movement_title }}</h2>
+      <button class="btn btn-outline-secondary d-grid gap-2" @click="createMovement()">
+        <span>&#10133;</span> Adicionar novo(a) {{ settings.movement_title }}
       </button>
+    </div>
+    <div class="row">
+      <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+        <input
+          type="radio"
+          class="btn-check"
+          name="btnradio"
+          id="btnradio1"
+          value="all"
+          v-model="filter_term"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="btnradio1">Ver Todos</label>
+
+        <input
+          type="radio"
+          class="btn-check"
+          name="btnradio"
+          id="btnradio2"
+          value="filter"
+          v-model="filter_term"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="btnradio2"
+          >Ver Ativos na data de referencia</label
+        >
+      </div>
+    </div>
+    <div class="row" v-if="filter_term === 'filter'">
+      <DatePickerComponent v-model:currentDate="currentDate"></DatePickerComponent>
     </div>
     <DataTableComponent
       v-model:rows="rows"
       v-model:cols="cols"
       v-model:loading="loading"
       v-model:route="route"
-      @delete_="deleteEntity"
+      @delete_="deleteMovement"
     >
     </DataTableComponent>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
-    <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>
+    <MovementFormComponent
+      :id="movement_id"
+      :mode="mode"
+      @close="closeModal"
+    ></MovementFormComponent>
   </BareModal>
 </template>

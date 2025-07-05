@@ -1,7 +1,7 @@
 <script setup>
 import { ref, defineProps, onMounted } from "vue";
 import { useUserStore } from "@/features/user/store";
-import { ListInputComponent } from "@/features/common/ListInputComponent.vue";
+import ListInputComponent from "@/features/common/ListInputComponent.vue";
 
 const props = defineProps({
   first_access: {

@@ -1,23 +1,20 @@
 <script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
-import { useEntityStore } from "@/features/entity/store";
+import { ref, onMounted, computed, defineProps, watch } from "vue";
+import { useMovementStore } from "@/features/movement/store";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/features/features/user/store";
-import Form from "@/features/entity/FormComponent.vue";
+import PaymentFormComponent from "@/features/movement/PaymentFormComponent.vue";
 import BareModal from "@/features/common/BareModal.vue";
 import DataTableComponent from "@/features/common/DataTableComponent.vue";
+import DatePickerComponent from "@/features/common/DatePickerComponent.vue";
 
 const router = useRouter();
-const entityStore = useEntityStore();
-const userStore = useUserStore();
-const settings = userStore.getSettings;
-const entities = computed(() => entityStore.getAllEntities);
-const route = ref("/entity");
+const movementStore = useMovementStore();
+const payments = ref({});
 
 onMounted(() => {
-  loadEntities();
+  loadPayment();
   if (props.id !== null) {
-    viewEntity(props.id);
+    viewPayment(props.id);
   }
 });
 
@@ -32,93 +29,100 @@ const props = defineProps({
     required: false,
     default: false,
   },
-  filter: {
-    type: [String, null],
-    required: false,
-    default: null,
-  },
   term: {
-    type: [Boolean, String, null],
+    type: [String],
     required: false,
-    default: null,
+    default: "Entrada",
   },
 });
+
+const filter_term = ref("");
+const currentDate = ref(new Date());
+filter_term.value = props.term;
 
 const rows = ref(null);
 const isModalOpen = ref(false);
 const loading = ref(true);
 const mode = ref("");
 const name = ref("");
-const entity_id = ref("");
+const payment_id = ref("");
 
 const cols =
   ref([
     { field: "name", title: "Nome" },
-    { field: "email", title: "E-Mail" },
     { field: "type_tag", title: "Tipo" },
-    { field: "document", title: "Documento" },
-    { field: "status", title: "Ativo" },
+    { field: "value", title: "Valor" },
+    { field: "status", title: "Status" },
+    { field: "payment_date", title: "Data de Pagamento" },
+    { field: "is_due", title: "Data de Vencimento" },
     { field: "actions", title: "Actions" },
   ]) || [];
 
-function viewEntity(id) {
-  entity_id.value = id;
-  name.value = entity.getEntity(id);
+function viewPayment(id) {
+  payment_id.value = id;
+  name.value = movementStore.getPayment(id).name;
   isModalOpen.value = true;
   mode.value = "show";
 }
-function createEntity() {
-  isModalOpen.value = true;
-  mode.value = "create";
-}
 
-function loadEntities() {
+function loadPayment() {
   loading.value = true;
-  let entityArray = null;
-  if (props.filter == "status") {
-    entityArray = entityStore.getEntitiesByStatus(props.term);
-  } else if (props.filter === "type_tag") {
-    entityArray = entityStore.getEntitiesByType(props.term);
-  } else {
-    entityArray = entities.value;
-  }
-  rows.value = entityArray.value.entity;
-
+  payments.value = rows.value = computed(() =>
+    movementStore.getPaymentWindow(currentDate, filter_term),
+  );
   loading.value = false;
 }
+
 function closeModal() {
   isModalOpen.value = false;
   if (props.back) {
     router.back();
   }
 }
-async function deleteEntity(id) {
-  try {
-    await api.delete(`${route.value}/${id}`);
-    entityStore.removeEntity(id);
-  } catch {
-    alert(`Falha na tentativa de deletar`);
-  }
+function deletePayment(id) {
+  movementStore.removePayment(id);
 }
+
+watch(filter_term, loadMovement, { immediate: true });
 </script>
 <template>
   <div>
-    <div class="flex items-center justify-between mb-5">
-      <h2 class="text-3xl">{{ settings.entity_title }}</h2>
-      <button class="btn btn-outline-secondary d-grid gap-2" @click="createEntity()">
-        <span>&#10133;</span> Adicionar novo(a) {{ settings.entity_title }}
-      </button>
+    <div class="row">
+      <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+        <input
+          type="radio"
+          class="btn-check"
+          id="btnradio1"
+          value="Entrada"
+          v-model="filter_term"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="btnradio1">Entrada</label>
+
+        <input
+          type="radio"
+          class="btn-check"
+          id="btnradio2"
+          value="Saída"
+          v-model="filter_term"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="btnradio2">Saída</label>
+      </div>
+    </div>
+    <div class="row">
+      <DatePickerComponent v-model:currentDate="currentDate"></DatePickerComponent>
     </div>
     <DataTableComponent
       v-model:rows="rows"
       v-model:cols="cols"
       v-model:loading="loading"
       v-model:route="route"
-      @delete_="deleteEntity"
+      @delete_="deletePayment"
     >
     </DataTableComponent>
   </div>
   <BareModal v-if="isModalOpen" :title="name" @close="closeModal">
-    <Form :entity="entity_id" :mode="mode" @close="closeModal"></Form>
+    <PaymentFormComponent :id="payment_id" :mode="mode" @close="closeModal"></PaymentFormComponent>
   </BareModal>
 </template>

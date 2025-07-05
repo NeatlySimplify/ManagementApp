@@ -25,9 +25,6 @@ async function logout() {
     </button>
     <div class="offcanvas offcanvas-start container-fluid" data-bs-scroll="true" tabindex="-1">
       <div class="offcanvas-header row align-content-center">
-        <div class="col-11">
-          <img src="/img/owl-seeklogo.svg" style="height: 100px; width: 100px" class="mx-auto" />
-        </div>
         <div class="col-1">
           <button
             type="button"
@@ -40,45 +37,10 @@ async function logout() {
       <div class="offcanvas-body">
         <div class="accordion" id="menuAccordion">
           <div class="accordion-item">
+            <RouterLink :to="{ name: user }"></RouterLink>
             <h2 class="accordion-header" id="heading_user">
-              <a
-                class="accordion-button collapsed menu-item"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#collapse_user"
-                aria-expanded="false"
-                aria-controls="collapse_user"
-                href="#"
-              >
-                Usuário
-              </a>
+              <a class="accordion-button menu-item" type="button" href="#"> Usuário </a>
             </h2>
-            <div
-              id="collapse_user"
-              class="accordion-collapse collapse"
-              aria-labelledby="heading_user"
-              data-bs-parent="#menuAccordion"
-            >
-              <div class="accordion-body sub-menu">
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item">
-                    <RouterLink :to="{ name: settings }" class="link-dark link-underline-opacity-0">
-                      Personalizar
-                    </RouterLink>
-                  </li>
-                  <li class="list-group-item">
-                    <RouterLink :to="{ name: user }" class="link-dark link-underline-opacity-0">
-                      Conta do Usuário
-                    </RouterLink>
-                  </li>
-                  <li class="list-group-item">
-                    <a href="#" class="link-dark link-underline-opacity-0" @click="logout">
-                      Sair
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
           </div>
           <div class="accordion-item">
             <h2 class="accordion-header" id="heading_entity">
@@ -168,14 +130,14 @@ async function logout() {
                   </li>
                   <li class="list-group-item">
                     <RouterLink
-                      :to="{ name: recordFiltered, query: { filter: status, term: false } }"
+                      :to="{ name: recordFiltered, query: { filter: status, status: false } }"
                       class="link-dark link-underline-opacity-0"
                       >Ativos</RouterLink
                     >
                   </li>
                   <li class="list-group-item">
                     <RouterLink
-                      :to="{ name: recordFiltered, query: { filter: status, term: true } }"
+                      :to="{ name: recordFiltered, query: { filter: status, status: true } }"
                       class="link-dark link-underline-opacity-0"
                       >Desativados</RouterLink
                     >
@@ -194,7 +156,6 @@ async function logout() {
                 </ul>
               </div>
             </div>
-            {% endif %}
           </div>
           <div class="accordion-item">
             <h2 class="accordion-header" id="heading_movement">
@@ -225,14 +186,14 @@ async function logout() {
                   </li>
                   <li class="list-group-item">
                     <RouterLink
-                      :to="{ name: paymentFiltered, query: { term: income } }"
+                      :to="{ name: paymentFiltered, query: { term: 'Entrada' } }"
                       class="link-dark link-underline-opacity-0"
                       >Entrada</RouterLink
                     >
                   </li>
                   <li class="list-group-item">
                     <RouterLink
-                      :to="{ name: paymentFiltered, query: { term: expense } }"
+                      :to="{ name: paymentFiltered, query: { term: 'Saída' } }"
                       class="link-dark link-underline-opacity-0"
                       >Saída</RouterLink
                     >
@@ -276,6 +237,7 @@ async function logout() {
               </div>
             </div>
           </div>
+          <button class="btn btn-outline-danger btn-lg" @click="logout">Logout</button>
         </div>
       </div>
     </div>

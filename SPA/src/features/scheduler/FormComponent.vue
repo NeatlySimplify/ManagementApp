@@ -1,41 +1,34 @@
 <script setup>
-import api from "@util/api";
-import { useUserStore } from "@user/store";
-import { useRecordStore } from "@record/store";
+import { useUserStore } from "@/features/user/store";
 import { defineProps } from "vue";
-import { defineEmits } from "vue";
 import NotesComponent from "@/features/common/NotesComponent.vue";
+import FormInputComponent from "@/features/common/FormInputComponent.vue";
+import FormSelectComponent from "@/features/common/FormSelectComponent.vue";
+import FormRadioComponent from "@/features/common/FormRadioComponent.vue";
 
-BeforeMounted(async () => {
-  if (props.mode === "show") {
-    try {
-      request = await api.get(`${route}/${props.id}`);
-      record.value = request.result;
-      changeMode();
-    } catch {
-      alert("Erro ao buscar os dados nos nossos serivdores.");
-    }
+BeforeMounted(() => {
+  if (props.mode === "show" && props.id !== null) {
+    scheduler.value = { ...schedulerStore.fetchScheduler(props.id) };
   }
 });
 
-defineEmits(["close"]);
-
 const props = defineProps({
-  id,
-  mode,
+  id: {
+    type: [String, null],
+    required: false,
+  },
+  mode: {
+    type: String,
+    default: "show",
+  },
 });
 const userStore = useUserStore();
-const recordStore = useRecordStore();
 const settings = userStore.getSettings;
-
-const record = ref({});
-
 const isReadOnly = ref(true);
+const scheduler = ref(null);
 
 const setting = {
-  title: settings.record_title,
-  types: settings.record_types.sort(),
-  documents: settings.record_status.sort(),
+  types: settings.scheduler_types.sort(),
 };
 
 function changeMode() {
@@ -47,182 +40,77 @@ async function handlerUpdate() {
   changeMode();
 }
 
-async function deleteEntity() {
-  try {
-    await api.delete(`${route}/${entity.value.id}`);
-    entityStore.removeEntity(entity.value.id);
-    closeModal();
-  } catch {
-    alert(`Falha na tentativa de deletar ${setting.entity_title}!`);
-  }
+function deleteRecord() {
+  schedulerStore.removeScheduler(scheduler.value.id);
+  close();
 }
 async function submitForm() {
   if (props.mode === "create") {
-    zeroingVars();
-    entity_data.value.notes = notes.value;
-    try {
-      request = await api.post("/entity", entity.value);
-      result = request.result.id;
-      data = {
-        id: result,
-        name: entity.value.name,
-        email: entity.value.email,
-        document: entity.value.document,
-        type_tag: entity.value.type_tag,
-        document_type: entity.value.document_type,
-        status: entity.value.status,
-      };
-      entityStore.addEntity(cleanEntity(data));
-    } catch {
-      alert(`Falha na tentativa de criar ${setting.entity_title}!`);
-    }
+    schedulerStore.createScheduler(scheduler.value);
   } else {
-    entity.value.id = props.id;
-    try {
-      request = await api.put(route, entity.value);
-      entity.value.id = request.result.id;
-      entityStore.updateEntity(cleanEntity(entity.value));
-    } catch {
-      alert("Falha na tentativa de atualizar!");
-    }
+    schedulerStore.updateScheduler(scheduler.value);
   }
 }
 </script>
 
 <template>
   <div class="modal-header">
-    <h5 class="modal-title">{{ entity.name }}</h5>
-    <button type="button" class="btn-close" @click="$emit('close')">Sair</button>
+    <h5 class="modal-title">{{ scheduler.name }}</h5>
+    <button type="button" class="btn-close" @click="closeModalfunc">Sair</button>
   </div>
   <div class="modal-body">
     <div>
       <form @submit.prevent>
-        <div class="mb-3 row">
-          <label for="email" class="col-sm-2 col-form-label">Email</label>
-          <div class="col-sm-10">
-            <input
-              type="text"
-              :readonly="isReadOnly"
-              v-model="entity.value.email"
-              class="form-control-plaintext"
-              id="email"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Nome"
+          :required="true"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="scheduler.name"
+        ></FormInputComponent>
 
-        <div class="mb-3 row">
-          <label for="type_tag" class="col-sm-2 col-form-label">Tipo de {{ setting.title }}</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.type_tag">
-              <option selected></option>
-              <option v-for="(option, index) in setting.types" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              v-model="entity.type_tag"
-              class="form-control-plaintext"
-              id="type_tag"
-            />
-          </div>
-        </div>
+        <FormSelectComponent
+          :title="'Tipo de ' + setting.title"
+          :required="true"
+          :isReadOnly="isReadOnly"
+          :types="setting.types"
+          v-model:placeholder="scheduler.type_tag"
+        ></FormSelectComponent>
 
-        <div class="mb-3 row">
-          <label for="document_type" class="col-sm-2 col-form-label"
-            >Tipo de {{ setting.title }}</label
-          >
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.document_type">
-              <option select></option>
-              <option v-for="(option, index) in setting.documents" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              v-model="entity.document_type"
-              class="form-control-plaintext"
-              id="document_type"
-            />
-          </div>
-        </div>
+        <FormRadioComponent
+          title="Esta Ativo ou Arquivado?"
+          :isReadOnly="isReadOnly"
+          :required="true"
+          v-model:placeholder="scheduler.status"
+        ></FormRadioComponent>
 
-        <div class="mb-3 row">
-          <label for="sex" class="col-sm-2 col-form-label">Sexo</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.sex">
-              <option selected></option>
-              <option v-for="(option, index) in setting.sex" :key="index" :value="option">
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              readonly
-              v-else
-              :value="entity.sex"
-              class="form-control-plaintext"
-              id="sex"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Data de Inicio"
+          :required="true"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="scheduler.date_beginning"
+          type="datetime"
+        ></FormInputComponent>
 
-        <div class="mb-3 row">
-          <label for="relatioship_status" class="col-sm-2 col-form-label">Estado Cívil</label>
-          <div class="col-sm-10">
-            <select v-if="!isReadOnly" v-model="entity.relationship_status">
-              <option selected></option>
-              <option
-                v-for="(option, index) in setting.relationship_status"
-                :key="index"
-                :value="option"
-              >
-                {{ option }}
-              </option>
-            </select>
-            <input
-              type="text"
-              v-else
-              readonly
-              :value="entity.relationship_status"
-              class="form-control-plaintext"
-              id="relationship_status"
-            />
-          </div>
-        </div>
+        <FormInputComponent
+          title="Data do Fim"
+          :isReadOnly="isReadOnly"
+          v-model:placeholder="scheduler.date_ending"
+          type="datetime"
+        ></FormInputComponent>
 
-        <div class="mb-3 row">
-          <label for="birth" class="col-sm-2 col-form-label">Data de Nascimento</label>
-          <div class="col-sm-10">
-            <input
-              type="date"
-              :readonly="isReadOnly"
-              v-model="entity.birth"
-              class="form-control-plaintext"
-              id="birth"
-            />
-          </div>
-        </div>
-        <AddressComponent :entity="entity" :isReadOnly="isReadOnly" />
-        <ContactComponent :entity="entity" :isReadOnly="isReadOnly" />
         <NotesComponent :notes="entity.notes" :isReadOnly="isReadOnly" />
 
-        <button type="button" v-if="isReadOnly" @click="changeMode()" class="btn btn-secondary">
+        <button type="button" v-if="isReadOnly" @click="changeMode" class="btn btn-secondary">
           Editar
         </button>
-        <button type="submit" v-else @click="handlerUpdate()" class="btn btn-secondary">
+        <button type="submit" v-else @click="handlerUpdate" class="btn btn-secondary">
           Salvar
         </button>
-        <button type="button" @click="deleteEntity()" class="btn btn-danger">Excluir</button>
+        <button type="button" @click="deleteRecord" class="btn btn-danger">Excluir</button>
       </form>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-primary" @click="$emit('close')">Sair</button>
+    <button type="button" class="btn btn-primary" @click="close">Sair</button>
   </div>
 </template>

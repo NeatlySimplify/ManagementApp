@@ -6,7 +6,7 @@ const BankAccountSchema = z.object({
   id: z.uuid(),
   bank_name: z.string(),
   account_name: z.string(),
-  balance_str: z.coerce.bigint(),
+  balance: z.coerce.bigint(),
   ignore_on_totals: z.boolean(),
 });
 const CreateBankAccountSchema = z.object({
@@ -65,7 +65,7 @@ export const useUserStore = defineStore("user", {
     getTotalBalance: (state) => {
       return Object.values(state.bank_account)
         .filter((account) => !account.ignore_on_totals)
-        .reduce((total, account) => total + BigInt(account.balance_str), 0n)
+        .reduce((total, account) => total + BigInt(account.balance), 0n)
         .toString(); // Pode retornar como bigint ou string
     },
     getGroupedAccounts: (state) => {
@@ -74,7 +74,7 @@ export const useUserStore = defineStore("user", {
       for (const account of Object.values(state.bank_account)) {
         const item = {
           account_name: account.account_name,
-          balance: BigInt(account.balance_str).toString(),
+          balance: BigInt(account.balance).toString(),
         };
 
         if (account.ignore_on_totals) {

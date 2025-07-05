@@ -5,7 +5,7 @@ import api from "@/util/api";
 import { useUserStore } from "@/features/user/store";
 import { useEntityStore } from "@/features/entity/store";
 import { useMovementStore } from "@/features/movement/store";
-import { useRecordStore } from "@/features/record/store";
+import { useRecordStore } from "@/features/records/store";
 import { useSchedulerStore } from "@/features/scheduler/store";
 import FormInputComponent from "@/features/common/FormInputComponent.vue";
 import PasswordComponent from "@/features/common/PasswordComponent.vue";

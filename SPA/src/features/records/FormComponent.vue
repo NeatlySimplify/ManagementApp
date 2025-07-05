@@ -1,6 +1,6 @@
 <script setup>
 import { useUserStore } from "@/features/user/store";
-import { useRecordStore } from "@/features/record/store";
+import { useRecordStore } from "@/features/records/store";
 import { useEntityStore } from "@/features/entity/store";
 import { defineProps } from "vue";
 import NotesComponent from "@/features/common/NotesComponent.vue";

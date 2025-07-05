@@ -29,12 +29,6 @@ export const useSchedulerStore = defineStore("scheduler", {
 
   getters: {
     getEvent: (state) => (id: string) => state.entries[id],
-    getAllEvents: (state) => Object.values(state.entries),
-    getEventsByStatus:
-      (state) =>
-      (status: boolean): Scheduler[] =>
-        Object.values(state.entries).filter((entity) => entity.status === status),
-
     getEventsByType:
       (state) =>
       (type_tag: string): Scheduler[] =>
@@ -67,7 +61,7 @@ export const useSchedulerStore = defineStore("scheduler", {
     directDelete(id: string) {
       delete this.entries[id];
     },
-    async getScheduler(id: string): Promise<string | null> {
+    async fetchScheduler(id: string): Promise<string | null> {
       try {
         const response = await api.get(`/api/scheduler/${id}`);
         const { status, result } = response.data;

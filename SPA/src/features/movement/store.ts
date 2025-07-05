@@ -9,7 +9,7 @@ const PaymentSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   type_tag: z.string(),
-  value_str: z.coerce.bigint(),
+  value: z.coerce.bigint(),
   payment_date: z.coerce.date(),
   is_due: z.coerce.date(),
   status: z.boolean(),
@@ -21,7 +21,7 @@ const PaymentResponseSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   type_tag: z.string(),
-  value_str: z.coerce.bigint(),
+  value: z.coerce.bigint(),
   payment_date: z.coerce.date(),
   is_due: z.coerce.date(),
   status: z.boolean(),
@@ -35,14 +35,14 @@ const MovementResponseSchema = z.object({
 
 const CreateMovementSchema = z.object({
   type_tag: z.string(),
-  value_str: z.coerce.bigint(),
+  value: z.coerce.bigint(),
   installment: z.number(),
 });
 
 const MovementSchema = z.object({
   id: z.string(),
   type_tag: z.string(),
-  value_str: z.coerce.bigint(),
+  value: z.coerce.bigint(),
   installment: z.number(),
 });
 type Movement = z.infer<typeof MovementSchema>;
@@ -62,14 +62,21 @@ export const useMovementStore = defineStore("movement", {
     getPayment: (state) => (id: string) => state.payment[id],
     getPaymentWindow:
       (state) =>
-      (referenceDate: Date, tag: string): Payment[] => {
+      (referenceDate: Date, tag: string | null): Payment[] => {
         const start = new Date(referenceDate);
         start.setDate(1);
         const end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1);
         end.setDate(1);
-        const relevantPayments = Object.values(state.payment).filter(
-          (pay) => pay.type_tag === tag && pay.payment_date >= start && pay.payment_date < end,
-        );
+        let relevantPayments;
+        if (tag) {
+          relevantPayments = Object.values(state.payment).filter(
+            (pay) => pay.type_tag === tag && pay.payment_date >= start && pay.payment_date < end,
+          );
+        } else {
+          relevantPayments = Object.values(state.payment).filter(
+            (pay) => pay.payment_date >= start && pay.payment_date < end,
+          );
+        }
         return relevantPayments;
       },
     getActiveMovement:
@@ -110,7 +117,7 @@ export const useMovementStore = defineStore("movement", {
       let expense = 0n;
 
       for (const payment of relevantPayments) {
-        const val = BigInt(payment.value_str);
+        const val = BigInt(payment.value);
         if (payment.type_tag.startsWith("Entrada")) {
           income += val;
         } else if (payment.type_tag.startsWith("Saída")) {

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, defineProps } from "vue";
 import { useEntityStore } from "@/features/entity/store";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/features/features/user/store";
+import { useUserStore } from "@/features/user/store";
 import Form from "@/features/entity/FormComponent.vue";
 import BareModal from "@/features/common/BareModal.vue";
 import DataTableComponent from "@/features/common/DataTableComponent.vue";
@@ -63,7 +63,7 @@ const cols =
 
 function viewEntity(id) {
   entity_id.value = id;
-  name.value = entity.getEntity(id);
+  name.value = entityStore.getEntity(id).name;
   isModalOpen.value = true;
   mode.value = "show";
 }

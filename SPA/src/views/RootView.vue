@@ -47,7 +47,7 @@ const form = computed(() => formComponent.value.component);
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url("@/assets/images/maxresdefault.jpg"); /* Replace with your image path */
+  background-image: url("@/assets/maxresdefault.jpg"); /* Replace with your image path */
   background-size: cover;
   background-repeat: no-repeat;
 }

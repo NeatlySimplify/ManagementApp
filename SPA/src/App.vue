@@ -1,5 +1,6 @@
 <script setup>
-import { RouterView, useRoute } from "vue-router";
+import { useRoute } from "vue-router";
+import RouterView from "vue-router";
 import SidebarComponent from "@/features/common/SidebarComponent.vue";
 
 const route = useRoute();
