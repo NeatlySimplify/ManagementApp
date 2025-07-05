@@ -26,17 +26,11 @@ const prop = defineProps({
 const placeholder = defineModel("placeholder");
 </script>
 <template>
-  <div class="mb-3 row">
-    <label for="input" class="col-sm-2 col-form-label">{{ prop.title }}</label>
-    <div class="col-sm-10">
-      <input
-        :type="prop.type"
-        :readonly="prop.isReadOnly"
-        v-model="placeholder"
-        :required="required"
-        class="form-control-plaintext"
-        id="input"
-      />
+  <div class="mb-2 row rounded shadow-sm">
+    <label for="data" class="col-2 form-label">{{ prop.title }}</label>
+    <div class="col-10">
+      <input :type="prop.type" :readonly="prop.isReadOnly" v-model="placeholder" :required="required"
+        class="form-control" id="data" />
     </div>
   </div>
 </template>

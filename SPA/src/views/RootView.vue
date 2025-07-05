@@ -42,11 +42,9 @@ const form = computed(() => formComponent.value.component);
 </template>
 <style scoped>
 .fullscreen-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  background-position: center;
+  background-attachment: fixed;
+  margin: 0;
   background-image: url("@/assets/maxresdefault.jpg"); /* Replace with your image path */
   background-size: cover;
   background-repeat: no-repeat;

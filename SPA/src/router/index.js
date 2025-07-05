@@ -9,13 +9,13 @@ const router = createRouter({
       path: "/",
       name: "root",
       component: RootView,
-      meta: { guestOnly: true },
+      meta: { guestOnly: true, skipSidebar: true },
     },
     {
       path: "/register",
       name: "register",
       component: RootView,
-      meta: { guestOnly: true },
+      meta: { guestOnly: true, skipSidebar: true },
     },
     // {
     //   path: "/mfa",
@@ -137,14 +137,12 @@ router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
   const user = userStore.getUser;
   const auth = user.auth;
-  console.log("Value of auth: ", auth);
+
 
   if (to.meta.requiresAuth && !auth) {
     next("/");
-    console.log("blocked route");
   } else if (to.meta.guestOnly && auth) {
     next("/board");
-    console.log("already autheticated");
   } else {
     next();
   }

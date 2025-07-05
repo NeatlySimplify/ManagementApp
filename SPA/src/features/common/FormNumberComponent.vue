@@ -36,20 +36,11 @@ const prop = defineProps({
 const placeholder = defineModel("placeholder");
 </script>
 <template>
-  <div class="mb-3 row">
-    <label for="input" class="col-sm-2 col-form-label">{{ prop.title }}</label>
+  <div class="mb-3 row rounded shadow-sm">
+    <label for="input" class="col-sm-2 form-label">{{ prop.title }}</label>
     <div class="col-sm-10">
-      <input
-        type="number"
-        :readonly="prop.isReadOnly"
-        v-model="placeholder"
-        :min="prop.min"
-        :required="required"
-        :max="prop.max"
-        :step="prop.step"
-        class="form-control-plaintext"
-        id="input"
-      />
+      <input type="number" :readonly="prop.isReadOnly" v-model="placeholder" :min="prop.min" :required="required"
+        :max="prop.max" :step="prop.step" class="form-control" id="input" />
     </div>
   </div>
 </template>

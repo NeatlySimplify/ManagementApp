@@ -15,23 +15,14 @@ const prop = defineProps({
 const placeholder = defineModel("placeholder");
 </script>
 <template>
-  <div class="mb-3 row">
-    <label for="select" class="col-sm-2 col-form-label">{{ prop.title }}</label>
-    <div class="col-sm-10">
-      <select v-if="!prop.isReadOnly" v-model="placeholder" :required="required">
-        <option selected></option>
-        <option v-for="(option, index) in prop.types" :key="index" :value="option">
-          {{ option }}
-        </option>
-      </select>
-      <input
-        type="text"
-        v-else
-        readonly
-        v-model="placeholder"
-        class="form-control-plaintext"
-        id="select"
-      />
-    </div>
+  <div class="mb-2 row rounded shadow-sm">
+    <label for="select" class="col-sm-2 form-label">{{ prop.title }}</label>
+    <input class="form-control" list="datalistOptions" id="select" v-if="!prop.isReadOnly" v-model="placeholder"
+      :required="required">
+    <datalist id="datalistOptions">
+      <option v-for="(option, index) in prop.types" :key="index" :value="option">
+        {{ option }}
+      </option>
+    </datalist>
   </div>
 </template>

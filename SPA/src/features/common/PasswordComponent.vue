@@ -1,7 +1,9 @@
 <script setup>
-import { ref, watch, computed, onMounted, defineModel, defineProps } from "vue";
+import { ref, watch, computed, defineModel, defineProps } from "vue";
 
-const passwordModel = defineModel("password", { type: String, default: "" });
+const passwordModel = defineModel("passwordModel", { type: String, default: "" });
+const valid = defineModel("valid", { type: Boolean, default: false});
+
 
 // Props for title, label, and placeholder
 const props = defineProps({
@@ -15,135 +17,81 @@ const props = defineProps({
   },
 });
 
-// Internal state for the component
-const currentPassword = ref(passwordModel.value); // Use ref for internal password state
-const displayValue = ref(""); // What's actually shown in the input
-const isFocused = ref(false); // To control when to show the last character
-const validationErrors = ref([]); // Still used internally to determine hasError and emit
-let timeoutId = null; // To clear the last character after a delay
-const passwordInput = ref(null); // Ref to the input element
 
-// --- Constant Validation Rules ---
-const MIN_LENGTH = 6;
-const MAX_LENGTH = 30;
-const REQUIRE_UPPERCASE = true;
-const REQUIRE_LOWERCASE = true;
-// No requirement for digit or special character as per new instructions
+const validateMax = ref(false)
+const validateMin = ref(false)
+const validateUpper = ref(false)
+const validateLow = ref(false)
 
-// --- Computed Properties ---
 
-// Determines if there are any validation errors
-const hasError = computed(() => validationErrors.value.length > 0);
-
-// --- Watchers ---
-
-// Watch for changes in the passwordModel (from parent v-model)
-watch(passwordModel, (newVal) => {
-  currentPassword.value = newVal;
-  maskInput(currentPassword.value); // Re-mask when parent changes value
-  validate(); // Re-validate
-});
-
-// Watch for internal password changes to trigger validation
-watch(currentPassword, () => {
-  validate();
-});
-
-// --- Methods ---
-
-// Handles input events from the text field
-const handleInput = (event) => {
-  const newValue = event.target.value;
-
-  // Update the internal password model and emit to parent
-  currentPassword.value = newValue;
-  passwordModel.value = newValue; // Update defineModel
-
-  // Logic for showing the last typed character
-  if (isFocused.value) {
-    clearTimeout(timeoutId); // Clear any existing timeout
-
-    if (newValue.length > 0) {
-      // Show all but the last character masked, and the last character unmasked
-      displayValue.value = getMaskedString(newValue.slice(0, -1)) + newValue.slice(-1);
-
-      // Set a timeout to mask the last character after a short delay
-      timeoutId = setTimeout(() => {
-        maskInput(newValue);
-      }, 700); // Show last character for 700ms
-    } else {
-      displayValue.value = ""; // If empty, clear display
-    }
-  } else {
-    maskInput(newValue); // If not focused, keep it fully masked
-  }
-};
-
-// Handles blur event (when input loses focus)
-const handleBlur = () => {
-  isFocused.value = false;
-  clearTimeout(timeoutId); // Clear any pending masking timeout
-  maskInput(currentPassword.value); // Fully mask on blur
-  validate(); // Run final validation on blur
-};
-
-// Generates a masked string of asterisks
-const getMaskedString = (text) => {
-  return "*".repeat(text.length);
-};
-
-// Masks the input field's display value
-const maskInput = (password) => {
-  displayValue.value = getMaskedString(password);
-};
-
-// Performs validation checks
 const validate = () => {
-  const password = currentPassword.value;
-  const errors = [];
+  const password = passwordModel.value;
 
   // 1. At least 6 characters
-  if (password.length < MIN_LENGTH) {
-    errors.push("A senha deve conter no mínimo 6 caracteres.");
+  if (password.length < 6) {
+    validateMin.value = true;
+  } else {
+    validateMin.value = false;
   }
 
-  // 2. At most 30 characters
-  if (password.length > MAX_LENGTH) {
-    errors.push("A senha deve conter no máximo 30 caracteres.");
+  if (password.length > 30) {
+    validateMax.value = true
+  } else {
+    validateMax.value = false
   }
-  if (REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
-    errors.push("Senha deve conter pelo menos uma letra maiuscula.");
+  if (!/[A-Z]/.test(password)) {
+    validateUpper.value = true
+  } else { validateUpper.value = false }
+  if (!/[a-z]/.test(password)) {
+    validateLow.value = true
+  } else {
+    validateLow.value = false
   }
-  if (REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
-    errors.push("Senha deve conter pelo menos uma letra minuscula.");
-  }
-
-  validationErrors.value = errors;
-  emit("validation-status", errors.length === 0); // Emit overall validity
-  emit("errors", errors); // Emit the array of errors for parent to display
 };
+const showPassword = ref(false);
 
-onMounted(() => {
-  maskInput(currentPassword.value);
-  validate(); // Initial validation
+
+watch(passwordModel, validate);
+
+
+// Performs validation checks
+
+valid.value = computed(() => {
+  return !validateMin.value &&
+    !validateMax.value &&
+    !validateUpper.value &&
+    !validateLow.value;
 });
+
 </script>
 <template>
-  <div class="mb-4 p-4 bg-light rounded shadow-sm">
-    <label v-if="props.label" class="form-label">{{ props.label }}</label>
-    <div class="input-group">
-      <input
-        ref="passwordInput"
-        type="text"
-        :value="displayValue"
-        @input="handleInput"
-        @focus="isFocused = true"
-        @blur="handleBlur"
-        :placeholder="props.placeholder"
-        :class="['form-control', { 'is-invalid': hasError }]"
-        :maxlength="maxLength"
-        autocomplete="new-password"
-      />
+  <div class="mb-2 row rounded shadow-sm">
+    <div class="col-2">
+      <label v-if=" props.label" class="form-label">{{ props.label }}</label>
     </div>
+    <div class="col-10">
+      <div class="input-group">
+        <input :type="showPassword ? 'text' : 'password'" :placeholder="props.placeholder" class="form-control"
+          v-model="passwordModel" autocomplete="new-password" />
+        <span class="input-group-text text-secondary" @mouseenter="showPassword = true"
+          @mouseleave="showPassword = false">&#128065;</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <ul class="list-group">
+      <li v-if="validateMax" class="list-group-item text-danger">
+        A senha deve conter no máximo 30 caracteres.
+      </li>
+      <li v-if="validateMin" class="list-group-item text-danger">
+        A senha deve conter no mínimo 6 caracteres.
+      </li>
+      <li v-if="validateUpper" class="list-group-item text-danger">
+        A senha deve conter pelo menos uma letra maiúscula.
+      </li>
+      <li v-if="validateLow" class="list-group-item text-danger">
+        A senha deve conter pelo menos uma letra minuscula.
+      </li>
+    </ul>
   </div>
 </template>

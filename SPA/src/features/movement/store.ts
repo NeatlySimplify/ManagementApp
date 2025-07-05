@@ -1,9 +1,8 @@
 import { defineStore } from "pinia";
 import z from "zod/v4";
 import api from "@/util/api";
-import { useSchedulerStore, SchedulerSchema } from "@/features/scheduler/store";
+import {SchedulerSchema } from "@/features/scheduler/store";
 
-const schedulerStore = useSchedulerStore();
 
 const PaymentSchema = z.object({
   id: z.uuid(),
@@ -208,7 +207,9 @@ export const useMovementStore = defineStore("movement", {
               const eventObj = parsedResponse.payment[i].event;
               event_list.push(eventObj);
             }
-            schedulerStore.set(event_list);
+            const store = await import("@/features/scheduler/store")
+            const useStore = store.useSchedulerStore();
+            useStore.set(event_list)
           } catch (error) {
             console.error("Error parsing fetchMovement response:", error);
             return null; // Or handle the error as needed
@@ -238,8 +239,10 @@ export const useMovementStore = defineStore("movement", {
             // Parse the response using the Zod schema
             const parsedResponse = MovementResponseSchema.parse(bag);
             const payments = parsedResponse.payment;
+            const store = await import("@/features/scheduler/store");
+            const useStore = store.useSchedulerStore();
             for (let i = 0; i < payments.length; i++) {
-              schedulerStore.directDelete(payments[i].event.id);
+              useStore.directDelete(payments[i].event.id);
               delete this.payment[id];
             }
           } catch (error) {

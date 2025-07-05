@@ -1,15 +1,25 @@
 <script setup>
-import { useRoute } from "vue-router";
-import RouterView from "vue-router";
+import { RouterView, useRoute } from "vue-router";
 import SidebarComponent from "@/features/common/SidebarComponent.vue";
+import {watch, ref} from "vue";
 
 const route = useRoute();
-const excludedRoutes = ["root", "register"];
 
-const shouldLoadComponent = !excludedRoutes.includes(String(route.name));
+const shouldLoadSidebar = ref(false);
+
+
+watch(() => route.meta,
+  (meta) => {
+    if (route.matched.length === 0) {
+      shouldLoadSidebar.value = false;
+      return;
+    }
+    shouldLoadSidebar.value = meta?.skipSidebar;
+  },
+  { immediate: true })
 </script>
 
 <template>
-  <SidebarComponent v-if="shouldLoadComponent"></SidebarComponent>
+  <SidebarComponent v-if="shouldLoadSidebar"/>
   <RouterView />
 </template>
