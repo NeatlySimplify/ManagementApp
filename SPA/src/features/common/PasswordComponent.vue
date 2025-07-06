@@ -67,29 +67,52 @@ valid.value = computed(() => {
 <template>
   <div class="mb-2 row rounded shadow-sm">
     <div class="col-2">
-      <label v-if=" props.label" class="form-label">{{ props.label }}</label>
+      <label
+        v-if=" props.label"
+        class="form-label"
+      >{{ props.label }}</label>
     </div>
     <div class="col-10">
       <div class="input-group">
-        <input :type="showPassword ? 'text' : 'password'" :placeholder="props.placeholder" class="form-control"
-          v-model="passwordModel" autocomplete="new-password" />
-        <span class="input-group-text text-secondary" @mouseenter="showPassword = true"
-          @mouseleave="showPassword = false">&#128065;</span>
+        <input
+          v-model="passwordModel"
+          :type="showPassword ? 'text' : 'password'"
+          :placeholder="props.placeholder"
+          class="form-control"
+          autocomplete="new-password"
+        >
+        <span
+          class="input-group-text text-secondary"
+          @mouseenter="showPassword = true"
+          @mouseleave="showPassword = false"
+        >&#128065;</span>
       </div>
     </div>
   </div>
   <div class="col-12">
     <ul class="list-group">
-      <li v-if="validateMax" class="list-group-item text-danger">
+      <li
+        v-if="validateMax"
+        class="list-group-item text-danger"
+      >
         A senha deve conter no máximo 30 caracteres.
       </li>
-      <li v-if="validateMin" class="list-group-item text-danger">
+      <li
+        v-if="validateMin"
+        class="list-group-item text-danger"
+      >
         A senha deve conter no mínimo 6 caracteres.
       </li>
-      <li v-if="validateUpper" class="list-group-item text-danger">
+      <li
+        v-if="validateUpper"
+        class="list-group-item text-danger"
+      >
         A senha deve conter pelo menos uma letra maiúscula.
       </li>
-      <li v-if="validateLow" class="list-group-item text-danger">
+      <li
+        v-if="validateLow"
+        class="list-group-item text-danger"
+      >
         A senha deve conter pelo menos uma letra minuscula.
       </li>
     </ul>

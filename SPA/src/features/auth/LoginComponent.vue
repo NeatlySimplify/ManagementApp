@@ -1,5 +1,5 @@
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, RouterLink } from "vue-router";
 import { ref } from "vue";
 import api from "@/util/api";
 import { useUserStore } from "@/features/user/store";
@@ -36,7 +36,7 @@ const onSubmit = async () => {
       const data = userStore.getData();
       if (data.settings.record_title === "" || data.settings.record_title === null) {
         first_access.value = true;
-        router.push({ name: user, params: { first_access: first_access } });
+        router.push({ name: 'user', params: { first_access: first_access } });
       } else {
         userStore.setSettings(data.settings);
         userStore.setAccounts(data.account);
@@ -47,7 +47,7 @@ const onSubmit = async () => {
         movementStore.setMovement(data.movement);
         movementStore.setPayment(data.payment);
       }
-      router.push({ name: board });
+      router.push({ name: 'board' });
     }
   } catch (err) {
     console.error("Error on request:", err);
@@ -59,12 +59,16 @@ const onSubmit = async () => {
   <div class="container-fluid border rounded border-top-0">
     <form @submit.prevent="onSubmit">
       <FormInputComponent
+        v-movel:placeholder="data.email"
         title="E-mail"
         :required="true"
-        :isReadOnly="false"
-        v-movel:placeholder="data.email"
-      ></FormInputComponent>
-      <PasswordComponent label="Senha" v-model:passwordModel="data.password" v-model:valid="valid"></PasswordComponent>
+        :is-read-only="false"
+      />
+      <PasswordComponent
+        v-model:password-model="data.password"
+        v-model:valid="valid"
+        label="Senha"
+      />
       <div class="mb-3 row">
         <div class="btn-group d-flex">
           <RouterLink
@@ -74,8 +78,15 @@ const onSubmit = async () => {
           >
             Registrar
           </RouterLink>
-          <button type="submit" :disabled="!valid" class="btn btn-outline-primary btn-lg flex-grow-1">
-            Login <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
+          <button
+            type="submit"
+            :disabled="!valid"
+            class="btn btn-outline-primary btn-lg flex-grow-1"
+          >
+            Login <i
+              v-if="isLoading"
+              class="fa fa-spinner fa-spin"
+            />
           </button>
         </div>
       </div>

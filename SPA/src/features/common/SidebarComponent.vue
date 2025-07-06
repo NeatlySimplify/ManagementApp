@@ -1,49 +1,75 @@
 <script setup>
-import api from "@/util/api";
-import { defineEmits } from "vue";
-import { useUserStore } from "@/features/user/store";
-import { useRouter, RouterLink } from "vue-router";
+  import api from '@/util/api'
+  import { defineEmits } from 'vue'
+  import { useUserStore } from '@/features/user/store'
+  import { useRouter, RouterLink } from 'vue-router'
 
-const userStore = useUserStore();
-const setting = useRouter.getSettings;
-const router = useRouter();
+  const userStore = useUserStore()
+  const setting = useRouter.getSettings
+  const router = useRouter()
 
-defineEmits(["close"]);
+  defineEmits(['close'])
 
-async function logout() {
-  const result = await api.get("api/auth/logout");
-  if (result.status === "success") {
-    userStore.$reset();
-    router.push("root");
+  async function logout() {
+    const result = await api.get('api/auth/logout')
+    if (result.status === 'success') {
+      userStore.$reset()
+      router.push('root')
+    }
   }
-}
 </script>
 <template>
   <div id="sidebar">
-    <button type="button" class="btn btn-outline-dark" @click="$emit('close')">
-      <i class="fa fa-bars fa-solid" aria-hidden="true"></i>
+    <button
+      type="button"
+      class="btn btn-outline-dark"
+      @click="$emit('close')"
+    >
+      <i
+        class="fa fa-bars fa-solid"
+        aria-hidden="true"
+      />
     </button>
-    <div class="offcanvas offcanvas-start container-fluid" data-bs-scroll="true" tabindex="-1">
+    <div
+      class="offcanvas offcanvas-start container-fluid"
+      data-bs-scroll="true"
+      tabindex="-1"
+    >
       <div class="offcanvas-header row align-content-center">
         <div class="col-1">
           <button
             type="button"
             class="btn-close"
-            @click="$emit('close')"
             aria-label="Close"
-          ></button>
+            @click="$emit('close')"
+          />
         </div>
       </div>
       <div class="offcanvas-body">
-        <div class="accordion" id="menuAccordion">
+        <div
+          id="menuAccordion"
+          class="accordion"
+        >
           <div class="accordion-item">
-            <RouterLink :to="{ name: user }"></RouterLink>
-            <h2 class="accordion-header" id="heading_user">
-              <a class="accordion-button menu-item" type="button" href="#"> Usuário </a>
+            <RouterLink :to="{ name: user }" />
+            <h2
+              id="heading_user"
+              class="accordion-header"
+            >
+              <a
+                class="accordion-button menu-item"
+                type="button"
+                href="#"
+              >
+                Usuário
+              </a>
             </h2>
           </div>
           <div class="accordion-item">
-            <h2 class="accordion-header" id="heading_entity">
+            <h2
+              id="heading_entity"
+              class="accordion-header"
+            >
               <a
                 class="accordion-button collapsed menu-item"
                 type="button"
@@ -65,7 +91,10 @@ async function logout() {
               <div class="accordion-body sub-menu">
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item">
-                    <RouterLink :to="{ name: entity }" class="link-dark link-underline-opacity-0">
+                    <RouterLink
+                      :to="{ name: entity }"
+                      class="link-dark link-underline-opacity-0"
+                    >
                       Todos
                     </RouterLink>
                   </li>
@@ -102,7 +131,10 @@ async function logout() {
             </div>
           </div>
           <div class="accordion-item">
-            <h2 class="accordion-header" id="heading_record">
+            <h2
+              id="heading_record"
+              class="accordion-header"
+            >
               <a
                 class="accordion-button collapsed menu-item"
                 type="button"
@@ -124,23 +156,28 @@ async function logout() {
               <div class="accordion-body sub-menu">
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item">
-                    <RouterLink :to="{ name: record }" class="link-dark link-underline-opacity-0"
-                      >Todos</RouterLink
+                    <RouterLink
+                      :to="{ name: record }"
+                      class="link-dark link-underline-opacity-0"
                     >
+                      Todos
+                    </RouterLink>
                   </li>
                   <li class="list-group-item">
                     <RouterLink
                       :to="{ name: recordFiltered, query: { filter: status, status: false } }"
                       class="link-dark link-underline-opacity-0"
-                      >Ativos</RouterLink
                     >
+                      Ativos
+                    </RouterLink>
                   </li>
                   <li class="list-group-item">
                     <RouterLink
                       :to="{ name: recordFiltered, query: { filter: status, status: true } }"
                       class="link-dark link-underline-opacity-0"
-                      >Desativados</RouterLink
                     >
+                      Desativados
+                    </RouterLink>
                   </li>
                   <li
                     v-for="(item, index) in setting.record_types"
@@ -150,15 +187,19 @@ async function logout() {
                     <RouterLink
                       :to="{ name: recordFiltered, query: { filter: type_tag, term: item } }"
                       class="link-dark link-underline-opacity-0"
-                      >Tipo - {{ item }}</RouterLink
                     >
+                      Tipo - {{ item }}
+                    </RouterLink>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
           <div class="accordion-item">
-            <h2 class="accordion-header" id="heading_movement">
+            <h2
+              id="heading_movement"
+              class="accordion-header"
+            >
               <a
                 class="accordion-button collapsed menu-item"
                 type="button"
@@ -166,7 +207,6 @@ async function logout() {
                 data-bs-target="#collapse_movement"
                 aria-expanded="false"
                 aria-controls="collapse_movement"
-                ref="#"
               >
                 {{ setting.movement_title }}
               </a>
@@ -180,30 +220,38 @@ async function logout() {
               <div class="accordion-body sub-menu">
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item">
-                    <RouterLink :to="{ name: movement }" class="link-dark link-underline-opacity-0"
-                      >Todos</RouterLink
+                    <RouterLink
+                      :to="{ name: movement }"
+                      class="link-dark link-underline-opacity-0"
                     >
+                      Todos
+                    </RouterLink>
                   </li>
                   <li class="list-group-item">
                     <RouterLink
                       :to="{ name: paymentFiltered, query: { term: 'Entrada' } }"
                       class="link-dark link-underline-opacity-0"
-                      >Entrada</RouterLink
                     >
+                      Entrada
+                    </RouterLink>
                   </li>
                   <li class="list-group-item">
                     <RouterLink
                       :to="{ name: paymentFiltered, query: { term: 'Saída' } }"
                       class="link-dark link-underline-opacity-0"
-                      >Saída</RouterLink
                     >
+                      Saída
+                    </RouterLink>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
           <div class="accordion-item">
-            <h2 class="accordion-header" id="heading_schedule">
+            <h2
+              id="heading_schedule"
+              class="accordion-header"
+            >
               <a
                 class="accordion-button collapsed menu-item"
                 type="button"
@@ -231,13 +279,18 @@ async function logout() {
                   >
                     <RouterLink
                       :to="{ name: schedulerFiltered, query: { filter: type_tag, term: item } }"
-                    ></RouterLink>
+                    />
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-          <button class="btn btn-outline-danger btn-lg" @click="logout">Logout</button>
+          <button
+            class="btn btn-outline-danger btn-lg"
+            @click="logout"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>

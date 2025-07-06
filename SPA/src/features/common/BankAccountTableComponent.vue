@@ -21,15 +21,28 @@ const accounts = defineModel("accounts", { type: Array });
   <table class="table table-hover">
     <thead>
       <tr>
-        <th scope="col">Nome do Banco</th>
-        <th scope="col">Nome da Conta</th>
-        <th scope="col">Balanço</th>
-        <th scope="col">Ignorar nos Totais</th>
-        <th scope="col">#</th>
+        <th scope="col">
+          Nome do Banco
+        </th>
+        <th scope="col">
+          Nome da Conta
+        </th>
+        <th scope="col">
+          Balanço
+        </th>
+        <th scope="col">
+          Ignorar nos Totais
+        </th>
+        <th scope="col">
+          #
+        </th>
       </tr>
     </thead>
     <tbody class="table-group-divider">
-      <tr v-for="(item, index) in entity" :key="index">
+      <tr
+        v-for="(item, index) in entity"
+        :key="index"
+      >
         <td>{{ item.bank_name }}</td>
         <td>{{ item.bank_account }}</td>
         <td>{{ item.balance }}</td>
@@ -41,13 +54,21 @@ const accounts = defineModel("accounts", { type: Array });
               type="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
-            ></button>
+            />
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item" @click="getAccount(item)" href="#">Ver Mais!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="getAccount(item)"
+                >Ver Mais!</a>
               </li>
               <li>
-                <a class="dropdown-item" href="#" @click="deleteAccount(item, index)">Excluir!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="deleteAccount(item, index)"
+                >Excluir!</a>
               </li>
             </ul>
           </div>

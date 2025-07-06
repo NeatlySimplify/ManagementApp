@@ -28,16 +28,31 @@ const scheduler = defineModel("scheduler", { type: Array });
   <table class="table table-hover">
     <thead>
       <tr>
-        <th scope="col">Nome</th>
-        <th scope="col">Tipo</th>
-        <th scope="col">Status</th>
-        <th scope="col">Começo</th>
-        <th scope="col">Fim</th>
-        <th scope="col">#</th>
+        <th scope="col">
+          Nome
+        </th>
+        <th scope="col">
+          Tipo
+        </th>
+        <th scope="col">
+          Status
+        </th>
+        <th scope="col">
+          Começo
+        </th>
+        <th scope="col">
+          Fim
+        </th>
+        <th scope="col">
+          #
+        </th>
       </tr>
     </thead>
     <tbody class="table-group-divider">
-      <tr v-for="(item, index) in payments" :key="index">
+      <tr
+        v-for="(item, index) in payments"
+        :key="index"
+      >
         <td>{{ item.name }}</td>
         <td>{{ item.type_tag }}</td>
         <td>{{ item.status }}</td>
@@ -50,13 +65,21 @@ const scheduler = defineModel("scheduler", { type: Array });
               type="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
-            ></button>
+            />
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item" @click="getScheduler(item)" href="#">Ver Mais!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="getScheduler(item)"
+                >Ver Mais!</a>
               </li>
               <li>
-                <a class="dropdown-item" href="#" @click="deleteScheduler(item, index)">Excluir!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="deleteScheduler(item, index)"
+                >Excluir!</a>
               </li>
             </ul>
           </div>

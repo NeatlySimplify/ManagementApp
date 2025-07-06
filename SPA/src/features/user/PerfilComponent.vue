@@ -11,18 +11,26 @@ user.value = { ...userStore.getUser };
 </script>
 <template>
   <form @submit.prevent>
-    <FormInputComponent title="Nome" v-model:placeholder="user.name"></FormInputComponent>
+    <FormInputComponent
+      v-model:placeholder="user.name"
+      title="Nome"
+    />
 
-    <FormInputComponent title="E-mail" v-model:placeholder="user.email"></FormInputComponent>
+    <FormInputComponent
+      v-model:placeholder="user.email"
+      title="E-mail"
+    />
 
-    <p class="fs-4">Mudar a senha:</p>
+    <p class="fs-4">
+      Mudar a senha:
+    </p>
     <PasswordComponent
+      v-model:password-model="passwordPlaceholder.new"
       label="Nova Senha:"
-      v-model:passwordModel="passwordPlaceholder.new"
-    ></PasswordComponent>
+    />
     <PasswordComponent
+      v-model:password-model="passwordPlaceholder.old"
       label="Antiga Senha:"
-      v-model:passwordModel="passwordPlaceholder.old"
-    ></PasswordComponent>
+    />
   </form>
 </template>

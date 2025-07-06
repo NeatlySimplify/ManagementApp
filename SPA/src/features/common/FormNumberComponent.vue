@@ -4,7 +4,7 @@ import { defineModel, defineProps } from "vue";
 const prop = defineProps({
   title: {
     type: String,
-    required: false,
+    required: true,
   },
   isReadOnly: {
     type: Boolean,
@@ -33,14 +33,26 @@ const prop = defineProps({
   },
 });
 
-const placeholder = defineModel("placeholder");
+const placeholder = defineModel("placeholder", {type: String});
 </script>
 <template>
   <div class="mb-3 row rounded shadow-sm">
-    <label for="input" class="col-sm-2 form-label">{{ prop.title }}</label>
+    <label
+      for="input"
+      class="col-sm-2 form-label"
+    >{{ prop.title }}</label>
     <div class="col-sm-10">
-      <input type="number" :readonly="prop.isReadOnly" v-model="placeholder" :min="prop.min" :required="required"
-        :max="prop.max" :step="prop.step" class="form-control" id="input" />
+      <input
+        id="input"
+        v-model="placeholder"
+        type="number"
+        :readonly="prop.isReadOnly"
+        :min="prop.min"
+        :required="required"
+        :max="prop.max"
+        :step="prop.step"
+        class="form-control"
+      >
     </div>
   </div>
 </template>

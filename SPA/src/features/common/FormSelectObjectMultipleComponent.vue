@@ -1,57 +1,80 @@
 <script setup>
-import { defineProps, defineModel } from "vue";
+  import { defineProps, defineModel, ref } from 'vue'
 
-const prop = defineProps({
-  title: {
-    type: String,
-  },
-  object: {
-    type: Array,
-  },
-});
-const selectedOptions = defineModel("selectedOptions", { type: Array });
-const custom = prop.object.value.map((item) => ({ id: item.id, name: item.name }));
-const searchTerm = ref("");
-const filteredOptions = computed(() =>
-  custom.filter((opt) => opt.name.toLowerCase().includes(searchTerm.value.toLowerCase())),
-);
+  const selectedOptions = defineModel('selectedOptions', { type: Array })
+  const props = defineProps({
+    title: { type: String, required: true },
+    object: { type: Array, required: true },
+  })
 
-function selectOption(opt) {
-  const exists = selectedOptions.value.some((item) => item.id === opt.id);
-  if (!exists) {
-    selectedOptions.value.push(opt);
+  const shown_value = ref([])
+  const input_value = ref('')
+
+  function add() {
+    // Find object by matching name
+    const selectedObject = props.object.find((item) => item.name === input_value.value)
+
+    if (!selectedObject) {
+      // no match found, do nothing or notify user
+      input_value.value = ''
+      return
+    }
+
+    // Prevent duplicates by checking if id already selected
+    if (!selectedOptions.value.includes(selectedObject.id)) {
+      selectedOptions.value.push(selectedObject.id)
+      shown_value.value.push(selectedObject.name)
+    }
+
+    input_value.value = '' // reset input
   }
-  searchTerm.value = ""; // Optional: clear search after selection
-}
 
-function removeEntity(index) {
-  selectedOptions.splice(index, 1);
-}
+  function remove(index) {
+    selectedOptions.value.splice(index, 1)
+    shown_value.value.splice(index, 1)
+  }
 </script>
+
 <template>
   <div class="mb-3 row">
-    <label for="entities" class="col-sm-2 col-form-label">{{ prop.title }}</label>
-    <input v-model="searchTerm" type="text" placeholder="" class="form-control" />
-
-    <!-- Filtered list -->
-    <ul v-if="filteredOptions.length && searchTerm" class="list-group position-absolute w-100 z-3">
-      <li
-        v-for="opt in filteredOptions"
-        :key="String(opt.value)"
-        class="list-group-item list-group-item-action"
-        @click="selectOption(opt)"
-        style="cursor: pointer"
+    <div class="col-2">
+      <label
+        for="exampleDataList"
+        class="form-label"
+        >{{ props.title }}</label>
+    </div>
+    <div class="col-10">
+      <span
+        v-for="(item, index) in shown_value"
+        :key="index"
+        class="btn btn-outline-secondary btn-sm me-2"
       >
-        {{ opt.name }}
-      </li>
-    </ul>
+        {{ item }}
+        <button
+          type="button"
+          class="btn-close ms-1"
+          @click="remove(index)"
+        ></button>
+      </span>
 
-    <!-- Selected display -->
-    <ul v-if="selectedOptions" class="mt-2 list-group">
-      <li class="list-group-item" v-for="(option, index) in selectedEntity" :key="index">
-        {{ option.name }}
-      </li>
-      <span class="btn-close" @click="removeEntity(index)"></span>
-    </ul>
+      <input
+        id="exampleDataList"
+        v-model="input_value"
+        class="form-control mt-2"
+        list="datalistOptions"
+        placeholder="Type and press enter or select"
+        @keydown.enter.prevent="add"
+      />
+    </div>
+
+    <datalist id="datalistOptions">
+      <option
+        v-for="item in props.object"
+        :key="item.id"
+        :value="item.name"
+      >
+        {{ item.name }}
+      </option>
+    </datalist>
   </div>
 </template>

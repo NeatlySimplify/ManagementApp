@@ -26,14 +26,22 @@ function openToggle(id) {
     :columns="cols"
     :loading="loading"
     :sortable="true"
-    :columnFilter="true"
+    :column-filter="true"
   >
     <template #actions="data">
       <div class="flex gap-4">
-        <button type="button" class="btn btn-success !py-1" @click="openToggle(data.id)">
+        <button
+          type="button"
+          class="btn btn-success !py-1"
+          @click="openToggle(data.id)"
+        >
           Ver Mais!
         </button>
-        <button type="button" class="btn btn-danger !py-1" @click="delete_resource(data.id)">
+        <button
+          type="button"
+          class="btn btn-danger !py-1"
+          @click="delete_resource(data.id)"
+        >
           Excluir
         </button>
       </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { defineModel } from "vue";
+import { defineModel, computed } from "vue";
 
 const currentDate = defineModel("currentDate", { type: Date, default: new Date() });
 
@@ -27,11 +27,17 @@ const year_month = computed(() => {
 </script>
 <template>
   <div class="row">
-    <button class="btn btn-outline-primary col-1 col-md-2 col-lg-3 col" @click="prevMonth">
+    <button
+      class="btn btn-outline-primary col-1 col-md-2 col-lg-3 col"
+      @click="prevMonth"
+    >
       <i>&#11144;</i>
     </button>
     <span>{{ year_month }}</span>
-    <button class="btn btn-outline-primary col-1 col-md-2 col-lg-3 col" @click="nextMonth">
+    <button
+      class="btn btn-outline-primary col-1 col-md-2 col-lg-3 col"
+      @click="nextMonth"
+    >
       <i>&#11146;</i>
     </button>
   </div>

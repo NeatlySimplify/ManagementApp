@@ -28,12 +28,19 @@ const entity = defineModel("entity", { type: Array });
   <table class="table table-hover">
     <thead>
       <tr>
-        <th scope="col">Nome</th>
-        <th scope="col">#</th>
+        <th scope="col">
+          Nome
+        </th>
+        <th scope="col">
+          #
+        </th>
       </tr>
     </thead>
     <tbody class="table-group-divider">
-      <tr v-for="(item, index) in entity" :key="index">
+      <tr
+        v-for="(item, index) in entity"
+        :key="index"
+      >
         <td>R$ {{ item.name }}</td>
         <td>
           <div class="dropdown">
@@ -42,13 +49,21 @@ const entity = defineModel("entity", { type: Array });
               type="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
-            ></button>
+            />
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item" @click="getEntity(item)" href="#">Ver Mais!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="getEntity(item)"
+                >Ver Mais!</a>
               </li>
               <li>
-                <a class="dropdown-item" href="#" @click="deleteEntity(item, index)">Excluir!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="deleteEntity(item, index)"
+                >Excluir!</a>
               </li>
             </ul>
           </div>

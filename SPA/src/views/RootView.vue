@@ -35,8 +35,10 @@ const form = computed(() => formComponent.value.component);
       class="col-12 col-md-8 mt-5 text-end text-sm-center position-absolute top-0 start-50 rounded-5 translate-middle-x"
       style="background-color: #ffffff"
     >
-      <h1 class="text-center fs-2">{{ title }}</h1>
-      <component :is="form"></component>
+      <h1 class="text-center fs-2">
+        {{ title }}
+      </h1>
+      <component :is="form" />
     </div>
   </div>
 </template>

@@ -28,14 +28,25 @@ const movement = defineModel("movement", { type: Array });
   <table class="table table-hover">
     <thead>
       <tr>
-        <th scope="col">Tipo</th>
-        <th scope="col">Valor</th>
-        <th scope="col">Parcelas</th>
-        <th scope="col">#</th>
+        <th scope="col">
+          Tipo
+        </th>
+        <th scope="col">
+          Valor
+        </th>
+        <th scope="col">
+          Parcelas
+        </th>
+        <th scope="col">
+          #
+        </th>
       </tr>
     </thead>
     <tbody class="table-group-divider">
-      <tr v-for="(item, index) in payments" :key="index">
+      <tr
+        v-for="(item, index) in payments"
+        :key="index"
+      >
         <td>R$ {{ item.type_tage }}</td>
         <td>{{ item.value }}</td>
         <td>{{ item.installment }}</td>
@@ -46,13 +57,21 @@ const movement = defineModel("movement", { type: Array });
               type="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
-            ></button>
+            />
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item" @click="getMovement(item)" href="#">Ver Mais!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="getMovement(item)"
+                >Ver Mais!</a>
               </li>
               <li>
-                <a class="dropdown-item" href="#" @click="deleteMovement(item, index)">Excluir!</a>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  @click="deleteMovement(item, index)"
+                >Excluir!</a>
               </li>
             </ul>
           </div>

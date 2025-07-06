@@ -1,75 +1,86 @@
 <script setup>
-import { defineProps, onMounted } from "vue";
-import BankAccountComponent from "@/features/user/BankAccountComponent.vue";
-import PerfilComponent from "@/features/user/PerfilComponent.vue";
-import SettingsComponent from "@/features/user/SettingsComponent.vue";
+  import { defineProps, onMounted, ref } from 'vue'
+  import BankAccountComponent from '@/features/user/BankAccountComponent.vue'
+  import PerfilComponent from '@/features/user/PerfilComponent.vue'
+  import SettingsComponent from '@/features/user/SettingsComponent.vue'
 
-const props = defineProps({
-  first_access: {
-    type: [Boolean, null],
-    required: false,
-    default: null,
-  },
-});
+  const props = defineProps({
+    firstAccess: {
+      type: [Boolean, null],
+      required: false,
+      default: null,
+    },
+  })
 
-const view_component = ref("perfil");
+  const view_component = ref('perfil')
 
-onMounted(() => {
-  if (props.first_access !== null) {
-    if (props.first_access === false) {
-      showLists.value = true;
-    } else {
-      view_component.value = "settings";
+  onMounted(() => {
+    if (props.first_access !== null) {
+      if (props.firstAccess) {
+        view_component.value = 'settings'
+      }
     }
-  }
-});
+  })
 </script>
 <template>
   <div class="container">
-    <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+    <div
+      class="btn-group"
+      role="group"
+      aria-label="Basic radio toggle button group"
+    >
       <input
+        id="btnradio1"
+        v-mode="view_component"
         type="radio"
         class="btn-check"
         name="btnradio"
         value="perfil"
-        v-mode="view_component"
-        id="btnradio1"
         autocomplete="off"
       />
-      <label class="btn btn-outline-primary" for="btnradio1">Perfil</label>
+      <label
+        class="btn btn-outline-primary"
+        for="btnradio1"
+        >Perfil</label>
 
       <input
+        id="btnradio2"
+        v-mode="view_component"
         type="radio"
         class="btn-check"
         name="btnradio"
         value="settings"
-        v-mode="view_component"
-        id="btnradio2"
         autocomplete="off"
         @click="userComponent('settings')"
       />
-      <label class="btn btn-outline-primary" for="btnradio2">Customização</label>
+      <label
+        class="btn btn-outline-primary"
+        for="btnradio2"
+        >Customização</label>
 
       <input
+        id="btnradio3"
+        v-mode="view_component"
         type="radio"
         class="btn-check"
         name="btnradio"
         value="bank_account"
-        v-mode="view_component"
-        id="btnradio3"
         autocomplete="off"
         @click="userComponent('bank_account')"
       />
-      <label class="btn btn-outline-primary" for="btnradio3">Contas Bancárias</label>
+      <label
+        class="btn btn-outline-primary"
+        for="btnradio3"
+        >Contas Bancárias</label>
     </div>
     <div v-if="view_component === 'bank_acocunt'">
-      <BankAccountComponent></BankAccountComponent>
+      <BankAccountComponent />
     </div>
     <div v-if="view_component === 'settings'">
-      <SettingsComponent></SettingsComponent>
+      <SettingsComponent :first-access="props.firstAccess" />
     </div>
     <div v-else>
-      <PerfilComponent></PerfilComponent>
+      <PerfilComponent />
     </div>
   </div>
 </template>

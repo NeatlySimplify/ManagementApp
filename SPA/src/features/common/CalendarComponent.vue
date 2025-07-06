@@ -1,5 +1,5 @@
 <script setup>
-import { defineModel, defineProps, onMounted } from "vue";
+import { defineModel, defineProps, onMounted, ref, computed } from "vue";
 import { useSchedulerStore } from "@/features/scheduler/store";
 import { ScheduleXCalendar } from "@schedule-x/vue";
 import {
@@ -44,7 +44,7 @@ onMounted(() => {
       events: events.value,
     });
     if (prop.objects) {
-      events.value = props.object;
+      events.value = prop.object;
     } else {
       events.value = computed(() => schedulerStore.getMonthlyEvents(currentDate.value));
     }

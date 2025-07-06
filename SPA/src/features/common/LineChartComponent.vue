@@ -93,6 +93,9 @@ const chartOptions = {
 </script>
 <template>
   <div class="container">
-    <Line :data="chartData" :options="chartOptions"></Line>
+    <Line
+      :data="chartData"
+      :options="chartOptions"
+    />
   </div>
 </template>

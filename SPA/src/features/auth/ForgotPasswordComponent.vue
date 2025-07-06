@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import api from "@/util/api";
 import FormInputComponent from "@/features/common/FormInputComponent.vue";
-import { useRouter } from "vue-router";
+import { useRouter, RouterLink } from "vue-router";
 
 const email = ref("");
 const router = useRouter();
@@ -27,11 +27,11 @@ const onSubmit = async () => {
   <div class="container">
     <form @submit.prevent="onSubmit">
       <FormInputComponent
+        v-model:placeholder="email"
         title="Type your email to reset your password:"
         :required="true"
-        :isReadOnly="false"
-        v-model:placeholder="email"
-      ></FormInputComponent>
+        :is-read-only="false"
+      />
       <div class="offset-sm-4 col-sm-8 mt-3 mx-auto">
         <RouterLink
           class="btn btn-outline-danger btn-lg flex-grow-1"
@@ -40,8 +40,14 @@ const onSubmit = async () => {
         >
           Registrar
         </RouterLink>
-        <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1">
-          Login <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
+        <button
+          type="submit"
+          class="btn btn-outline-primary btn-lg flex-grow-1"
+        >
+          Login <i
+            v-if="isLoading"
+            class="fa fa-spinner fa-spin"
+          />
         </button>
       </div>
     </form>

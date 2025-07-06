@@ -1,15 +1,21 @@
 import js from '@eslint/js'
+import { defineConfig } from 'eslint/config'
 import vue from 'eslint-plugin-vue'
+import tseslint from 'typescript-eslint'
 import globals from 'globals'
 
-export default [
+export default defineConfig([
   {
     ignores: ['**/dist/**', '**/node_modules/**'],
   },
+  js.configs.recommended,
+  tseslint.configs.recommended,
+  vue.configs['flat/recommended'],
+
   {
-    files: ['**/*.js', '**/*.vue'],
+    files: ['**/*.js', '**/*.vue', '**/*.ts',],
     languageOptions: {
-      ecmaVersion: 2021,
+      ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
         ...globals.browser,
@@ -20,8 +26,17 @@ export default [
       vue: vue,
     },
     rules: {
-      ...vue.configs['vue3-recommended'].rules,
       'vue/no-undef-components': 'error',
+      'vue/require-default-prop': 'warn',
+      'vue/no-required-prop-with-default': 'error',
+      'vue/valid-v-for': 'error',
+      'vue/require-v-for-key': 'warn',
+      'vue/no-setup-props-reactivity-loss': 'warn',
+      'vue/no-unused-refs': 'warn',
+      'vue/html-indent': 'off',
+      'vue/html-self-closing': 'off',
+      'vue-attributes-order': 'off',
+      'vue/html-closing-bracket-newline': 'off'
     },
   },
-]
+])

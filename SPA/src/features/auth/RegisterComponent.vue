@@ -53,80 +53,96 @@ const onSubmit = async () => {
   <div class="container">
     <form @submit.prevent="onSubmit">
       <FormInputComponent
+        v-model:placeholder="form.name"
         title="Nome:"
         :required="true"
-        :isReadOnly="false"
-        v-model:placeholder="form.name"
-      ></FormInputComponent>
+        :is-read-only="false"
+      />
 
       <FormInputComponent
+        v-model:placeholder="form.email"
         title="E-mail:"
         :required="true"
-        :isReadOnly="false"
-        v-model:placeholder="form.email"
-      ></FormInputComponent>
+        :is-read-only="false"
+      />
 
       <div class="border rounded border-start-0 border-end-0 my-3">
-        <p class="form-label fs-4">Tipo de Usuário</p>
-        <div class="btn-group d-flex mb-3" role="group">
+        <p class="form-label fs-4">
+          Tipo de Usuário
+        </p>
+        <div
+          class="btn-group d-flex mb-3"
+          role="group"
+        >
           <input
+            id="individual-btn"
             type="radio"
-            @click="showYourself = true"
             class="btn-check btn-lg"
             name="options-outlined"
-            id="individual-btn"
             autocomplete="off"
             :checked="showYourself"
-          />
-          <label class="btn btn-outline-secondary flex-grow-1 fs-5" for="individual-btn"
-            >Individual</label
+            @click="showYourself = true"
           >
+          <label
+            class="btn btn-outline-secondary flex-grow-1 fs-5"
+            for="individual-btn"
+          >Individual</label>
           <input
+            id="organization-btn"
             type="radio"
-            @click="showYourself = false"
             class="btn-check btn-lg"
             name="options-outlined"
-            id="organization-btn"
             autocomplete="off"
             :checked="!showYourself"
-          />
-          <label class="btn btn-outline-secondary flex-grow-1 fs-5" for="organization-btn"
-            >Organização</label
+            @click="showYourself = false"
           >
+          <label
+            class="btn btn-outline-secondary flex-grow-1 fs-5"
+            for="organization-btn"
+          >Organização</label>
         </div>
 
-        <div class="input-group input-group-lg my-3" v-if="!showYourself">
+        <div
+          v-if="!showYourself"
+          class="input-group input-group-lg my-3"
+        >
           <span class="input-group-text">CNPJ:</span>
           <input
+            v-model="form.identification"
             type="text"
             class="form-control"
             placeholder="CNPJ da Organização..."
-            v-model="form.identification"
             required
             minlength="14"
             maxlength="18"
-          />
+          >
         </div>
 
-        <div class="input-group input-group-lg my-3" v-else>
+        <div
+          v-else
+          class="input-group input-group-lg my-3"
+        >
           <span class="input-group-text">CPF:</span>
           <input
+            v-model="form.identification"
             type="text"
             class="form-control"
-            v-model="form.identification"
             required
             minlength="11"
             maxlength="15"
-          />
+          >
         </div>
       </div>
 
-      <PasswordComponent label="Senha" v-model:passwordModel="form.password"></PasswordComponent>
+      <PasswordComponent
+        v-model:password-model="form.password"
+        label="Senha"
+      />
 
       <PasswordComponent
+        v-model:password-model="form.confirm_pw"
         label="Confirme sua Senha"
-        v-model:passwordModel="form.confirm_pw"
-      ></PasswordComponent>
+      />
 
       <div class="mb-3 row">
         <div class="btn-group d-flex">
@@ -137,8 +153,14 @@ const onSubmit = async () => {
           >
             Cancelar
           </RouterLink>
-          <button type="submit" class="btn btn-outline-primary btn-lg flex-grow-1">
-            Registrar <i v-if="isLoading" class="fa fa-spinner fa-spin"></i>
+          <button
+            type="submit"
+            class="btn btn-outline-primary btn-lg flex-grow-1"
+          >
+            Registrar <i
+              v-if="isLoading"
+              class="fa fa-spinner fa-spin"
+            />
           </button>
         </div>
       </div>

@@ -20,6 +20,6 @@ watch(() => route.meta,
 </script>
 
 <template>
-  <SidebarComponent v-if="shouldLoadSidebar"/>
+  <SidebarComponent v-if="shouldLoadSidebar" />
   <RouterView />
 </template>
